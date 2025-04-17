@@ -1,15 +1,14 @@
 import 'package:flutter/material.dart';
 
 class TextoAnimado extends StatefulWidget {
-  
   final String text;
   final TextStyle style;
-  
+
   const TextoAnimado({
-    Key? key,
+    super.key,
     required this.text,
     required this.style,
-    }) : super(key : key);
+  });
 
   @override
   State<TextoAnimado> createState() => _TextoAnimadoState();
