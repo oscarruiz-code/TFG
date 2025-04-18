@@ -11,16 +11,30 @@ class LoginScreen extends StatefulWidget {
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStateMixin {
   final UserService _userService = UserService();
-
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  
+  late AnimationController _fadeController;
+  late Animation<double> _fadeAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _fadeController = AnimationController(
+      duration: const Duration(milliseconds: 1000),
+      vsync: this,
+    );
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(_fadeController);
+    _fadeController.forward();
+  }
 
   @override
   void dispose() {
     _usernameController.dispose();
     _passwordController.dispose();
+    _fadeController.dispose();
     super.dispose();
   }
 
@@ -29,99 +43,109 @@ class _LoginScreenState extends State<LoginScreen> {
     return Scaffold(
       body: Stack(
         children: [
-          const VideoBackground(), // El video ya está cargado y funcionando
-          Center(
-            child: Container(
-              width: 400,
-              padding: const EdgeInsets.all(30),
-              decoration: BoxDecoration(
-                color: Color.fromRGBO(255, 255, 255, 0.15),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: Color.fromRGBO(255, 255, 255, 0.3),
-                  width: 2,
+          const VideoBackground(),
+          FadeTransition(
+            opacity: _fadeAnimation,
+            child: Center(
+              child: Container(
+                width: 400,
+                padding: const EdgeInsets.all(30),
+                decoration: BoxDecoration(
+                  color: Color.fromRGBO(255, 255, 255, 0.15),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: Color.fromRGBO(255, 255, 255, 0.3),
+                    width: 2,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Color.fromRGBO(0, 0, 255, 0.2),
+                      blurRadius: 15,
+                      spreadRadius: 5,
+                    ),
+                  ],
                 ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Color.fromRGBO(0, 0, 255, 0.2),
-                    blurRadius: 15,
-                    spreadRadius: 5,
-                  ),
-                ],
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Text(
-                    'LOGGEAR',
-                    style: TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                      shadows: [
-                        Shadow(
-                          color: Colors.blue,
-                          blurRadius: 10,
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 30),
-                  _buildTextField(
-                    controller: _usernameController,
-                    hintText: 'Usuario',
-                    icon: Icons.person,
-                  ),
-                  const SizedBox(height: 20),
-                  _buildTextField(
-                    controller: _passwordController,
-                    hintText: 'Contraseña',
-                    icon: Icons.lock,
-                    isPassword: true,
-                  ),
-                  const SizedBox(height: 30),
-                  ElevatedButton(
-                    onPressed: _login,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Color.fromRGBO(0, 0, 255, 0.7),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 50,
-                        vertical: 15,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30),
-                      ),
-                    ),
-                    child: const Text(
-                      'Login',
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text(
+                      'LOGGEAR',
                       style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
+                        fontSize: 32,
                         fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        shadows: [
+                          Shadow(
+                            color: Colors.blue,
+                            blurRadius: 10,
+                          ),
+                        ],
                       ),
                     ),
-                  ),
-                  // Inside the Column widget in the login form, after the ElevatedButton:
-                  const SizedBox(height: 20),
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const RegisterScreen(),
+                    const SizedBox(height: 30),
+                    _buildTextField(
+                      controller: _usernameController,
+                      hintText: 'Usuario',
+                      icon: Icons.person,
+                    ),
+                    const SizedBox(height: 20),
+                    _buildTextField(
+                      controller: _passwordController,
+                      hintText: 'Contraseña',
+                      icon: Icons.lock,
+                      isPassword: true,
+                    ),
+                    const SizedBox(height: 30),
+                    ElevatedButton(
+                      onPressed: _login,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Color.fromRGBO(0, 0, 255, 0.7),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 50,
+                          vertical: 15,
                         ),
-                      );
-                    },
-                    child: Text(
-                      'No estas registrado?',
-                      style: TextStyle(
-                        color: Color.fromRGBO(255, 255, 255, 0.8),
-                        fontSize: 16,
-                        decoration: TextDecoration.underline,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                      ),
+                      child: const Text(
+                        'Login',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 20),
+                    GestureDetector(
+                      // In the GestureDetector onTap for Register
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          PageRouteBuilder(
+                            pageBuilder: (context, animation, secondaryAnimation) => const RegisterScreen(),
+                            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                              return FadeTransition(
+                                opacity: animation,
+                                child: child,
+                              );
+                            },
+                            transitionDuration: const Duration(milliseconds: 300),
+                          ),
+                        );
+                      },
+                      child: Text(
+                        'No estas registrado?',
+                        style: TextStyle(
+                          color: Color.fromRGBO(255, 255, 255, 0.8),
+                          fontSize: 16,
+                          decoration: TextDecoration.underline,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -164,17 +188,23 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _login() async {
     try {
-      bool isValid = await _userService.checkUser(
+      final userInfo = await _userService.checkUserAndGetInfo(
         _usernameController.text,
         _passwordController.text,
       );
 
       if (!mounted) return;
       
-      if (isValid) {
+      if (userInfo != null) {
+        await _fadeController.reverse();
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const MenuInicio()),
+          MaterialPageRoute(
+            builder: (context) => MenuInicio(
+              userId: userInfo['userId'],
+              username: userInfo['username'],
+            ),
+          ),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(

@@ -1,134 +1,179 @@
+import 'package:oscarruizcode_pingu/servicios/entity/player.dart';
 import 'package:oscarruizcode_pingu/widgets/video_background.dart';
 import 'package:flutter/material.dart';
+import 'package:oscarruizcode_pingu/servicios/sevices/player_service.dart';
+import 'package:oscarruizcode_pingu/widgets/shared_widgets.dart';
+import 'menuopcion.dart';
+import 'menutienda.dart';
+import 'menuhistorial.dart';
+import '../games/game1.dart';
+import '../games/game2.dart';
 
 class MenuInicio extends StatefulWidget {
-  const MenuInicio({super.key});
+  final int userId;
+  final String username;  // Add this line
+  const MenuInicio({
+    super.key, 
+    required this.userId,
+    required this.username,  // Add this line
+  });
 
   @override
   State<MenuInicio> createState() => _MenuInicioState();
 }
 
 class _MenuInicioState extends State<MenuInicio> {
+  final PlayerService _playerService = PlayerService();
+  final PageController _pageController = PageController(initialPage: 1);
+  late Future<PlayerStats> _playerStatsFuture;
+
   @override
   void initState() {
     super.initState();
-    // Aseguramos que el dispose se ejecute después de que el widget esté montado
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      VideoBackground.disposeVideo();
-    });
+    VideoBackground.disposeVideo();
+    _playerStatsFuture = _playerService.getPlayerStats(widget.userId);
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFF1A1A1A),
-      body: SafeArea(
+    return FutureBuilder<PlayerStats>(
+      future: _playerStatsFuture,
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        final playerStats = snapshot.data!;
+        return Scaffold(
+          body: PageView(
+            controller: _pageController,
+            children: [
+              MenuOpciones(
+                userId: widget.userId,
+                username: widget.username,
+                pageController: _pageController,
+              ),
+              _buildMainPage(playerStats),
+              MenuTienda(
+                userId: widget.userId,
+                username: widget.username,
+                pageController: _pageController,
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildMainPage(PlayerStats playerStats) {
+    return Container(
+      decoration: const BoxDecoration(
+        image: DecorationImage(
+          image: AssetImage('assets/imagenes/fondo.png'),
+          fit: BoxFit.cover,
+        ),
+      ),
+      child: SafeArea(
         child: Column(
           children: [
-            // Header with title
-            Container(
-              padding: const EdgeInsets.all(20),
-              child: const Text(
-                'ICEBERGS',
-                style: TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                  shadows: [
-                    Shadow(
-                      color: Colors.blue,
-                      blurRadius: 10,
-                    ),
-                  ],
-                ),
-              ),
+            SharedTopBar(
+              username: widget.username,  // Change this line
+              playerStats: playerStats,
             ),
-            // Main menu options
-            Expanded(
-              child: GridView.count(
-                crossAxisCount: 2,
-                padding: const EdgeInsets.all(20),
-                mainAxisSpacing: 20,
-                crossAxisSpacing: 20,
-                children: [
-                  _buildMenuButton(
-                    'Play',
-                    Icons.play_arrow,
-                    () {
-                      // Navigate to game screen
-                    },
-                  ),
-                  _buildMenuButton(
-                    'Settings',
-                    Icons.settings,
-                    () {
-                      // Navigate to settings screen
-                    },
-                  ),
-                  _buildMenuButton(
-                    'Profile',
-                    Icons.person,
-                    () {
-                      // Navigate to profile screen
-                    },
-                  ),
-                  _buildMenuButton(
-                    'Exit',
-                    Icons.exit_to_app,
-                    () {
-                      // Exit the app
-                    },
-                  ),
-                ],
-              ),
-            ),
+            const Spacer(),
+            _buildGameButtons(playerStats),
+            const SizedBox(height: 20),
+            _buildHistoryButton(),
+            const Spacer(),
+            SharedBottomNav(pageController: _pageController),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildMenuButton(String title, IconData icon, VoidCallback onPressed) {
+  Widget _buildGameButtons(PlayerStats playerStats) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: [
+        _buildGameButton('Game 1', () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const Game1()),
+          );
+        }),
+        _buildGameButton('Game 2', () {
+          if (playerStats.ticketsGame2 > 0) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const Game2()),
+            );
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Necesitas un ticket para jugar Game 2')),
+            );
+          }
+        }),
+      ],
+    );
+  }
+
+  Widget _buildGameButton(String title, VoidCallback onPressed) {
     return Container(
-      decoration: BoxDecoration(
-        color: Color.fromRGBO(0, 0, 255, 0.2),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: Color.fromRGBO(0, 0, 255, 0.3),
-          width: 2,
+      width: 150,
+      height: 150,
+      child: ElevatedButton(
+        onPressed: onPressed,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.blue.withOpacity(0.7),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15),
+          ),
         ),
-        boxShadow: [
-          BoxShadow(
-            color: Color.fromRGBO(0, 0, 255, 0.1),
-            blurRadius: 10,
-            spreadRadius: 2,
+        child: Text(
+          title,
+          style: const TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
           ),
-        ],
+        ),
       ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onPressed,
-          borderRadius: BorderRadius.circular(20),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                icon,
-                size: 50,
-                color: Colors.white,
-              ),
-              const SizedBox(height: 10),
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
-            ],
+    );
+  }
+
+  Widget _buildHistoryButton() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 40),
+      child: ElevatedButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => MenuHistorial(userId: widget.userId),
+            ),
+          );
+        },
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.blue.withOpacity(0.7),
+          padding: const EdgeInsets.symmetric(vertical: 15),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15),
           ),
+        ),
+        child: const Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.history),
+            SizedBox(width: 10),
+            Text(
+              'Historial de Partidas',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
         ),
       ),
     );

@@ -12,7 +12,20 @@ class RegisterScreen extends StatefulWidget {
 
 class _RegisterScreenState extends State<RegisterScreen> {
   final UserService _userService = UserService();
-  
+  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();    // Nuevo controller
+  final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _confirmPasswordController = TextEditingController();
+
+  @override
+  void dispose() {
+    _usernameController.dispose();
+    _emailController.dispose();    // Nuevo dispose
+    _passwordController.dispose();
+    _confirmPasswordController.dispose();
+    super.dispose();
+  }
+
   Future<void> _register() async {
     if (_passwordController.text != _confirmPasswordController.text) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -33,13 +46,25 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
       await _userService.createUser(
         _usernameController.text,
+        _emailController.text,
         _passwordController.text,
       );
       
       if (!mounted) return;
+      // No detenemos el video, solo navegamos al login
+      // In the successful registration navigation
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const LoginScreen()),
+        PageRouteBuilder(
+          pageBuilder: (context, animation, secondaryAnimation) => const LoginScreen(),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return FadeTransition(
+              opacity: animation,
+              child: child,
+            );
+          },
+          transitionDuration: const Duration(milliseconds: 300),
+        ),
       );
     } catch (e) {
       if (!mounted) return;
@@ -47,17 +72,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
         const SnackBar(content: Text('Error al Registrar Usuario')),
       );
     }
-  }
-  final TextEditingController _usernameController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _confirmPasswordController = TextEditingController();
-
-  @override
-  void dispose() {
-    _usernameController.dispose();
-    _passwordController.dispose();
-    _confirmPasswordController.dispose();
-    super.dispose();
   }
 
   @override
@@ -88,8 +102,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text(
-                    'REGISTRAR',
+                  const Text('REGISTRAR',
                     style: TextStyle(
                       fontSize: 32,
                       fontWeight: FontWeight.bold,
@@ -109,6 +122,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     icon: Icons.person,
                   ),
                   const SizedBox(height: 20),
+                  _buildTextField(                     // Nuevo campo email
+                    controller: _emailController,
+                    hintText: 'Correo Electrónico',
+                    icon: Icons.email,
+                  ),
+                  const SizedBox(height: 20),
                   _buildTextField(
                     controller: _passwordController,
                     hintText: 'Contraseña',
@@ -118,7 +137,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   const SizedBox(height: 20),
                   _buildTextField(
                     controller: _confirmPasswordController,
-                    hintText: 'Confirm Contraseña',
+                    hintText: 'Confirmar Contraseña',
                     icon: Icons.lock_outline,
                     isPassword: true,
                   ),

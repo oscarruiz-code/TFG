@@ -1,11 +1,13 @@
 class User {
   final int? id;
   final String username;
+  final String email;
   final String password;
 
   User({
     this.id,
     required this.username,
+    required this.email,
     required this.password,
   });
 
@@ -13,6 +15,7 @@ class User {
     return {
       'id': id,
       'username': username,
+      'email': email,
       'password': password,
     };
   }
@@ -21,6 +24,7 @@ class User {
     return User(
       id: map['id'],
       username: map['username'],
+      email: map['email'],
       password: map['password'],
     );
   }

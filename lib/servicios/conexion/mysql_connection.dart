@@ -1,24 +1,23 @@
 import 'package:mysql1/mysql1.dart';
-import 'package:flutter/foundation.dart';  // Agregamos esta importación
+import 'package:flutter/foundation.dart';
 
 class DatabaseConnection {
   static Future<MySqlConnection> getConnection() async {
     try {
       final settings = ConnectionSettings(
-        host: 'localhost',  // Cambiado de '127.0.0.1' a 'localhost'
+        host: 'bepsnkpq9ccmcvndmyjc-mysql.services.clever-cloud.com',
         port: 3306,
-        user: 'root',
-        password: '',
-        db: 'icebergs_db',
-        timeout: const Duration(seconds: 10)  // Reducido el timeout
+        user: 'uel3r1fi9jrcvkff',
+        password: '8MbOCWddYEdl6qtneB8X',
+        db: 'bepsnkpq9ccmcvndmyjc'
       );
 
-      debugPrint('Intentando conectar a MySQL...');
+      debugPrint('Connecting to Clever Cloud MySQL...');
       var connection = await MySqlConnection.connect(settings);
-      debugPrint('Conexión exitosa a MySQL');
+      debugPrint('Connection successful!');
       return connection;
     } catch (e) {
-      debugPrint('Error de conexión MySQL: $e');
+      debugPrint('Connection error: $e');
       rethrow;
     }
   }

@@ -8,15 +8,12 @@ class VideoBackground extends StatefulWidget {
   
   static Future<bool> preloadVideo() async {
     try {
-      if (_sharedController == null) {
-        _sharedController = VideoPlayerController.asset('assets/videos/fondo_inicio.mp4');
-        await _sharedController!.initialize();
-        await _sharedController!.setLooping(true);
-        await _sharedController!.setVolume(0.0);
-        await _sharedController!.play();
-        return true;
-      }
-      return _sharedController!.value.isInitialized;
+      _sharedController = VideoPlayerController.asset('assets/videos/fondo_inicio.mp4');
+      await _sharedController!.initialize();
+      await _sharedController!.setLooping(true);
+      await _sharedController!.setVolume(0.0);
+      await _sharedController!.play();
+      return true;
     } catch (e) {
       debugPrint('Error initializing video: $e');
       return false;
@@ -24,12 +21,12 @@ class VideoBackground extends StatefulWidget {
   }
 
   static void disposeVideo() {
-    try {
-      _sharedController?.dispose();
-      _sharedController = null;
-    } catch (e) {
-      debugPrint('Error disposing video: $e');
-    }
+    _sharedController?.dispose();
+    _sharedController = null;
+  }
+
+  static VideoPlayerController? getController() {
+    return _sharedController;
   }
 
   @override
@@ -37,28 +34,9 @@ class VideoBackground extends StatefulWidget {
 }
 
 class _VideoBackgroundState extends State<VideoBackground> {
-  bool _isReady = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _checkVideoStatus();
-  }
-
-  void _checkVideoStatus() {
-    if (VideoBackground._sharedController?.value.isInitialized ?? false) {
-      if (mounted) {
-        setState(() {
-          _isReady = true;
-        });
-        VideoBackground._sharedController?.play();
-      }
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    if (!_isReady || VideoBackground._sharedController == null || 
+    if (VideoBackground._sharedController == null || 
         !VideoBackground._sharedController!.value.isInitialized) {
       return Container(color: Colors.black);
     }
