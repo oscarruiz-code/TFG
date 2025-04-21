@@ -13,38 +13,57 @@ class SharedTopBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            username,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              shadows: [Shadow(color: Colors.blue, blurRadius: 10)],
+    return Material(
+      color: const Color.fromRGBO(0, 32, 96, 1),
+      elevation: 4,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
+        decoration: BoxDecoration(
+          border: Border(
+            bottom: const BorderSide(color: Color.fromRGBO(0, 0, 255, 0.3)),
+          ),
+        ),
+        child: Row(
+          children: [
+            Text(
+              username,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
             ),
-          ),
-          Row(
-            children: [
-              const Icon(Icons.star, color: Colors.yellow),
-              const SizedBox(width: 5),
-              Text(
-                '${playerStats.coins}',
-                style: const TextStyle(color: Colors.white, fontSize: 18),
-              ),
-              const SizedBox(width: 15),
-              const Icon(Icons.confirmation_number, color: Colors.green),
-              const SizedBox(width: 5),
-              Text(
-                '${playerStats.ticketsGame2}',
-                style: const TextStyle(color: Colors.white, fontSize: 18),
-              ),
-            ],
-          ),
-        ],
+            const Spacer(),
+            Row(
+              children: [
+                const Icon(Icons.star, color: Colors.amber),
+                const SizedBox(width: 5),
+                Text(
+                  '${playerStats.coins}',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(width: 15),
+                const Text(
+                  '🎟️',
+                  style: TextStyle(fontSize: 20),
+                ),
+                const SizedBox(width: 5),
+                Text(
+                  '${playerStats.ticketsGame2}',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -60,36 +79,39 @@ class SharedBottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 20),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          IconButton(
-            icon: const Icon(Icons.settings, color: Colors.white),
-            onPressed: () => pageController.animateToPage(
-              0,
-              duration: const Duration(milliseconds: 300),
-              curve: Curves.easeInOut,
-            ),
+    return Material(
+      color: const Color.fromRGBO(0, 32, 96, 1),
+      elevation: 4,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        decoration: BoxDecoration(
+          border: Border(
+            top: const BorderSide(color: Color.fromRGBO(0, 0, 255, 0.3)),
           ),
-          IconButton(
-            icon: const Icon(Icons.home, color: Colors.white, size: 32),
-            onPressed: () => pageController.animateToPage(
-              1,
-              duration: const Duration(milliseconds: 300),
-              curve: Curves.easeInOut,
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            IconButton(
+              icon: const Icon(Icons.settings, color: Colors.white),
+              onPressed: () => pageController.animateToPage(0,
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeInOut),
             ),
-          ),
-          IconButton(
-            icon: const Icon(Icons.store, color: Colors.white),
-            onPressed: () => pageController.animateToPage(
-              2,
-              duration: const Duration(milliseconds: 300),
-              curve: Curves.easeInOut,
+            IconButton(
+              icon: const Icon(Icons.home, color: Colors.white),
+              onPressed: () => pageController.animateToPage(1,
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeInOut),
             ),
-          ),
-        ],
+            IconButton(
+              icon: const Icon(Icons.store, color: Colors.white),
+              onPressed: () => pageController.animateToPage(2,
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeInOut),
+            ),
+          ],
+        ),
       ),
     );
   }

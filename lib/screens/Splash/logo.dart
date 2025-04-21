@@ -18,61 +18,52 @@ class _LogoScreenState extends State<LogoScreen> with SingleTickerProviderStateM
   void initState() {
     super.initState();
     _fadeController = AnimationController(
-      duration: const Duration(milliseconds: 1000),
+      duration: const Duration(milliseconds: 2000),
       vsync: this,
     );
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(_fadeController);
-    _fadeController.forward();  // Fades in the logo
-    _preloadVideo();
+    _initializeScreen();
+  }
+
+  Future<void> _initializeScreen() async {
+    _fadeController.forward();
+    
+    bool isLoaded = await VideoBackground.preloadVideo();
+    if (!isLoaded) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Error al cargar el video')),
+      );
+      return;
+    }
+
+    await Future.delayed(const Duration(seconds: 5));
+    
+    if (!mounted) return;
+
+    await VideoBackground.playVideo();
+    await _fadeController.reverse();
+    
+    if (!mounted) return;
+    
+    Navigator.of(context).pushReplacement(
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) => const LoginScreen(),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return FadeTransition(
+            opacity: animation,
+            child: child,
+          );
+        },
+        transitionDuration: const Duration(milliseconds: 2000),
+      ),
+    );
   }
 
   @override
   void dispose() {
     _fadeController.dispose();
     super.dispose();
-  }
-
-  Future<void> _preloadVideo() async {
-    try {
-      bool isLoaded = await VideoBackground.preloadVideo();
-      
-      if (!isLoaded) {
-        await Future.delayed(const Duration(seconds: 1));
-        isLoaded = await VideoBackground.preloadVideo();
-      }
-
-      if (!mounted) return;
-
-      while (mounted && 
-             (VideoBackground.getController()?.value.isPlaying != true || 
-              VideoBackground.getController()?.value.isBuffering == true)) {
-        await Future.delayed(const Duration(milliseconds: 100));
-      }
-      
-      await Future.delayed(const Duration(seconds: 6));
-      
-      if (mounted && isLoaded) {
-        Navigator.of(context).pushReplacement(
-          PageRouteBuilder(
-            pageBuilder: (context, animation, secondaryAnimation) {
-              return FadeTransition(
-                opacity: _fadeController,  // Use the same controller for both transitions
-                child: const LoginScreen(),
-              );
-            },
-            transitionDuration: const Duration(milliseconds: 1000),  // Match logo fade duration
-          ),
-        );
-        await _fadeController.reverse();  // Reverse after pushing the new screen
-      }
-    } catch (e) {
-      debugPrint('Error en _preloadVideo: $e');
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Error al cargar el video')),
-        );
-      }
-    }
   }
 
   @override
@@ -85,7 +76,7 @@ class _LogoScreenState extends State<LogoScreen> with SingleTickerProviderStateM
           FadeTransition(
             opacity: _fadeAnimation,
             child: Container(
-              color: Colors.white.withOpacity(0.9),
+              color: const Color.fromRGBO(255, 255, 255, 0.9),
               child: Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -93,7 +84,7 @@ class _LogoScreenState extends State<LogoScreen> with SingleTickerProviderStateM
                     Container(
                       width: 150,
                       height: 150,
-                      decoration: BoxDecoration(
+                      decoration: const BoxDecoration(
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(

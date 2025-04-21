@@ -8,6 +8,7 @@ import 'menutienda.dart';
 import 'menuhistorial.dart';
 import '../games/game1.dart';
 import '../games/game2.dart';
+import 'package:oscarruizcode_pingu/widgets/music_service.dart';
 
 class MenuInicio extends StatefulWidget {
   final int userId;
@@ -24,49 +25,40 @@ class MenuInicio extends StatefulWidget {
 
 class _MenuInicioState extends State<MenuInicio> {
   final PlayerService _playerService = PlayerService();
+  final MusicService _musicService = MusicService();
   final PageController _pageController = PageController(initialPage: 1);
-  late Future<PlayerStats> _playerStatsFuture;
+  late PlayerStats _playerStats;
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
     VideoBackground.disposeVideo();
-    _playerStatsFuture = _playerService.getPlayerStats(widget.userId);
+    _loadPlayerStats();
+    _musicService.playBackgroundMusic();
+  }
+
+  @override
+  void dispose() {
+    _musicService.stopBackgroundMusic();
+    super.dispose();
+  }
+
+  Future<void> _loadPlayerStats() async {
+    _playerStats = await _playerService.getPlayerStats(widget.userId);
+    if (mounted) {
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<PlayerStats>(
-      future: _playerStatsFuture,
-      builder: (context, snapshot) {
-        if (!snapshot.hasData) {
-          return const Center(child: CircularProgressIndicator());
-        }
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
 
-        final playerStats = snapshot.data!;
-        return Scaffold(
-          body: PageView(
-            controller: _pageController,
-            children: [
-              MenuOpciones(
-                userId: widget.userId,
-                username: widget.username,
-                pageController: _pageController,
-              ),
-              _buildMainPage(playerStats),
-              MenuTienda(
-                userId: widget.userId,
-                username: widget.username,
-                pageController: _pageController,
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildMainPage(PlayerStats playerStats) {
     return Container(
       decoration: const BoxDecoration(
         image: DecorationImage(
@@ -74,21 +66,45 @@ class _MenuInicioState extends State<MenuInicio> {
           fit: BoxFit.cover,
         ),
       ),
-      child: SafeArea(
-        child: Column(
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        body: PageView(
+          controller: _pageController,
           children: [
-            SharedTopBar(
-              username: widget.username,  // Change this line
-              playerStats: playerStats,
+            MenuOpciones(
+              userId: widget.userId,
+              username: widget.username,
+              pageController: _pageController,
+              playerStats: _playerStats,
             ),
-            const Spacer(),
-            _buildGameButtons(playerStats),
-            const SizedBox(height: 20),
-            _buildHistoryButton(),
-            const Spacer(),
-            SharedBottomNav(pageController: _pageController),
+            _buildMainPage(_playerStats),
+            MenuTienda(
+              userId: widget.userId,
+              username: widget.username,
+              pageController: _pageController,
+              playerStats: _playerStats,
+            ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildMainPage(PlayerStats playerStats) {
+    return SafeArea(
+      child: Column(
+        children: [
+          SharedTopBar(
+            username: widget.username,
+            playerStats: playerStats,
+          ),
+          const Spacer(),
+          _buildGameButtons(playerStats),
+          const SizedBox(height: 20),
+          _buildHistoryButton(),
+          const Spacer(),
+          SharedBottomNav(pageController: _pageController),
+        ],
       ),
     );
   }
@@ -120,22 +136,25 @@ class _MenuInicioState extends State<MenuInicio> {
   }
 
   Widget _buildGameButton(String title, VoidCallback onPressed) {
-    return Container(
+    return SizedBox(
       width: 150,
       height: 150,
-      child: ElevatedButton(
-        onPressed: onPressed,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.blue.withOpacity(0.7),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(15),
-          ),
-        ),
-        child: Text(
-          title,
-          style: const TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
+      child: Material(
+        color: const Color.fromRGBO(0, 32, 96, 1), // Dark navy blue
+        elevation: 4,
+        borderRadius: BorderRadius.circular(15),
+        child: InkWell(
+          onTap: onPressed,
+          borderRadius: BorderRadius.circular(15),
+          child: Center(
+            child: Text(
+              title,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
         ),
       ),
@@ -145,35 +164,38 @@ class _MenuInicioState extends State<MenuInicio> {
   Widget _buildHistoryButton() {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 40),
-      child: ElevatedButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => MenuHistorial(userId: widget.userId),
-            ),
-          );
-        },
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.blue.withOpacity(0.7),
-          padding: const EdgeInsets.symmetric(vertical: 15),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(15),
-          ),
-        ),
-        child: const Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.history),
-            SizedBox(width: 10),
-            Text(
-              'Historial de Partidas',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
+      child: Material(
+        color: const Color.fromRGBO(0, 32, 96, 1),
+        elevation: 4,
+        borderRadius: BorderRadius.circular(15),
+        child: InkWell(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => MenuHistorial(userId: widget.userId),
               ),
+            );
+          },
+          borderRadius: BorderRadius.circular(15),
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 15),
+            child: const Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.history, color: Colors.white),
+                SizedBox(width: 10),
+                Text(
+                  'Historial de Partidas',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );

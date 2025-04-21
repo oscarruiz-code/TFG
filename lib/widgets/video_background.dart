@@ -5,14 +5,17 @@ class VideoBackground extends StatefulWidget {
   const VideoBackground({super.key});
 
   static VideoPlayerController? _sharedController;
+  static bool _isInitialized = false;
   
   static Future<bool> preloadVideo() async {
+    if (_isInitialized) return true;
+    
     try {
       _sharedController = VideoPlayerController.asset('assets/videos/fondo_inicio.mp4');
       await _sharedController!.initialize();
       await _sharedController!.setLooping(true);
       await _sharedController!.setVolume(0.0);
-      await _sharedController!.play();
+      _isInitialized = true;
       return true;
     } catch (e) {
       debugPrint('Error initializing video: $e');
@@ -20,9 +23,16 @@ class VideoBackground extends StatefulWidget {
     }
   }
 
+  static Future<void> playVideo() async {
+    if (_isInitialized && _sharedController != null) {
+      await _sharedController!.play();
+    }
+  }
+
   static void disposeVideo() {
     _sharedController?.dispose();
     _sharedController = null;
+    _isInitialized = false;
   }
 
   static VideoPlayerController? getController() {
@@ -36,7 +46,8 @@ class VideoBackground extends StatefulWidget {
 class _VideoBackgroundState extends State<VideoBackground> {
   @override
   Widget build(BuildContext context) {
-    if (VideoBackground._sharedController == null || 
+    if (!VideoBackground._isInitialized || 
+        VideoBackground._sharedController == null || 
         !VideoBackground._sharedController!.value.isInitialized) {
       return Container(color: Colors.black);
     }
@@ -55,7 +66,7 @@ class _VideoBackgroundState extends State<VideoBackground> {
           ),
           Container(
             decoration: BoxDecoration(
-              color: Color.fromRGBO(0, 0, 0, 0.2),
+              color: const Color.fromRGBO(0, 0, 0, 0.2),
             ),
           ),
         ],

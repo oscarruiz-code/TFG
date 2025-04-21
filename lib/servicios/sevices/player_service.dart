@@ -127,4 +127,39 @@ class PlayerService {
       await conn.close();
     }
   }
+
+  Future<bool> updateUsername(int userId, String newUsername) async {
+      final conn = await DatabaseConnection.getConnection();
+      try {
+        // First check if username already exists
+        var checkResults = await conn.query(
+          'SELECT id FROM users WHERE username = ? AND id != ?',
+          [newUsername, userId],
+        );
+        
+        if (checkResults.isNotEmpty) {
+          return false; // Username already taken
+        }
+  
+        await conn.query(
+          'UPDATE users SET username = ? WHERE id = ?',
+          [newUsername, userId],
+        );
+        return true; // Update successful
+      } finally {
+        await conn.close();
+      }
+    }
+
+  Future<void> setUsedFreeRename(int userId) async {
+    final conn = await DatabaseConnection.getConnection();
+    try {
+      await conn.query(
+        'UPDATE player_stats SET has_used_free_rename = true WHERE user_id = ?',
+        [userId],
+      );
+    } finally {
+      await conn.close();
+    }
+  }
 }

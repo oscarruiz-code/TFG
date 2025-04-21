@@ -10,8 +10,24 @@ class MenuHistorial extends StatefulWidget {
 }
 
 class _MenuHistorialState extends State<MenuHistorial> {
-   final PlayerService _playerStatsService = PlayerService();
-  int _selectedGameType = 1; // 1 para Game1, 2 para Game2
+  final PlayerService _playerStatsService = PlayerService();
+  int _selectedGameType = 1;
+  late Future<List<Map<String, dynamic>>> _gameHistoryFuture;
+  late Future<List<Map<String, dynamic>>> _topScoresFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    // Preload data when the widget initializes
+    _gameHistoryFuture = _playerStatsService.getGameHistory(widget.userId);
+    _topScoresFuture = _playerStatsService.getTopScores(widget.userId, _selectedGameType);
+  }
+
+  void _refreshData() {
+    setState(() {
+      _topScoresFuture = _playerStatsService.getTopScores(widget.userId, _selectedGameType);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -25,18 +41,74 @@ class _MenuHistorialState extends State<MenuHistorial> {
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
-          backgroundColor: Colors.transparent,
+          backgroundColor: const Color.fromRGBO(0, 32, 96, 1),
           title: const Text('Historial de Partidas'),
-          elevation: 0,
+          elevation: 4,
         ),
-        body: Column(
-          children: [
-            _buildGameSelector(),
-            _buildTopScores(),
-            const Divider(color: Colors.white30),
-            _buildGameHistory(),
-          ],
+        body: FutureBuilder<List<dynamic>>(
+          future: Future.wait([_gameHistoryFuture, _topScoresFuture]),
+          builder: (context, snapshot) {
+            if (!snapshot.hasData) {
+              return const Center(child: CircularProgressIndicator());
+            }
+
+            final gameHistory = snapshot.data![0] as List<Map<String, dynamic>>;
+            final topScores = snapshot.data![1] as List<Map<String, dynamic>>;
+
+            return Column(
+              children: [
+                _buildGameSelector(),
+                _buildTopScoresWidget(topScores),
+                const Divider(color: Colors.white30),
+                _buildGameHistoryWidget(gameHistory),
+              ],
+            );
+          },
         ),
+      ),
+    );
+  }
+
+  Widget _buildTopScoresWidget(List<Map<String, dynamic>> scores) {
+    final filteredScores = scores.where((score) => 
+      score['game_type'] == _selectedGameType).toList();
+
+    return Container(
+      margin: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color.fromRGBO(0, 32, 96, 1),
+        borderRadius: BorderRadius.circular(15),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Mejores Puntuaciones',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 10),
+          ...filteredScores.map((score) => _buildScoreItem(score)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGameHistoryWidget(List<Map<String, dynamic>> history) {
+    final filteredHistory = history
+        .where((game) => game['game_type'] == _selectedGameType)
+        .toList();
+
+    return Expanded(
+      child: ListView.builder(
+        itemCount: filteredHistory.length,
+        itemBuilder: (context, index) {
+          return _buildHistoryItem(filteredHistory[index]);
+        },
       ),
     );
   }
@@ -45,7 +117,7 @@ class _MenuHistorialState extends State<MenuHistorial> {
     return Container(
       margin: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.2),
+        color: const Color.fromRGBO(0, 32, 96, 1),
         borderRadius: BorderRadius.circular(15),
       ),
       child: Row(
@@ -64,11 +136,14 @@ class _MenuHistorialState extends State<MenuHistorial> {
   Widget _buildSelectorButton(String title, int gameType) {
     final isSelected = _selectedGameType == gameType;
     return GestureDetector(
-      onTap: () => setState(() => _selectedGameType = gameType),
+      onTap: () {
+        setState(() => _selectedGameType = gameType);
+        _refreshData();
+      },
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
-          color: isSelected ? Colors.blue.withOpacity(0.3) : Colors.transparent,
+          color: isSelected ? const Color.fromRGBO(0, 0, 255, 0.3) : Colors.transparent,
           borderRadius: BorderRadius.circular(15),
         ),
         child: Text(
@@ -79,67 +154,6 @@ class _MenuHistorialState extends State<MenuHistorial> {
             fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildTopScores() {
-    return FutureBuilder<List<Map<String, dynamic>>>(
-      future: _playerStatsService.getTopScores(widget.userId, _selectedGameType),
-      builder: (context, snapshot) {
-        if (!snapshot.hasData) {
-          return const CircularProgressIndicator();
-        }
-
-        final scores = snapshot.data!;
-        return Container(
-          margin: const EdgeInsets.all(16),
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.2),
-            borderRadius: BorderRadius.circular(15),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Mejores Puntuaciones',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 10),
-              ...scores.map((score) => _buildScoreItem(score)),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildGameHistory() {
-    return Expanded(
-      child: FutureBuilder<List<Map<String, dynamic>>>(
-        future: _playerStatsService.getGameHistory(widget.userId),
-        builder: (context, snapshot) {
-          if (!snapshot.hasData) {
-            return const CircularProgressIndicator();
-          }
-
-          final history = snapshot.data!
-              .where((game) => game['game_type'] == _selectedGameType)
-              .toList();
-
-          return ListView.builder(
-            itemCount: history.length,
-            itemBuilder: (context, index) {
-              final game = history[index];
-              return _buildHistoryItem(game);
-            },
-          );
-        },
       ),
     );
   }
@@ -164,39 +178,39 @@ class _MenuHistorialState extends State<MenuHistorial> {
   }
 
   Widget _buildHistoryItem(Map<String, dynamic> game) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Puntuación: ${game['score']}',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
+    return Material(  // Wrap with Material for elevation
+      elevation: 4,
+      color: const Color.fromRGBO(0, 32, 96, 1),
+      borderRadius: BorderRadius.circular(15),
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Puntuación: ${game['score']}',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-              ),
-              Text(
-                'Duración: ${_formatDuration(game['duration'])}',
-                style: const TextStyle(color: Colors.white70),
-              ),
-            ],
-          ),
-          Text(
-            _formatDate(game['played_at']),
-            style: const TextStyle(color: Colors.white70),
-          ),
-        ],
-      ),
-    );
+                Text(
+                  'Duración: ${_formatDuration(game['duration'])}',
+                  style: const TextStyle(color: Colors.white70),
+                ),
+              ],
+            ),
+            Text(
+              _formatDate(game['played_at']),
+              style: const TextStyle(color: Colors.white70),
+            ),
+          ],
+        ),
+      ));
   }
 
   String _formatDuration(int seconds) {

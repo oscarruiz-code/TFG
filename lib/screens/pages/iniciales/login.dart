@@ -3,6 +3,7 @@ import '../../../widgets/video_background.dart';
 import 'register.dart';
 import 'package:oscarruizcode_pingu/screens/pages/menus/menuinicio.dart';
 import 'package:oscarruizcode_pingu/servicios/sevices/user_service.dart';
+import 'package:oscarruizcode_pingu/widgets/music_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -13,6 +14,7 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStateMixin {
   final UserService _userService = UserService();
+  final MusicService _musicService = MusicService();
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   
@@ -32,6 +34,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
 
   @override
   void dispose() {
+    _musicService.stopBackgroundMusic();
     _usernameController.dispose();
     _passwordController.dispose();
     _fadeController.dispose();
@@ -197,12 +200,14 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
       
       if (userInfo != null) {
         await _fadeController.reverse();
+        _musicService.stopBackgroundMusic();
+        if (!mounted) return;
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (context) => MenuInicio(
-              userId: userInfo['userId'],
-              username: userInfo['username'],
+            builder: (dialogContext) => MenuInicio(
+              userId: userInfo['id'] as int,  // Cast to int for type safety
+              username: userInfo['username'] as String,  // Cast to String for type safety
             ),
           ),
         );

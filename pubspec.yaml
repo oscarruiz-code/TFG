@@ -28,6 +28,7 @@ dependencies:
   video_player: ^2.5.0
   mysql1: ^0.20.0
   cupertino_icons: ^1.0.8
+  audioplayers: ^5.2.1  # Add this line
 
 dev_dependencies:
   flutter_test:
@@ -41,3 +42,12 @@ flutter:
    - assets/imagenes/fondo.png
    - assets/imagenes/logo.png
    - assets/videos/fondo_inicio.mp4
+   - assets/sonidos/musica.mp3
+   - assets/sprites/enemies/foca.png
+   - assets/sprites/items/pez2.png
+   - assets/sprites/penguin/andando/andar1.png
+   - assets/sprites/penguin/andando/andar4.png
+   - assets/sprites/penguin/deslizandose/deslizarse2.png
+   - assets/sprites/penguin/parado/parado.png
+  
+

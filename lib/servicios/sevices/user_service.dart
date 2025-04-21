@@ -50,7 +50,7 @@ class UserService {
       
       if (results.isNotEmpty) {
         return {
-          'userId': results.first['id'],
+          'id': results.first['id'],  // Changed from 'userId' to 'id'
           'username': results.first['username'],
         };
       }
