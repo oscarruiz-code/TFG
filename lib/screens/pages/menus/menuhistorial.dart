@@ -1,9 +1,18 @@
-import 'package:flutter/material.dart';
-import 'package:oscarruizcode_pingu/servicios/sevices/player_service.dart';
+import 'package:oscarruizcode_pingu/dependencias/imports.dart';
 
 class MenuHistorial extends StatefulWidget {
   final int userId;
-  const MenuHistorial({super.key, required this.userId});
+  final String username;  // Agregar username
+  final PlayerStats playerStats;  // Agregar playerStats
+  final PageController pageController;  // Agregar pageController
+
+  const MenuHistorial({
+    super.key, 
+    required this.userId,
+    required this.username,  // Agregar este parámetro
+    required this.playerStats,  // Agregar este parámetro
+    required this.pageController,  // Agregar este parámetro
+  });
 
   @override
   State<MenuHistorial> createState() => _MenuHistorialState();
@@ -40,30 +49,38 @@ class _MenuHistorialState extends State<MenuHistorial> {
       ),
       child: Scaffold(
         backgroundColor: Colors.transparent,
-        appBar: AppBar(
-          backgroundColor: const Color.fromRGBO(0, 32, 96, 1),
-          title: const Text('Historial de Partidas'),
-          elevation: 4,
-        ),
-        body: FutureBuilder<List<dynamic>>(
-          future: Future.wait([_gameHistoryFuture, _topScoresFuture]),
-          builder: (context, snapshot) {
-            if (!snapshot.hasData) {
-              return const Center(child: CircularProgressIndicator());
-            }
+        body: SafeArea(
+          child: Column(
+            children: [
+              SharedTopBar(
+                username: widget.username,
+                playerStats: widget.playerStats,
+              ),
+              Expanded(
+                child: FutureBuilder<List<dynamic>>(
+                  future: Future.wait([_gameHistoryFuture, _topScoresFuture]),
+                  builder: (context, snapshot) {
+                    if (!snapshot.hasData) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
 
-            final gameHistory = snapshot.data![0] as List<Map<String, dynamic>>;
-            final topScores = snapshot.data![1] as List<Map<String, dynamic>>;
+                    final gameHistory = snapshot.data![0] as List<Map<String, dynamic>>;
+                    final topScores = snapshot.data![1] as List<Map<String, dynamic>>;
 
-            return Column(
-              children: [
-                _buildGameSelector(),
-                _buildTopScoresWidget(topScores),
-                const Divider(color: Colors.white30),
-                _buildGameHistoryWidget(gameHistory),
-              ],
-            );
-          },
+                    return Column(
+                      children: [
+                        _buildGameSelector(),
+                        _buildTopScoresWidget(topScores),
+                        const Divider(color: Colors.white30),
+                        _buildGameHistoryWidget(gameHistory),
+                      ],
+                    );
+                  },
+                ),
+              ),
+              SharedBottomNav(pageController: widget.pageController),
+            ],
+          ),
         ),
       ),
     );

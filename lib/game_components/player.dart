@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
+import 'package:oscarruizcode_pingu/dependencias/imports.dart';
 
-enum PlayerState {
+enum PenguinPlayerState {  // Renamed from PlayerState to be more specific
   idle,
   walking,
   sliding
@@ -13,14 +13,14 @@ class Player {
   double size;
   bool isSliding;
   bool isFacingRight;
-  PlayerState currentState;
+  PenguinPlayerState currentState;  // Updated to use new enum name
   int score = 0;  // Añadimos el score
   bool isInvincible = false;  // Añadimos estado de invencibilidad
   
-  final Map<PlayerState, String> sprites = {
-    PlayerState.idle: 'assets/sprites/penguin/parado/parado.png',
-    PlayerState.walking: 'assets/sprites/penguin/andando/andar1.png',
-    PlayerState.sliding: 'assets/sprites/penguin/deslizandose/deslizarse2.png',
+  final Map<PenguinPlayerState, String> sprites = {  // Updated map to use new enum
+    PenguinPlayerState.idle: 'assets/sprites/penguin/parado/parado.png',
+    PenguinPlayerState.walking: 'assets/sprites/penguin/andando/andar1.png',
+    PenguinPlayerState.sliding: 'assets/sprites/penguin/deslizandose/deslizarse2.png',
   };
 
   Player({
@@ -30,7 +30,7 @@ class Player {
     this.size = 50.0,
     this.isSliding = false,
     this.isFacingRight = true,
-    this.currentState = PlayerState.idle,
+    this.currentState = PenguinPlayerState.idle,  // Updated default value
   });
 
   void addPoints(int points) {

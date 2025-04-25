@@ -1,11 +1,11 @@
-import 'package:flutter/material.dart';
-import '../servicios/entity/player.dart';
+import 'package:oscarruizcode_pingu/dependencias/imports.dart';
 
 class SharedTopBar extends StatelessWidget {
   final String username;
   final PlayerStats playerStats;
+  final PlayerService _playerService = PlayerService();  // Add this line
 
-  const SharedTopBar({
+  SharedTopBar({
     super.key,
     required this.username,
     required this.playerStats,
@@ -13,47 +13,21 @@ class SharedTopBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: const Color.fromRGBO(0, 32, 96, 1),
-      elevation: 4,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
-        decoration: BoxDecoration(
-          border: Border(
-            bottom: const BorderSide(color: Color.fromRGBO(0, 0, 255, 0.3)),
-          ),
-        ),
-        child: Row(
-          children: [
-            Text(
-              username,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const Spacer(),
-            Row(
+    return GlassContainer(
+      padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
+      child: Row(
+        children: [
+          GestureDetector(
+            onTap: () => _showProfilePictureDialog(context),
+            child: Row(
               children: [
-                const Icon(Icons.star, color: Colors.amber),
-                const SizedBox(width: 5),
-                Text(
-                  '${playerStats.coins}',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
+                CircleAvatar(
+                  radius: 20,
+                  backgroundImage: AssetImage(playerStats.currentAvatar),
                 ),
-                const SizedBox(width: 15),
-                const Text(
-                  '🎟️',
-                  style: TextStyle(fontSize: 20),
-                ),
-                const SizedBox(width: 5),
+                const SizedBox(width: 10),
                 Text(
-                  '${playerStats.ticketsGame2}',
+                  username,
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 18,
@@ -62,9 +36,144 @@ class SharedTopBar extends StatelessWidget {
                 ),
               ],
             ),
-          ],
-        ),
+          ),
+          const Spacer(),
+          Row(
+            children: [
+              const Icon(Icons.star, color: Colors.amber),
+              const SizedBox(width: 5),
+              Text(
+                '${playerStats.coins}',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(width: 15),
+              const Text(
+                '🎟️',
+                style: TextStyle(fontSize: 20),
+              ),
+              const SizedBox(width: 5),
+              Text(
+                '${playerStats.ticketsGame2}',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
+    );
+  }
+
+  Future<void> _showProfilePictureDialog(BuildContext context) async {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Seleccionar Foto de Perfil'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text('Avatares Gratuitos',
+                    style: TextStyle(fontWeight: FontWeight.bold)),
+                Wrap(
+                  spacing: 10,
+                  runSpacing: 10,
+                  children: List.generate(5, (index) {
+                    String avatarPath = 'assets/perfil/gratis/perfil${index + 1}.png';
+                    return GestureDetector(
+                      onTap: () async {
+                        await _playerService.updateProfilePicture(
+                          playerStats.userId,
+                          avatarPath
+                        );
+                        if (context.mounted) {
+                          Navigator.pop(context);
+                          Navigator.pushReplacementNamed(
+                            context,
+                            '/menu',
+                            arguments: {
+                              'userId': playerStats.userId,
+                              'username': username
+                            }
+                          );
+                        }
+                      },
+                      child: CircleAvatar(
+                        radius: 30,
+                        backgroundImage: AssetImage(avatarPath),
+                      ),
+                    );
+                  }),
+                ),
+                const SizedBox(height: 20),
+                const Text('Avatares Premium',
+                    style: TextStyle(fontWeight: FontWeight.bold)),
+                Wrap(
+                  spacing: 10,
+                  runSpacing: 10,
+                  children: List.generate(3, (index) {
+                    String avatarPath = 'assets/perfil/premium/perfil${index + 6}.png';
+                    bool hasAccess = playerStats.hasPremiumAvatar(avatarPath);
+                    return Stack(
+                      children: [
+                        CircleAvatar(
+                          radius: 30,
+                          backgroundImage: AssetImage(avatarPath),
+                          child: !hasAccess
+                              ? const Icon(Icons.lock, color: Colors.white)
+                              : null,
+                        ),
+                        if (hasAccess)
+                          GestureDetector(
+                            onTap: () async {
+                              await _playerService.updateProfilePicture(
+                                playerStats.userId,
+                                avatarPath
+                              );
+                              if (context.mounted) {
+                                Navigator.pop(context);
+                                Navigator.pushReplacementNamed(
+                                  context,
+                                  '/menu',
+                                  arguments: {
+                                    'userId': playerStats.userId,
+                                    'username': username
+                                  }
+                                );
+                              }
+                            },
+                            child: Container(
+                              width: 60,
+                              height: 60,
+                              decoration: const BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Colors.transparent,
+                              ),
+                            ),
+                          ),
+                      ],
+                    );
+                  }),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancelar'),
+            ),
+          ],
+        );
+      },
     );
   }
 }
@@ -79,39 +188,30 @@ class SharedBottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: const Color.fromRGBO(0, 32, 96, 1),
-      elevation: 4,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 10),
-        decoration: BoxDecoration(
-          border: Border(
-            top: const BorderSide(color: Color.fromRGBO(0, 0, 255, 0.3)),
+    return GlassContainer(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          IconButton(
+            icon: const Icon(Icons.settings, color: Colors.white),
+            onPressed: () => pageController.animateToPage(0,
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeInOut),
           ),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            IconButton(
-              icon: const Icon(Icons.settings, color: Colors.white),
-              onPressed: () => pageController.animateToPage(0,
-                  duration: const Duration(milliseconds: 300),
-                  curve: Curves.easeInOut),
-            ),
-            IconButton(
-              icon: const Icon(Icons.home, color: Colors.white),
-              onPressed: () => pageController.animateToPage(1,
-                  duration: const Duration(milliseconds: 300),
-                  curve: Curves.easeInOut),
-            ),
-            IconButton(
-              icon: const Icon(Icons.store, color: Colors.white),
-              onPressed: () => pageController.animateToPage(2,
-                  duration: const Duration(milliseconds: 300),
-                  curve: Curves.easeInOut),
-            ),
-          ],
-        ),
+          IconButton(
+            icon: const Icon(Icons.home, color: Colors.white),
+            onPressed: () => pageController.animateToPage(1,
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeInOut),
+          ),
+          IconButton(
+            icon: const Icon(Icons.store, color: Colors.white),
+            onPressed: () => pageController.animateToPage(2,
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeInOut),
+          ),
+        ],
       ),
     );
   }

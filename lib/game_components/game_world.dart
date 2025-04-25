@@ -1,8 +1,4 @@
-import 'package:flutter/material.dart';
-import 'dart:math';
-import 'player.dart';
-import 'enemy.dart';
-import 'powerup.dart';
+import 'package:oscarruizcode_pingu/dependencias/imports.dart';
 
 class GameWorld {
   final Size worldSize;

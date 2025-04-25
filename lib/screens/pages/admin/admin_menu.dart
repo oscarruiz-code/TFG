@@ -1,0 +1,183 @@
+import 'package:oscarruizcode_pingu/dependencias/imports.dart';
+
+class AdminMenuScreen extends StatefulWidget {
+  final bool isAdmin;
+  final String username;
+  final int userId;
+
+  const AdminMenuScreen({
+    super.key,
+    required this.isAdmin,
+    required this.username,
+    required this.userId,
+  });
+
+  @override
+  State<AdminMenuScreen> createState() => _AdminMenuScreenState();
+}
+
+class _AdminMenuScreenState extends State<AdminMenuScreen> {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Stack(
+        children: [
+          const VideoBackground(),
+          Center(
+            child: Container(
+              width: 400,
+              padding: const EdgeInsets.all(30),
+              decoration: BoxDecoration(
+                color: Color.fromRGBO(255, 255, 255, 0.15),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: Color.fromRGBO(255, 255, 255, 0.3),
+                  width: 2,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Color.fromRGBO(0, 0, 255, 0.2),
+                    blurRadius: 15,
+                    spreadRadius: 5,
+                  ),
+                ],
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    '¡Bienvenido, ${widget.username}!',
+                    style: const TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      shadows: [
+                        Shadow(
+                          color: Colors.blue,
+                          blurRadius: 10,
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 30),
+                  ElevatedButton(
+                    onPressed: () async {
+                      final playerService = PlayerService();
+                      final playerStats = await playerService.getPlayerStats(widget.userId);
+                      
+                      if (!mounted) return;
+                      
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => MenuInicio(
+                            userId: widget.userId,
+                            username: widget.username,
+                            initialStats: playerStats,
+                          ),
+                        ),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Color.fromRGBO(0, 0, 255, 0.7),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 50,
+                        vertical: 15,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                    ),
+                    child: const Text(
+                      'Ir al Juego',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: () {
+                      final adminService = AdminService();
+                      adminService.getAllUsers().then((users) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => UserListScreen(
+                              isAdmin: widget.isAdmin,
+                              initialUsers: users,
+                            ),
+                          ),
+                        );
+                      });
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Color.fromRGBO(0, 128, 255, 0.7),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 50,
+                        vertical: 15,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                    ),
+                    child: const Text(
+                      'Lista de Usuarios',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: () async {
+                      await VideoBackground.preloadVideo();
+                      
+                      if (!mounted) return;
+                      Navigator.pushAndRemoveUntil(
+                        context,
+                        PageRouteBuilder(
+                          pageBuilder: (context, animation, secondaryAnimation) => const LoginScreen(),
+                          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                            return FadeTransition(
+                              opacity: animation,
+                              child: child,
+                            );
+                          },
+                          transitionDuration: const Duration(milliseconds: 300),
+                        ),
+                        (route) => false,
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Color.fromRGBO(255, 0, 0, 0.7),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 50,
+                        vertical: 15,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                    ),
+                    child: const Text(
+                      'Cerrar Sesión',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

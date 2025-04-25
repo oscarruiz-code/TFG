@@ -1,5 +1,4 @@
-import 'package:flutter/material.dart';
-import 'package:video_player/video_player.dart';
+import 'package:oscarruizcode_pingu/dependencias/imports.dart';
 
 class VideoBackground extends StatefulWidget {
   const VideoBackground({super.key});

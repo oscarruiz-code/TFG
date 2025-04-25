@@ -1,7 +1,4 @@
-import 'package:flutter/material.dart';
-import '../../../widgets/video_background.dart';
-import 'login.dart';
-import 'package:oscarruizcode_pingu/servicios/sevices/user_service.dart';
+import 'package:oscarruizcode_pingu/dependencias/imports.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});

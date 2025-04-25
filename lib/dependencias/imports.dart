@@ -1,0 +1,45 @@
+//DEPENDENCIAS
+export 'package:flutter/material.dart';
+export 'dart:math';
+export 'package:video_player/video_player.dart';
+export 'package:audioplayers/audioplayers.dart';
+export 'package:mysql1/mysql1.dart';
+export 'package:flutter/foundation.dart';
+export 'dart:async';
+
+//CLASES
+
+export 'package:oscarruizcode_pingu/game_components/enemy.dart';
+export 'package:oscarruizcode_pingu/game_components/player.dart';
+export 'package:oscarruizcode_pingu/game_components/powerup.dart';
+export 'package:oscarruizcode_pingu/game_components/game_world.dart';
+export 'package:oscarruizcode_pingu/screens/Splash/logo.dart';
+export 'package:oscarruizcode_pingu/screens/pages/admin/admin_menu.dart';
+export 'package:oscarruizcode_pingu/screens/pages/admin/user_detail.dart';
+export 'package:oscarruizcode_pingu/screens/pages/admin/user_list.dart';
+export 'package:oscarruizcode_pingu/screens/pages/admin/admin_register.dart';
+export 'package:oscarruizcode_pingu/screens/pages/games/game1.dart';
+export 'package:oscarruizcode_pingu/screens/pages/games/game2.dart';
+export 'package:oscarruizcode_pingu/screens/pages/iniciales/login.dart';
+export 'package:oscarruizcode_pingu/screens/pages/iniciales/register.dart';
+export 'package:oscarruizcode_pingu/screens/pages/menus/menuhistorial.dart';
+export 'package:oscarruizcode_pingu/screens/pages/menus/menuinicio.dart';
+export 'package:oscarruizcode_pingu/screens/pages/menus/menuopcion.dart';
+export 'package:oscarruizcode_pingu/screens/pages/menus/menutienda.dart';
+export 'package:oscarruizcode_pingu/screens/pages/menus/menu_editar_perfil.dart';
+export 'package:oscarruizcode_pingu/servicios/conexion/mysql_connection.dart';
+export 'package:oscarruizcode_pingu/servicios/entity/admin.dart';
+export 'package:oscarruizcode_pingu/servicios/entity/user.dart';
+export 'package:oscarruizcode_pingu/servicios/entity/player.dart';
+export 'package:oscarruizcode_pingu/servicios/entity/subadmin.dart';
+export 'package:oscarruizcode_pingu/servicios/sevices/admin_service.dart';
+export 'package:oscarruizcode_pingu/servicios/sevices/user_service.dart';
+export 'package:oscarruizcode_pingu/servicios/sevices/player_service.dart';
+export 'package:oscarruizcode_pingu/widgets/animacion_texto.dart';
+export 'package:oscarruizcode_pingu/widgets/music_service.dart';
+export 'package:oscarruizcode_pingu/widgets/shared_widgets.dart';
+export 'package:oscarruizcode_pingu/widgets/glass_container.dart';
+export 'package:oscarruizcode_pingu/widgets/video_background.dart';
+
+
+

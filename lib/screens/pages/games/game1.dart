@@ -1,9 +1,5 @@
-import 'package:flutter/material.dart';
-import 'dart:async';
-import 'dart:math' as math;
-import '../../../game_components/game_world.dart';
-import '../../../game_components/player.dart';
-import '../../../servicios/sevices/player_service.dart';  // Añadimos esta importación
+import 'package:oscarruizcode_pingu/dependencias/imports.dart';
+import 'dart:math' as math;  
 
 class Game1 extends StatefulWidget {
   final int? userId;  // Añadimos userId como parámetro

@@ -1,5 +1,4 @@
-import 'package:flutter/material.dart';
-import 'package:oscarruizcode_pingu/screens/Splash/logo.dart';
+import 'package:oscarruizcode_pingu/dependencias/imports.dart';
 
 void main() {
   runApp(const MyApp());

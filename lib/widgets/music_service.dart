@@ -1,4 +1,4 @@
-import 'package:audioplayers/audioplayers.dart';
+import 'package:oscarruizcode_pingu/dependencias/imports.dart';
 
 class MusicService {
   static final MusicService _instance = MusicService._internal();

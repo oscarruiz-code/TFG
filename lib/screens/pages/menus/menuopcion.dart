@@ -1,8 +1,4 @@
-import 'package:flutter/material.dart';
-import 'package:oscarruizcode_pingu/servicios/entity/player.dart';
-import '../../../servicios/sevices/player_service.dart';
-import 'package:oscarruizcode_pingu/widgets/shared_widgets.dart';
-import 'package:oscarruizcode_pingu/widgets/music_service.dart';
+import 'package:oscarruizcode_pingu/dependencias/imports.dart';
 
 class MenuOpciones extends StatelessWidget {
   final int userId;
@@ -42,17 +38,46 @@ class MenuOpciones extends StatelessWidget {
               }
 
               TextEditingController nameController = TextEditingController();
+              
+              // Mostrar diálogo diferente según sea primera vez o no
               final newName = await showDialog<String>(
                 context: context,
                 builder: (context) => AlertDialog(
                   title: Text(playerStats.hasUsedFreeRename 
-                    ? 'Cambiar Nombre (Ticket)' 
-                    : 'Cambiar Nombre (Gratis)'),
-                  content: TextField(
-                    controller: nameController,
-                    decoration: const InputDecoration(
-                      hintText: '¿Qué nombre deseas usar?',
-                    ),
+                    ? 'Cambiar Nombre (Requiere Ticket)' 
+                    : 'Primer Cambio de Nombre (Gratis)'),
+                  content: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (playerStats.hasUsedFreeRename) ...[
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Text('🎟️', style: TextStyle(fontSize: 24)),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Tickets disponibles: ${playerStats.renameTickets}',
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        const Text('Se usará 1 ticket para cambiar tu nombre'),
+                        const SizedBox(height: 16),
+                      ] else
+                        const Text('¡Tu primer cambio de nombre es gratis!'),
+                      const SizedBox(height: 16),
+                      TextField(
+                        controller: nameController,
+                        decoration: const InputDecoration(
+                          hintText: '¿Qué nombre deseas usar?',
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                    ],
                   ),
                   actions: [
                     TextButton(
@@ -61,7 +86,9 @@ class MenuOpciones extends StatelessWidget {
                     ),
                     TextButton(
                       onPressed: () => Navigator.pop(context, nameController.text),
-                      child: const Text('Guardar'),
+                      child: Text(playerStats.hasUsedFreeRename 
+                        ? 'Usar Ticket' 
+                        : 'Confirmar'),
                     ),
                   ],
                 ),
@@ -78,13 +105,22 @@ class MenuOpciones extends StatelessWidget {
                     }
                     
                     if (context.mounted) {
-                      Navigator.pushReplacementNamed(
-                        context, 
-                        '/menu',
-                        arguments: {'userId': userId, 'username': newName}
+                      // Actualizamos el estado local primero
+                      final updatedStats = await _playerService.getPlayerStats(userId);
+                      
+                      Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => MenuInicio(
+                                  userId: userId,
+                                  username: newName,
+                                  initialStats: updatedStats,  // Agregamos el initialStats requerido
+                              ),
+                          ),
                       );
+                      
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Nombre actualizado correctamente')),
+                          const SnackBar(content: Text('Nombre actualizado correctamente')),
                       );
                     }
                   } else {
@@ -132,6 +168,23 @@ class MenuOpciones extends StatelessWidget {
             },
           ),
           _buildOptionButton(
+            'Editar Perfil',
+            Icons.person,
+            () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => MenuEditarPerfil(
+                    userId: userId,
+                    username: username,
+                    playerStats: playerStats,
+                    pageController: pageController,
+                  ),
+                ),
+              );
+            },
+          ),
+          _buildOptionButton(
             'Cerrar Sesión',
             Icons.exit_to_app,
             () {
@@ -146,11 +199,28 @@ class MenuOpciones extends StatelessWidget {
                       child: const Text('Cancelar'),
                     ),
                     TextButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                        Navigator.of(context).pushReplacementNamed('/login');
+                      onPressed: () async {
+                        // Primero reiniciamos el video
+                        await VideoBackground.preloadVideo();
+                        await VideoBackground.playVideo();
+                        
+                        if (!context.mounted) return;
+                        Navigator.pushAndRemoveUntil(
+                          context,
+                          PageRouteBuilder(
+                            pageBuilder: (context, animation, secondaryAnimation) => const LoginScreen(),
+                            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                              return FadeTransition(
+                                opacity: animation,
+                                child: child,
+                              );
+                            },
+                            transitionDuration: const Duration(milliseconds: 300),
+                          ),
+                          (route) => false,
+                        );
                       },
-                      child: const Text('Cerrar Sesión'),
+                      child: const Text('Confirmar'),
                     ),
                   ],
                 ),

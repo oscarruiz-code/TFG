@@ -1,5 +1,4 @@
-import 'package:flutter/material.dart';
-import 'player.dart';
+import 'package:oscarruizcode_pingu/dependencias/imports.dart';
 
 class PowerUp {
   double x;

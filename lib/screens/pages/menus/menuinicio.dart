@@ -1,22 +1,15 @@
-import 'package:oscarruizcode_pingu/servicios/entity/player.dart';
-import 'package:oscarruizcode_pingu/widgets/video_background.dart';
-import 'package:flutter/material.dart';
-import 'package:oscarruizcode_pingu/servicios/sevices/player_service.dart';
-import 'package:oscarruizcode_pingu/widgets/shared_widgets.dart';
-import 'menuopcion.dart';
-import 'menutienda.dart';
-import 'menuhistorial.dart';
-import '../games/game1.dart';
-import '../games/game2.dart';
-import 'package:oscarruizcode_pingu/widgets/music_service.dart';
+import 'package:oscarruizcode_pingu/dependencias/imports.dart';
 
 class MenuInicio extends StatefulWidget {
   final int userId;
-  final String username;  // Add this line
+  final String username;
+  final PlayerStats initialStats;  // Agregar este parámetro
+
   const MenuInicio({
     super.key, 
     required this.userId,
-    required this.username,  // Add this line
+    required this.username,
+    required this.initialStats,  // Agregar este parámetro
   });
 
   @override
@@ -27,38 +20,20 @@ class _MenuInicioState extends State<MenuInicio> {
   final PlayerService _playerService = PlayerService();
   final MusicService _musicService = MusicService();
   final PageController _pageController = PageController(initialPage: 1);
-  late PlayerStats _playerStats;
-  bool _isLoading = true;
+  late Stream<PlayerStats> _statsStream;
 
   @override
   void initState() {
     super.initState();
-    VideoBackground.disposeVideo();
-    _loadPlayerStats();
+    // Eliminar esta línea que detiene el video
+    // VideoBackground.disposeVideo();
+    _statsStream = Stream.periodic(const Duration(seconds: 1))
+      .asyncMap((_) => _playerService.getPlayerStats(widget.userId));
     _musicService.playBackgroundMusic();
   }
 
   @override
-  void dispose() {
-    _musicService.stopBackgroundMusic();
-    super.dispose();
-  }
-
-  Future<void> _loadPlayerStats() async {
-    _playerStats = await _playerService.getPlayerStats(widget.userId);
-    if (mounted) {
-      setState(() {
-        _isLoading = false;
-      });
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
-    if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
     return Container(
       decoration: const BoxDecoration(
         image: DecorationImage(
@@ -68,23 +43,38 @@ class _MenuInicioState extends State<MenuInicio> {
       ),
       child: Scaffold(
         backgroundColor: Colors.transparent,
-        body: PageView(
-          controller: _pageController,
-          children: [
-            MenuOpciones(
-              userId: widget.userId,
-              username: widget.username,
-              pageController: _pageController,
-              playerStats: _playerStats,
-            ),
-            _buildMainPage(_playerStats),
-            MenuTienda(
-              userId: widget.userId,
-              username: widget.username,
-              pageController: _pageController,
-              playerStats: _playerStats,
-            ),
-          ],
+        body: StreamBuilder<PlayerStats>(
+          stream: _statsStream,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            
+            if (snapshot.hasError) {
+              return Center(child: Text('Error: ${snapshot.error}'));
+            }
+
+            final playerStats = snapshot.data!;
+            
+            return PageView(
+              controller: _pageController,
+              children: [
+                MenuOpciones(
+                  userId: widget.userId,
+                  username: widget.username,
+                  pageController: _pageController,
+                  playerStats: playerStats,
+                ),
+                _buildMainPage(playerStats),
+                MenuTienda(
+                  userId: widget.userId,
+                  username: widget.username,
+                  pageController: _pageController,
+                  playerStats: playerStats,
+                ),
+              ],
+            );
+          },
         ),
       ),
     );
@@ -101,7 +91,7 @@ class _MenuInicioState extends State<MenuInicio> {
           const Spacer(),
           _buildGameButtons(playerStats),
           const SizedBox(height: 20),
-          _buildHistoryButton(),
+          _buildHistoryButton(playerStats), 
           const Spacer(),
           SharedBottomNav(pageController: _pageController),
         ],
@@ -119,8 +109,12 @@ class _MenuInicioState extends State<MenuInicio> {
             MaterialPageRoute(builder: (context) => const Game1()),
           );
         }),
-        _buildGameButton('Game 2', () {
+        _buildGameButton('Game 2', () async {
           if (playerStats.ticketsGame2 > 0) {
+            // Descontar un ticket antes de iniciar el juego
+            await _playerService.updateTicketsGame2(widget.userId, playerStats.ticketsGame2 - 1);
+            
+            if (!mounted) return;
             Navigator.push(
               context,
               MaterialPageRoute(builder: (context) => const Game2()),
@@ -139,20 +133,20 @@ class _MenuInicioState extends State<MenuInicio> {
     return SizedBox(
       width: 150,
       height: 150,
-      child: Material(
-        color: const Color.fromRGBO(0, 32, 96, 1), // Dark navy blue
-        elevation: 4,
-        borderRadius: BorderRadius.circular(15),
-        child: InkWell(
-          onTap: onPressed,
-          borderRadius: BorderRadius.circular(15),
-          child: Center(
-            child: Text(
-              title,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
+      child: GlassContainer(
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onPressed,
+            borderRadius: BorderRadius.circular(15),
+            child: Center(
+              child: Text(
+                title,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
           ),
@@ -161,7 +155,7 @@ class _MenuInicioState extends State<MenuInicio> {
     );
   }
 
-  Widget _buildHistoryButton() {
+  Widget _buildHistoryButton(PlayerStats playerStats) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 40),
       child: Material(
@@ -173,7 +167,12 @@ class _MenuInicioState extends State<MenuInicio> {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => MenuHistorial(userId: widget.userId),
+                builder: (context) => MenuHistorial(
+                  userId: widget.userId,
+                  username: widget.username,
+                  playerStats: playerStats,
+                  pageController: _pageController,
+                ),
               ),
             );
           },

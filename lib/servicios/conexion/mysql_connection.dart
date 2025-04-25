@@ -1,5 +1,4 @@
-import 'package:mysql1/mysql1.dart';
-import 'package:flutter/foundation.dart';
+import 'package:oscarruizcode_pingu/dependencias/imports.dart';
 
 class DatabaseConnection {
   static Future<MySqlConnection> getConnection() async {

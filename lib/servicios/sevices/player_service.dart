@@ -1,5 +1,4 @@
-import '../conexion/mysql_connection.dart';
-import '../entity/player.dart';
+import 'package:oscarruizcode_pingu/dependencias/imports.dart';
 
 class PlayerService {
 
@@ -9,6 +8,18 @@ class PlayerService {
       await conn.query(
         'UPDATE player_stats SET rename_tickets = ? WHERE user_id = ?',
         [newAmount, userId],
+      );
+    } finally {
+      await conn.close();
+    }
+  }
+  
+   Future<void> updateProfilePicture(int userId, String avatarPath) async {
+    final conn = await DatabaseConnection.getConnection();
+    try {
+      await conn.query(
+        'UPDATE player_stats SET current_avatar = ? WHERE user_id = ?',
+        [avatarPath, userId],
       );
     } finally {
       await conn.close();
@@ -158,6 +169,27 @@ class PlayerService {
         'UPDATE player_stats SET has_used_free_rename = true WHERE user_id = ?',
         [userId],
       );
+    } finally {
+      await conn.close();
+    }
+  }
+  
+  Future<void> updateUnlockedAvatars(int userId, String unlockedAvatars) async {
+    final conn = await DatabaseConnection.getConnection();
+    try {
+      await conn.query(
+        'UPDATE player_stats SET unlocked_premium_avatars = ? WHERE user_id = ?',
+        [unlockedAvatars, userId],
+      );
+    } finally {
+      await conn.close();
+    }
+  }
+  
+  Future<void> deletePlayerStats(int userId) async {
+    final conn = await DatabaseConnection.getConnection();
+    try {
+      await conn.query('DELETE FROM player_stats WHERE user_id = ?', [userId]);
     } finally {
       await conn.close();
     }

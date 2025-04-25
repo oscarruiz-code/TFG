@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:oscarruizcode_pingu/dependencias/imports.dart';
 
 class TextoAnimado extends StatefulWidget {
   final String text;

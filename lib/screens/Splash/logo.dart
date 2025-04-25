@@ -1,7 +1,4 @@
-import 'package:flutter/material.dart';
-import '../../widgets/video_background.dart';
-import '../../widgets/animacion_texto.dart';
-import 'package:oscarruizcode_pingu/screens/pages/iniciales/login.dart';
+import 'package:oscarruizcode_pingu/dependencias/imports.dart';
 
 class LogoScreen extends StatefulWidget {
   const LogoScreen({super.key});
