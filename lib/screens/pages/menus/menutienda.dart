@@ -95,7 +95,7 @@ class MenuTienda extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.1),
+                    color: Colors.white.withAlpha(26), // 0.1 * 255 ≈ 26
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Text(

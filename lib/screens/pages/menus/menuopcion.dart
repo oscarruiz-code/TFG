@@ -108,19 +108,24 @@ class MenuOpciones extends StatelessWidget {
                       // Actualizamos el estado local primero
                       final updatedStats = await _playerService.getPlayerStats(userId);
                       
+                      if (!context.mounted) return;  // Check again after the async call
+                      
+                      // Store the BuildContext in a local variable
+                      final currentContext = context;
+                      
                       Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => MenuInicio(
-                                  userId: userId,
-                                  username: newName,
-                                  initialStats: updatedStats,  // Agregamos el initialStats requerido
-                              ),
+                        currentContext,
+                        MaterialPageRoute(
+                          builder: (context) => MenuInicio(
+                            userId: userId,
+                            username: newName,
+                            initialStats: updatedStats,
                           ),
+                        ),
                       );
                       
-                      ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Nombre actualizado correctamente')),
+                      ScaffoldMessenger.of(currentContext).showSnackBar(
+                        const SnackBar(content: Text('Nombre actualizado correctamente')),
                       );
                     }
                   } else {

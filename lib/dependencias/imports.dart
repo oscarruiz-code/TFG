@@ -9,10 +9,9 @@ export 'dart:async';
 
 //CLASES
 
-export 'package:oscarruizcode_pingu/game_components/enemy.dart';
 export 'package:oscarruizcode_pingu/game_components/player.dart';
-export 'package:oscarruizcode_pingu/game_components/powerup.dart';
-export 'package:oscarruizcode_pingu/game_components/game_world.dart';
+
+
 export 'package:oscarruizcode_pingu/screens/Splash/logo.dart';
 export 'package:oscarruizcode_pingu/screens/pages/admin/admin_menu.dart';
 export 'package:oscarruizcode_pingu/screens/pages/admin/user_detail.dart';
@@ -27,6 +26,8 @@ export 'package:oscarruizcode_pingu/screens/pages/menus/menuinicio.dart';
 export 'package:oscarruizcode_pingu/screens/pages/menus/menuopcion.dart';
 export 'package:oscarruizcode_pingu/screens/pages/menus/menutienda.dart';
 export 'package:oscarruizcode_pingu/screens/pages/menus/menu_editar_perfil.dart';
+
+
 export 'package:oscarruizcode_pingu/servicios/conexion/mysql_connection.dart';
 export 'package:oscarruizcode_pingu/servicios/entity/admin.dart';
 export 'package:oscarruizcode_pingu/servicios/entity/user.dart';
@@ -35,11 +36,18 @@ export 'package:oscarruizcode_pingu/servicios/entity/subadmin.dart';
 export 'package:oscarruizcode_pingu/servicios/sevices/admin_service.dart';
 export 'package:oscarruizcode_pingu/servicios/sevices/user_service.dart';
 export 'package:oscarruizcode_pingu/servicios/sevices/player_service.dart';
-export 'package:oscarruizcode_pingu/widgets/animacion_texto.dart';
-export 'package:oscarruizcode_pingu/widgets/music_service.dart';
-export 'package:oscarruizcode_pingu/widgets/shared_widgets.dart';
-export 'package:oscarruizcode_pingu/widgets/glass_container.dart';
-export 'package:oscarruizcode_pingu/widgets/video_background.dart';
+export 'package:oscarruizcode_pingu/servicios/componentes/componentes_juego.dart';
+export 'package:oscarruizcode_pingu/servicios/colisiones/gestor_colisiones.dart';
+
+
+export 'package:oscarruizcode_pingu/widgets/animacion/animacion_texto.dart';
+export 'package:oscarruizcode_pingu/widgets/animacion/glass_container.dart';
+export 'package:oscarruizcode_pingu/widgets/recursos/music_service.dart';
+export 'package:oscarruizcode_pingu/widgets/recursos/video_background.dart';
+export 'package:oscarruizcode_pingu/widgets/widgets/shared_widgets.dart';
+export 'package:oscarruizcode_pingu/widgets/componentes/joystick.dart';
+
+
 
 
 

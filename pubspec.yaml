@@ -43,12 +43,13 @@ flutter:
    - assets/imagenes/logo.png
    - assets/videos/fondo_inicio.mp4
    - assets/sonidos/musica.mp3
-   - assets/sprites/enemies/foca.png
-   - assets/sprites/items/pez2.png
-   - assets/sprites/penguin/andando/andar1.png
-   - assets/sprites/penguin/andando/andar4.png
-   - assets/sprites/penguin/deslizandose/deslizarse2.png
-   - assets/sprites/penguin/parado/parado.png
+   - assets/personajes/principal/andar/andar1.png
+   - assets/personajes/principal/andar/andar2.png
+   - assets/personajes/principal/andar/andar3.png
+   - assets/personajes/principal/andar/andar4.png
+   - assets/personajes/principal/andar/andar5.png
+   - assets/personajes/principal/andar/andar6.png
+   - assets/personajes/principal/andar/andar7.png
    - assets/perfil/gratis/
    - assets/perfil/premium/
    - assets/etiquetas/

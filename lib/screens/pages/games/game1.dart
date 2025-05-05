@@ -1,67 +1,132 @@
 import 'package:oscarruizcode_pingu/dependencias/imports.dart';
-import 'dart:math' as math;  
+import 'package:flutter/services.dart';
 
 class Game1 extends StatefulWidget {
-  final int? userId;  // Añadimos userId como parámetro
-  
-  const Game1({super.key, this.userId});
+  const Game1({super.key});
 
   @override
   State<Game1> createState() => _Game1State();
 }
 
 class _Game1State extends State<Game1> {
-  late GameWorld gameWorld;
   late Player player;
+  double groundLevel = 100.0;
   bool isGameActive = true;
-  int timeElapsed = 0;
-  final PlayerService _playerService = PlayerService();
-  
-  // Usamos el userId del widget
-  int? get userId => widget.userId;
-  int coinsEarned = 0;
+  bool isInitialized = false;
+  late ComponentesJuego componentesJuego;
+  late GestorColisiones gestorColisiones;
 
   @override
   void initState() {
     super.initState();
-    initializeGame();
-    startGameLoop();
-    // Timer para las monedas cada 30 segundos
-    Timer.periodic(const Duration(seconds: 30), (timer) {
-      if (isGameActive) {
-        setState(() {
-          coinsEarned += 20;
-        });
-      }
-    });
+    // Forzar orientación horizontal
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.landscapeLeft,
+      DeviceOrientation.landscapeRight,
+    ]);
   }
 
-  Future<void> endGame() async {
-    isGameActive = false;
-    if (userId != null) {  // Solo guardamos si hay userId
-      await _playerService.registerGamePlay(
-        userId!, 
-        1,
-        gameWorld.score, 
-        timeElapsed
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!isInitialized) {
+      final size = MediaQuery.of(context).size;
+      const double platformHeight = 50;
+      groundLevel = size.height - platformHeight;
+      componentesJuego = ComponentesJuego(
+        groundLevel: groundLevel,
+        size: size,
       );
-      
-      var stats = await _playerService.getPlayerStats(userId!);
-      await _playerService.updateCoins(userId!, stats.coins + coinsEarned);
+      gestorColisiones = GestorColisiones();
+      isInitialized = true;
+      startGameLoop();
     }
   }
 
-  void initializeGame() {
-    player = Player(
-      x: 100,
-      y: 100,
-      speed: 5.0,
-      size: 50.0,
-    );
-
-    gameWorld = GameWorld(
-      worldSize: const Size(800, 600),
-      player: player,
+  @override
+  Widget build(BuildContext context) {
+    return WillPopScope(
+      onWillPop: () async {
+        await SystemChrome.setPreferredOrientations([
+          DeviceOrientation.portraitUp,
+          DeviceOrientation.portraitDown,
+          DeviceOrientation.landscapeLeft,
+          DeviceOrientation.landscapeRight,
+        ]);
+        return true;
+      },
+      child: Scaffold(
+        body: Stack(
+          children: [
+            // Fondo
+            Container(
+              decoration: const BoxDecoration(
+                image: DecorationImage(
+                  image: AssetImage('assets/imagenes/fondo.png'),
+                  fit: BoxFit.cover,
+                ),
+              ),
+              child: Stack(
+                children: [
+                  // Plataforma (suelo)
+                  Positioned(
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    height: 80,
+                    child: Container(
+                      color: Colors.lightBlue[900]?.withAlpha(179),
+                    ),
+                  ),
+                  // Jugador
+                  Positioned(
+                    left: componentesJuego.player.x,
+                    top: componentesJuego.player.y,
+                    child: Transform(
+                      alignment: Alignment.center,
+                      transform: Matrix4.diagonal3Values(
+                        componentesJuego.player.isFacingRight ? 1 : -1,
+                        1,
+                        1,
+                      ),
+                      child: Image.asset(
+                        componentesJuego.player.getCurrentSprite(),
+                        width: componentesJuego.player.size,
+                        height: componentesJuego.player.size,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Joystick
+            Positioned(
+              left: 50,
+              bottom: 50,
+              child: Joystick(
+                onDirectionChanged: (dx, dy) {
+                  setState(() {
+                    if (dx != 0) {
+                      componentesJuego.player.move(dx, 0, groundLevel: groundLevel);
+                      if (componentesJuego.player.currentState != PenguinPlayerState.walking) {
+                        componentesJuego.player.currentState = PenguinPlayerState.walking;
+                        componentesJuego.player.currentFrame = 0;
+                        componentesJuego.player.animationTime = 0;
+                      }
+                    } else {
+                      if (componentesJuego.player.currentState != PenguinPlayerState.idle) {
+                        componentesJuego.player.currentState = PenguinPlayerState.idle;
+                        componentesJuego.player.currentFrame = 0;
+                        componentesJuego.player.animationTime = 0;
+                      }
+                    }
+                  });
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -73,94 +138,8 @@ class _Game1State extends State<Game1> {
       }
 
       setState(() {
-        gameWorld.update();
-        timeElapsed++;
-        if (timeElapsed % 60 == 0) {
-          gameWorld.level = (timeElapsed ~/ 600) + 1; // Aumenta nivel cada 10 segundos
-        }
+        componentesJuego.player.updateAnimation(0.016);
       });
     });
-  }
-
-  void handleTap(TapDownDetails details) {
-    final RenderBox box = context.findRenderObject() as RenderBox;
-    final localPosition = box.globalToLocal(details.globalPosition);
-    
-    double dx = localPosition.dx - player.x;
-    double dy = localPosition.dy - player.y;
-    
-    double distance = math.sqrt(dx * dx + dy * dy);  // Usamos math.sqrt
-    if (distance > 0) {
-      dx /= distance;
-      dy /= distance;
-      player.move(dx, dy);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Survival Mode'),
-        backgroundColor: const Color.fromRGBO(0, 32, 96, 1),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Text(
-              'Score: ${gameWorld.score}',
-              style: const TextStyle(fontSize: 18),
-            ),
-          ),
-        ],
-      ),
-      body: GestureDetector(
-        onTapDown: handleTap,
-        child: Container(
-          decoration: const BoxDecoration(
-            image: DecorationImage(
-              image: AssetImage('assets/imagenes/fondo.png'),
-              fit: BoxFit.cover,
-            ),
-          ),
-          child: Stack(
-            children: [
-              // Jugador
-              Positioned(
-                left: player.x,
-                top: player.y,
-                child: Transform.scale(
-                  scaleX: player.isFacingRight ? 1 : -1,
-                  child: Image.asset(
-                    player.getCurrentSprite(),
-                    width: player.size,
-                    height: player.size,
-                  ),
-                ),
-              ),
-              // Enemigos
-              ...gameWorld.enemies.map((enemy) => Positioned(
-                left: enemy.x,
-                top: enemy.y,
-                child: Image.asset(
-                  enemy.sprite,
-                  width: enemy.size,
-                  height: enemy.size,
-                ),
-              )),
-              // Power-ups
-              ...gameWorld.powerUps.map((powerUp) => Positioned(
-                left: powerUp.x,
-                top: powerUp.y,
-                child: Image.asset(
-                  powerUp.sprite,
-                  width: powerUp.size,
-                  height: powerUp.size,
-                ),
-              )),
-            ],
-          ),
-        ),
-      ),
-    );
   }
 }
