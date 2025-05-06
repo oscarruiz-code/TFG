@@ -56,75 +56,77 @@ class _Game1State extends State<Game1> {
         return true;
       },
       child: Scaffold(
-        body: Stack(
-          children: [
-            // Fondo
-            Container(
-              decoration: const BoxDecoration(
-                image: DecorationImage(
-                  image: AssetImage('assets/imagenes/fondo.png'),
-                  fit: BoxFit.cover,
+        body: AnimacionRevelado(
+          child: Stack(
+            children: [
+              // Fondo
+              Container(
+                decoration: const BoxDecoration(
+                  image: DecorationImage(
+                    image: AssetImage('assets/imagenes/fondo.png'),
+                    fit: BoxFit.cover,
+                  ),
+                ),
+                child: Stack(
+                  children: [
+                    // Plataforma (suelo)
+                    Positioned(
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
+                      height: 80,
+                      child: Container(
+                        color: Colors.lightBlue[900]?.withAlpha(179),
+                      ),
+                    ),
+                    // Jugador
+                    Positioned(
+                      left: componentesJuego.player.x,
+                      top: componentesJuego.player.y,
+                      child: Transform(
+                        alignment: Alignment.center,
+                        transform: Matrix4.diagonal3Values(
+                          componentesJuego.player.isFacingRight ? 1 : -1,
+                          1,
+                          1,
+                        ),
+                        child: Image.asset(
+                          componentesJuego.player.getCurrentSprite(),
+                          width: componentesJuego.player.size,
+                          height: componentesJuego.player.size,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              child: Stack(
-                children: [
-                  // Plataforma (suelo)
-                  Positioned(
-                    bottom: 0,
-                    left: 0,
-                    right: 0,
-                    height: 80,
-                    child: Container(
-                      color: Colors.lightBlue[900]?.withAlpha(179),
-                    ),
-                  ),
-                  // Jugador
-                  Positioned(
-                    left: componentesJuego.player.x,
-                    top: componentesJuego.player.y,
-                    child: Transform(
-                      alignment: Alignment.center,
-                      transform: Matrix4.diagonal3Values(
-                        componentesJuego.player.isFacingRight ? 1 : -1,
-                        1,
-                        1,
-                      ),
-                      child: Image.asset(
-                        componentesJuego.player.getCurrentSprite(),
-                        width: componentesJuego.player.size,
-                        height: componentesJuego.player.size,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            // Joystick
-            Positioned(
-              left: 50,
-              bottom: 50,
-              child: Joystick(
-                onDirectionChanged: (dx, dy) {
-                  setState(() {
-                    if (dx != 0) {
-                      componentesJuego.player.move(dx, 0, groundLevel: groundLevel);
-                      if (componentesJuego.player.currentState != PenguinPlayerState.walking) {
-                        componentesJuego.player.currentState = PenguinPlayerState.walking;
-                        componentesJuego.player.currentFrame = 0;
-                        componentesJuego.player.animationTime = 0;
+              // Joystick
+              Positioned(
+                left: 50,
+                bottom: 50,
+                child: Joystick(
+                  onDirectionChanged: (dx, dy) {
+                    setState(() {
+                      if (dx != 0) {
+                        componentesJuego.player.move(dx, 0, groundLevel: groundLevel);
+                        if (componentesJuego.player.currentState != PenguinPlayerState.walking) {
+                          componentesJuego.player.currentState = PenguinPlayerState.walking;
+                          componentesJuego.player.currentFrame = 0;
+                          componentesJuego.player.animationTime = 0;
+                        }
+                      } else {
+                        if (componentesJuego.player.currentState != PenguinPlayerState.idle) {
+                          componentesJuego.player.currentState = PenguinPlayerState.idle;
+                          componentesJuego.player.currentFrame = 0;
+                          componentesJuego.player.animationTime = 0;
+                        }
                       }
-                    } else {
-                      if (componentesJuego.player.currentState != PenguinPlayerState.idle) {
-                        componentesJuego.player.currentState = PenguinPlayerState.idle;
-                        componentesJuego.player.currentFrame = 0;
-                        componentesJuego.player.animationTime = 0;
-                      }
-                    }
-                  });
-                },
+                    });
+                  },
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

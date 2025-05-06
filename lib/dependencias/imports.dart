@@ -42,6 +42,7 @@ export 'package:oscarruizcode_pingu/servicios/colisiones/gestor_colisiones.dart'
 
 export 'package:oscarruizcode_pingu/widgets/animacion/animacion_texto.dart';
 export 'package:oscarruizcode_pingu/widgets/animacion/glass_container.dart';
+export 'package:oscarruizcode_pingu/widgets/animacion/animacion_revelado.dart';
 export 'package:oscarruizcode_pingu/widgets/recursos/music_service.dart';
 export 'package:oscarruizcode_pingu/widgets/recursos/video_background.dart';
 export 'package:oscarruizcode_pingu/widgets/widgets/shared_widgets.dart';
