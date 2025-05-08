@@ -204,6 +204,33 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
 
   Future<void> _handleLogin() async {
     try {
+      // Primero intentar con la tabla de administradores
+      final adminInfo = await _userService.checkAdminAndGetInfo(
+        _usernameController.text,
+        _passwordController.text,
+      );
+
+      if (adminInfo != null) {
+        if (!mounted) return;
+        await _fadeController.reverse();
+        _musicService.stopBackgroundMusic();
+        
+        if (!mounted) return;
+        
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => AdminMenuScreen(
+              isAdmin: adminInfo['role'] == 'admin',
+              username: adminInfo['username'],
+              userId: adminInfo['id'] as int,
+            ),
+          ),
+        );
+        return;
+      }
+
+      // Si no es admin, intentar con la tabla de usuarios
       final userInfo = await _userService.checkUserAndGetInfo(
         _usernameController.text,
         _passwordController.text,
@@ -212,13 +239,6 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
       if (!mounted) return;
       
       if (userInfo != null) {
-        if (userInfo['is_blocked'] == 1) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Tu cuenta está bloqueada. Contacta al administrador.')),
-          );
-          return;
-        }
-        // Precargar datos del jugador
         final playerService = PlayerService();
         final playerStats = await playerService.getPlayerStats(userInfo['id'] as int);
         
@@ -227,29 +247,16 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
         
         if (!mounted) return;
         
-        if (userInfo['role'] == 'admin' || userInfo['role'] == 'subadmin') {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (context) => AdminMenuScreen(
-                isAdmin: userInfo['role'] == 'admin',
-                username: userInfo['username'],
-                userId: userInfo['id'] as int,
-              ),
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => MenuInicio(
+              userId: userInfo['id'] as int,
+              username: userInfo['username'] as String,
+              initialStats: playerStats, 
             ),
-          );
-        } else {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (context) => MenuInicio(
-                userId: userInfo['id'] as int,
-                username: userInfo['username'] as String,
-                initialStats: playerStats, // Pasar las estadísticas precargadas
-              ),
-            ),
-          );
-        }
+          ),
+        );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Usuario o Contraseña Invalido')),
@@ -258,7 +265,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Error login')),
+        SnackBar(content: Text('Error de inicio de sesión: $e')),
       );
     }
   }

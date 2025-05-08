@@ -36,7 +36,26 @@ class UserDetailScreenState extends State<UserDetailScreen> {
   Future<void> _loadUserDetails() async {
     try {
       final userData = await _adminService.getUserById(widget.userId);
-      final stats = await _playerService.getPlayerStats(widget.userId);
+      PlayerStats? stats;
+      
+      try {
+        if (userData.role == 'admin' || userData.role == 'subadmin') {
+          stats = await _adminService.getAdminStats(widget.userId);
+        } else {
+          stats = await _playerService.getPlayerStats(widget.userId);
+        }
+      } catch (e) {
+        developer.log('Error al cargar estadísticas: $e');
+        // Crear estadísticas por defecto si hay error
+        stats = PlayerStats(
+          userId: widget.userId,
+          coins: 0,
+          renameTickets: 0,
+          ticketsGame2: 0,
+          currentAvatar: 'assets/avatar/defecto.png',
+          hasUsedFreeRename: false,
+        );
+      }
 
       if (!mounted) return;
 
@@ -46,17 +65,17 @@ class UserDetailScreenState extends State<UserDetailScreen> {
         usernameController.text = userData.username;
         emailController.text = userData.email;
         selectedRole = userData.role;
-        ticketsController.text = stats.renameTickets.toString();
-        coinsController.text = stats.coins.toString();
-        game2TicketsController.text = stats.ticketsGame2.toString();
+        ticketsController.text = stats?.renameTickets.toString() ?? '0';
+        coinsController.text = stats?.coins.toString() ?? '0';
+        game2TicketsController.text = stats?.ticketsGame2.toString() ?? '0';
       });
     } catch (e, stackTrace) {
       developer.log('Error en _loadUserDetails: $e');
-      ('StackTrace: $stackTrace');
+      developer.log('StackTrace: $stackTrace');
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Error al cargar los datos: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error al cargar los datos: $e')),
+      );
     }
   }
 
@@ -119,6 +138,11 @@ class UserDetailScreenState extends State<UserDetailScreen> {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
+    // Determinar si el usuario actual puede editar este usuario
+    bool canEdit = widget.isAdmin || (user!.role == 'user');
+    // Determinar si puede eliminar al usuario
+    bool canDelete = widget.isAdmin || (user!.role == 'user');
+
     return Scaffold(
       appBar: AppBar(title: Text('Detalles de ${user!.username}')),
       body: SingleChildScrollView(
@@ -126,7 +150,7 @@ class UserDetailScreenState extends State<UserDetailScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (widget.isAdmin || user!.role != 'admin')
+            if (canEdit)
               Column(
                 children: [
                   Center(
@@ -234,7 +258,7 @@ class UserDetailScreenState extends State<UserDetailScreen> {
                           user!.isBlocked ? 'Desbloquear' : 'Bloquear',
                         ),
                       ),
-                      if (widget.isAdmin)
+                      if (canDelete) // Cambiado de widget.isAdmin a canDelete
                         ElevatedButton(
                           onPressed: () async {
                             try {
@@ -269,26 +293,55 @@ class UserDetailScreenState extends State<UserDetailScreen> {
                   const SizedBox(height: 20),
                   ElevatedButton(
                     onPressed: () async {
-                      // Guardar todos los cambios
-                      await _adminService.updateUserInfo(
-                        widget.userId,
-                        usernameController.text,
-                        emailController.text,
-                      );
-                      await _adminService.updateUserRole(
-                        widget.userId,
-                        selectedRole,
-                      );
-                      await _playerService.updateRenameTickets(
-                        widget.userId,
-                        int.parse(ticketsController.text),
-                      );
-                      // Actualizar la vista
-                      _loadUserDetails();
-                      if (mounted) {
+                      try {
+                        // Verificar si el nombre de usuario o email han cambiado
+                        if (usernameController.text != user!.username || 
+                            emailController.text != user!.email) {
+                          await _adminService.updateUserInfo(
+                            widget.userId,
+                            usernameController.text,
+                            emailController.text,
+                          );
+                        }
+
+                        // Verificar si el rol ha cambiado
+                        if (selectedRole != user!.role) {
+                          await _adminService.updateUserRole(
+                            widget.userId,
+                            selectedRole,
+                          );
+                        }
+
+                        // Verificar si los tickets han cambiado
+                        if (int.parse(ticketsController.text) != playerStats!.renameTickets) {
+                          await _playerService.updateRenameTickets(
+                            widget.userId,
+                            int.parse(ticketsController.text),
+                          );
+                        }
+
+                        // Actualizar la vista solo si se realizó algún cambio
+                        _loadUserDetails();
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Cambios guardados correctamente'),
+                            ),
+                          );
+                        }
+                      } catch (e) {
+                        if (!mounted) return;
+                        String errorMessage = 'Error al guardar los cambios';
+                        
+                        if (e.toString().contains('Duplicate entry') && 
+                            e.toString().contains('username')) {
+                          errorMessage = 'El nombre de usuario ya existe. Por favor, elige otro.';
+                        }
+                        
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Cambios guardados correctamente'),
+                          SnackBar(
+                            content: Text(errorMessage),
+                            backgroundColor: Colors.red,
                           ),
                         );
                       }
@@ -296,6 +349,13 @@ class UserDetailScreenState extends State<UserDetailScreen> {
                     child: const Text('Guardar Cambios'),
                   ),
                 ],
+              )  // Quitar la coma aquí
+            else
+              Center(
+                child: Text(
+                  'No tienes permisos para editar este usuario',
+                  style: TextStyle(fontSize: 18, color: Colors.red),
+                ),
               ),
           ],
         ),

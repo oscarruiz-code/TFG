@@ -15,6 +15,16 @@ class Admin {
 
   bool canManageAll() => true;
 
+  factory Admin.fromMap(Map<String, dynamic> map) {
+    return Admin(
+      id: map['id'] != null ? int.parse(map['id'].toString()) : null,
+      username: map['username'].toString(),
+      email: map['email'].toString(),
+      password: map['password'].toString(),
+      isActive: map['is_active'] == 1,
+    );
+  }
+
   Map<String, dynamic> toMap() {
     return {
       'id': id,
@@ -24,15 +34,5 @@ class Admin {
       'is_active': isActive ? 1 : 0,
       'role': 'admin'
     };
-  }
-
-  factory Admin.fromMap(Map<String, dynamic> map) {
-    return Admin(
-      id: map['id'],
-      username: map['username'],
-      email: map['email'],
-      password: map['password'],
-      isActive: map['is_active'] == 1,
-    );
   }
 }

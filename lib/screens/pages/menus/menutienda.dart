@@ -1,13 +1,12 @@
 import 'package:oscarruizcode_pingu/dependencias/imports.dart';
 
-class MenuTienda extends StatelessWidget {
+class MenuTienda extends StatefulWidget {
   final int userId;
   final String username;
   final PageController pageController;
   final PlayerStats playerStats;
-  final PlayerService _playerService = PlayerService();  // Add this line
 
-  MenuTienda({
+  const MenuTienda({
     super.key, 
     required this.userId,
     required this.username,
@@ -16,13 +15,20 @@ class MenuTienda extends StatelessWidget {
   });
 
   @override
+  State<MenuTienda> createState() => _MenuTiendaState();
+}
+
+class _MenuTiendaState extends State<MenuTienda> {
+  final PlayerService _playerService = PlayerService();
+
+  @override
   Widget build(BuildContext context) {
     return SafeArea(
       child: Column(
         children: [
           SharedTopBar(
-            username: username,
-            playerStats: playerStats,
+            username: widget.username,
+            playerStats: widget.playerStats,
           ),
           const SizedBox(height: 20),
           Expanded(
@@ -43,10 +49,10 @@ class MenuTienda extends StatelessWidget {
                   () => _showPurchaseDialog(context, 'premium_avatar2', 1000),
                 ),
                 _buildStoreItem(
-                  'Avatar Premium 2',
+                  'Avatar Premium 3',
                   'assets/perfil/premium/perfil8.png',
                   '1000 ⭐',
-                  () => _showPurchaseDialog(context, 'premium_avatar2', 1000),
+                  () => _showPurchaseDialog(context, 'premium_avatar3', 1000),
                 ),
                 _buildStoreItem(
                   'Ticket Game 2',
@@ -63,25 +69,49 @@ class MenuTienda extends StatelessWidget {
               ],
             ),
           ),
-          SharedBottomNav(pageController: pageController),
+          SharedBottomNav(pageController: widget.pageController),
         ],
       ),
     );
   }
 
   Widget _buildStoreItem(String title, String imagePath, String price, VoidCallback onTap) {
+    bool isAvatarUnlocked = false;
+    if (imagePath.contains('premium')) {
+      isAvatarUnlocked = widget.playerStats.unlockedPremiumAvatars.contains(imagePath);
+    }
+
     return Container(
       margin: const EdgeInsets.all(10),
       child: GlassContainer(
         child: Material(
           color: Colors.transparent,
           child: InkWell(
-            onTap: onTap,
+            onTap: isAvatarUnlocked ? null : onTap,
             borderRadius: BorderRadius.circular(15),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Image.asset(imagePath, width: 64, height: 64),
+                Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    Image.asset(imagePath, width: 64, height: 64),
+                    if (isAvatarUnlocked)
+                      Container(
+                        width: 64,
+                        height: 64,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Colors.green.withOpacity(0.3),
+                        ),
+                        child: const Icon(
+                          Icons.check,
+                          color: Colors.white,
+                          size: 32,
+                        ),
+                      ),
+                  ],
+                ),
                 const SizedBox(height: 10),
                 Text(
                   title,
@@ -95,13 +125,15 @@ class MenuTienda extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                   decoration: BoxDecoration(
-                    color: Colors.white.withAlpha(26), // 0.1 * 255 ≈ 26
+                    color: isAvatarUnlocked 
+                      ? Colors.green.withOpacity(0.2) 
+                      : Colors.white.withAlpha(26),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Text(
-                    price,
-                    style: const TextStyle(
-                      color: Colors.white,
+                    isAvatarUnlocked ? '¡YA LO TIENES!' : price,
+                    style: TextStyle(
+                      color: isAvatarUnlocked ? Colors.green : Colors.white,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -114,72 +146,119 @@ class MenuTienda extends StatelessWidget {
     );
   }
 
-  Future<void> _showPurchaseDialog(BuildContext context, String item, int price) async {
-    return showDialog(
+  Future<void> _showPurchaseDialog(BuildContext context, String itemType, int cost) async {
+    if (itemType.startsWith('premium_avatar')) {
+      String avatarPath = 'assets/perfil/premium/perfil${itemType.substring(13)}.png';
+      if (widget.playerStats.unlockedPremiumAvatars.contains(avatarPath)) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('¡Ya tienes este avatar!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        return;
+      }
+    }
+    
+    if (widget.playerStats.coins < cost) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No tienes suficientes monedas'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    final confirmed = await showDialog<bool>(
       context: context,
-      builder: (BuildContext dialogContext) => AlertDialog(
-        title: Text('Comprar ${item.startsWith('premium_avatar') ? "Avatar Premium" : item == "ticket" ? "Ticket Game 2" : "Renombrar"}'),
-        content: Text('¿Quieres comprar este item por $price estrellas?'),
+      builder: (context) => AlertDialog(
+        title: const Text('Confirmar Compra'),
+        content: Text('¿Quieres gastar $cost ⭐ en este artículo?'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
+            onPressed: () => Navigator.pop(context, false),
             child: const Text('Cancelar'),
           ),
           TextButton(
-            onPressed: () async {
-              if (playerStats.coins >= price) {
-                if (item == 'ticket') {
-                  await _playerService.updateTicketsGame2(userId, playerStats.ticketsGame2 + 1);
-                } else if (item == 'rename') {
-                  await _playerService.updateRenameTickets(userId, playerStats.renameTickets + 1);
-                } else if (item.startsWith('premium_avatar')) {
-                  // Obtener los avatares desbloqueados actuales y convertirlos a Object
-                  dynamic currentUnlockedAvatars = playerStats.unlockedPremiumAvatars;
-                  String avatarsString = currentUnlockedAvatars?.toString() ?? '';
-                  
-                  // Agregar el nuevo avatar a la lista de desbloqueados
-                  String avatarPath = '';
-                  switch (item) {
-                    case 'premium_avatar1':
-                      avatarPath = 'assets/perfil/premium/perfil6.png';
-                      break;
-                    case 'premium_avatar2':
-                      avatarPath = 'assets/perfil/premium/perfil7.png';
-                      break;
-                    case 'premium_avatar3':
-                      avatarPath = 'assets/perfil/premium/perfil8.png';
-                      break;
-                  }
-                  
-                  if (avatarPath.isNotEmpty) {
-                    List<String> unlockedAvatars = avatarsString.split(',')
-                      ..removeWhere((element) => element.isEmpty);
-                    if (!unlockedAvatars.contains(avatarPath)) {
-                      unlockedAvatars.add(avatarPath);
-                      await _playerService.updateUnlockedAvatars(userId, unlockedAvatars.join(','));
-                    }
-                  }
-                }
-                
-                await _playerService.updateCoins(userId, playerStats.coins - price);
-                
-                if (!dialogContext.mounted) return;
-                Navigator.pop(dialogContext);
-                ScaffoldMessenger.of(dialogContext).showSnackBar(
-                  const SnackBar(content: Text('¡Compra exitosa!')),
-                );
-              } else {
-                if (!dialogContext.mounted) return;
-                Navigator.pop(dialogContext);
-                ScaffoldMessenger.of(dialogContext).showSnackBar(
-                  const SnackBar(content: Text('No tienes suficientes estrellas')),
-                );
-              }
-            },
+            onPressed: () => Navigator.pop(context, true),
             child: const Text('Comprar'),
           ),
         ],
       ),
     );
+
+    if (confirmed == true && context.mounted) {
+      try {
+        if (itemType.startsWith('premium_avatar')) {
+          String avatarPath = 'assets/perfil/premium/perfil${itemType.substring(13)}.png';
+          List<String> updatedAvatars = [...widget.playerStats.unlockedPremiumAvatars, avatarPath];
+          await _playerService.updateUnlockedPremiumAvatars(widget.userId, updatedAvatars);
+          await _playerService.updateCoins(widget.userId, widget.playerStats.coins - cost);
+          
+          setState(() {
+            widget.playerStats.unlockedPremiumAvatars.add(avatarPath);
+            widget.playerStats.coins -= cost;
+          });
+          
+          // Forzar actualización de la UI
+          if (mounted) {
+            setState(() {});
+          }
+          
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('¡Avatar premium desbloqueado!'),
+                backgroundColor: Colors.green,
+              ),
+            );
+          }
+        } else if (itemType == 'ticket') {
+          await _playerService.updateTicketsGame2(widget.userId, widget.playerStats.ticketsGame2 + 1);
+          await _playerService.updateCoins(widget.userId, widget.playerStats.coins - cost);
+          
+          setState(() {
+            widget.playerStats.ticketsGame2 += 1;
+            widget.playerStats.coins -= cost;
+          });
+          
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('¡Ticket comprado con éxito!'),
+                backgroundColor: Colors.green,
+              ),
+            );
+          }
+        } else if (itemType == 'rename') {
+          await _playerService.updateRenameTickets(widget.userId, widget.playerStats.renameTickets + 1);
+          await _playerService.updateCoins(widget.userId, widget.playerStats.coins - cost);
+          
+          setState(() {
+            widget.playerStats.renameTickets += 1;
+            widget.playerStats.coins -= cost;
+          });
+          
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('¡Ticket de renombre comprado con éxito!'),
+                backgroundColor: Colors.green,
+              ),
+            );
+          }
+        }
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Error al realizar la compra'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    }
   }
 }

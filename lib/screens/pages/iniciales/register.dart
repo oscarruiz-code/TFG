@@ -41,15 +41,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
         return;
       }
 
+      // Crear usuario sin almacenar el ID
       await _userService.createUser(
         _usernameController.text,
         _emailController.text,
         _passwordController.text,
       );
-      
+
       if (!mounted) return;
-      // No detenemos el video, solo navegamos al login
-      // In the successful registration navigation
       Navigator.pushReplacement(
         context,
         PageRouteBuilder(
@@ -119,7 +118,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     icon: Icons.person,
                   ),
                   const SizedBox(height: 20),
-                  _buildTextField(                     // Nuevo campo email
+                  _buildTextField(                    
                     controller: _emailController,
                     hintText: 'Correo Electrónico',
                     icon: Icons.email,
@@ -147,7 +146,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         horizontal: 50,
                         vertical: 15,
                       ),
-                      shape: RoundedRectangleBorder(
+                      shape
+                      : RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(30),
                       ),
                     ),

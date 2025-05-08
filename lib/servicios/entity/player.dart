@@ -1,6 +1,6 @@
 
 class PlayerStats {
-  final int id;
+  final int? id;  // Hacer el id nullable
   final int userId;
   int ticketsGame2;
   int coins;
@@ -10,7 +10,7 @@ class PlayerStats {
   List<String> unlockedPremiumAvatars;
 
   PlayerStats({
-    required this.id,
+    this.id,  // Ya no es required
     required this.userId,
     this.ticketsGame2 = 0,
     this.coins = 0,
@@ -35,7 +35,7 @@ class PlayerStats {
 
   factory PlayerStats.fromMap(Map<String, dynamic> map) {
     return PlayerStats(
-      id: int.parse(map['id'].toString()),
+      id: map['id'] != null ? int.parse(map['id'].toString()) : null,
       userId: int.parse(map['user_id'].toString()),
       ticketsGame2: int.parse(map['tickets_game2'].toString()),
       coins: int.parse(map['coins'].toString()),
@@ -46,8 +46,8 @@ class PlayerStats {
     );
   }
 
-  bool hasPremiumAvatar(String avatarId) {
-    return unlockedPremiumAvatars.contains(avatarId);
+  bool hasPremiumAvatar(String avatarPath) {
+    return unlockedPremiumAvatars.contains(avatarPath);
   }
 
   static List<String> get freeAvatars => [

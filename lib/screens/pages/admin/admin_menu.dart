@@ -107,6 +107,7 @@ class _AdminMenuScreenState extends State<AdminMenuScreen> {
                           MaterialPageRoute(
                             builder: (context) => UserListScreen(
                               isAdmin: widget.isAdmin,
+                              loggedUserId: widget.userId,
                               initialUsers: users,
                             ),
                           ),

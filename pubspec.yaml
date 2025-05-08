@@ -53,6 +53,7 @@ flutter:
    - assets/perfil/gratis/
    - assets/perfil/premium/
    - assets/etiquetas/
+   - assets/avatar/defecto.png
 
   
 

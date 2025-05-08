@@ -31,7 +31,7 @@ class User {
 
   factory User.fromMap(Map<String, dynamic> map) {
     return User(
-      id: int.parse(map['id'].toString()),
+      id: map['id'] != null ? int.parse(map['id'].toString()) : null,
       username: map['username'].toString(),
       email: map['email'].toString(),
       password: map['password'].toString(),
@@ -39,5 +39,5 @@ class User {
       isActive: map['is_active'] == 1,
       role: map['role'].toString(),
     );
-}
-}
+  }
+} // Eliminar la llave extra que estaba aquí

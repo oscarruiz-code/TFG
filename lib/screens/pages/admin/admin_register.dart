@@ -1,7 +1,12 @@
 import 'package:oscarruizcode_pingu/dependencias/imports.dart';
 
 class AdminRegisterScreen extends StatefulWidget {
-  const AdminRegisterScreen({super.key});
+  final bool isAdmin; // Agregar la propiedad isAdmin
+
+  const AdminRegisterScreen({
+    super.key,
+    required this.isAdmin, // Requerir isAdmin en el constructor
+  });
 
   @override
   State<AdminRegisterScreen> createState() => _AdminRegisterScreenState();
@@ -18,9 +23,7 @@ class _AdminRegisterScreenState extends State<AdminRegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Registrar Nuevo Usuario'),
-      ),
+      appBar: AppBar(title: const Text('Registrar Nuevo Usuario')),
       body: Center(
         child: Container(
           width: 400,
@@ -95,19 +98,17 @@ class _AdminRegisterScreenState extends State<AdminRegisterScreen> {
                   ),
                   dropdownColor: Colors.white,
                   style: const TextStyle(color: Colors.black87),
-                  items: const [
-                    DropdownMenuItem(
-                      value: 'user',
-                      child: Text('Usuario'),
-                    ),
-                    DropdownMenuItem(
+                  items: [
+                    const DropdownMenuItem(value: 'user', child: Text('Usuario')),
+                    const DropdownMenuItem(
                       value: 'subadmin',
                       child: Text('Subadministrador'),
                     ),
-                    DropdownMenuItem(
-                      value: 'admin',
-                      child: Text('Administrador'),
-                    ),
+                    if (widget.isAdmin) // Solo mostrar opción de admin si el usuario es admin
+                      const DropdownMenuItem(
+                        value: 'admin',
+                        child: Text('Administrador'),
+                      ),
                   ],
                   onChanged: (String? value) {
                     setState(() {
@@ -120,13 +121,35 @@ class _AdminRegisterScreenState extends State<AdminRegisterScreen> {
                   onPressed: () async {
                     if (_formKey.currentState!.validate()) {
                       try {
-                        await _adminService.registerUser(
-                          username: _usernameController.text,
-                          email: _emailController.text,
-                          password: _passwordController.text,
-                          role: _selectedRole,
-                        );
-                        
+                        int userId;
+                        // Si es subadmin o admin, registrar en la tabla admins
+                        if (_selectedRole == 'subadmin' || _selectedRole == 'admin') {
+                          userId = await _adminService.registerAdmin(
+                            username: _usernameController.text,
+                            email: _emailController.text,
+                            password: _passwordController.text,
+                            role: _selectedRole,
+                          );
+                          
+                          // Crear registro en admin_stats
+                          await _adminService.createAdminStats(userId);
+                        } else {
+                          // Si es usuario normal, registrar en la tabla users
+                          userId = await _adminService.registerUser(
+                            username: _usernameController.text,
+                            email: _emailController.text,
+                            password: _passwordController.text,
+                            role: _selectedRole,
+                          );
+                          
+                          // Crear registro en player_stats
+                          final playerService = PlayerService();
+                          await playerService.updateProfilePicture(
+                            userId,
+                            'assets/avatar/defecto.png',
+                          );
+                        }
+
                         if (mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(

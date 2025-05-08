@@ -205,27 +205,34 @@ class MenuOpciones extends StatelessWidget {
                     ),
                     TextButton(
                       onPressed: () async {
-                        // Primero reiniciamos el video
-                        await VideoBackground.preloadVideo();
-                        await VideoBackground.playVideo();
-                        
-                        if (!context.mounted) return;
-                        Navigator.pushAndRemoveUntil(
-                          context,
-                          PageRouteBuilder(
-                            pageBuilder: (context, animation, secondaryAnimation) => const LoginScreen(),
-                            transitionsBuilder: (context, animation, secondaryAnimation, child) {
-                              return FadeTransition(
-                                opacity: animation,
-                                child: child,
-                              );
-                            },
-                            transitionDuration: const Duration(milliseconds: 300),
-                          ),
-                          (route) => false,
-                        );
+                        debugPrint('[Cerrar Sesión] Iniciando cierre de sesión...');
+                        try {
+                          await VideoBackground.preloadVideo();
+                          debugPrint('[Cerrar Sesión] Video precargado');
+                          if (!context.mounted) {
+                            debugPrint('[Cerrar Sesión] Contexto desmontado, abortando');
+                            return;
+                          }
+                          Navigator.pushAndRemoveUntil(
+                            context,
+                            PageRouteBuilder(
+                              pageBuilder: (context, animation, secondaryAnimation) => const LoginScreen(),
+                              transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                                return FadeTransition(
+                                  opacity: animation,
+                                  child: child,
+                                );
+                              },
+                              transitionDuration: const Duration(milliseconds: 300),
+                            ),
+                            (route) => false,
+                          );
+                          debugPrint('[Cerrar Sesión] Navegación a LoginScreen completada');
+                        } catch (e) {
+                          debugPrint('[Cerrar Sesión] Error durante el cierre de sesión: \$e');
+                        }
                       },
-                      child: const Text('Confirmar'),
+                      child: const Text('Cerrar Sesión'),
                     ),
                   ],
                 ),

@@ -25,10 +25,10 @@ class SubAdmin extends Admin {
 
   factory SubAdmin.fromMap(Map<String, dynamic> map) {
     return SubAdmin(
-      id: map['id'],
-      username: map['username'],
-      email: map['email'],
-      password: map['password'],
+      id: map['id'] != null ? int.parse(map['id'].toString()) : null,
+      username: map['username'].toString(),
+      email: map['email'].toString(),
+      password: map['password'].toString(),
       isActive: map['is_active'] == 1,
     );
   }

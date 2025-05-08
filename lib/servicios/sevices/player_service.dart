@@ -14,13 +14,32 @@ class PlayerService {
     }
   }
   
-   Future<void> updateProfilePicture(int userId, String avatarPath) async {
+   Future<bool> updateProfilePicture(int userId, String avatarPath) async {
     final conn = await DatabaseConnection.getConnection();
     try {
-      await conn.query(
-        'UPDATE player_stats SET current_avatar = ? WHERE user_id = ?',
-        [avatarPath, userId],
-      );
+      // Obtener stats actuales del jugador
+      var stats = await getPlayerStats(userId);
+      
+      // Verificar si el avatar es gratuito
+      if (PlayerStats.freeAvatars.contains(avatarPath)) {
+        await conn.query(
+          'UPDATE player_stats SET current_avatar = ? WHERE user_id = ?',
+          [avatarPath, userId],
+        );
+        return true;
+      }
+      
+      // Si es premium, verificar si está desbloqueado
+      if (PlayerStats.premiumAvatars.contains(avatarPath) && 
+          stats.hasPremiumAvatar(avatarPath)) {
+        await conn.query(
+          'UPDATE player_stats SET current_avatar = ? WHERE user_id = ?',
+          [avatarPath, userId],
+        );
+        return true;
+      }
+      
+      return false; // No tiene permiso para usar este avatar
     } finally {
       await conn.close();
     }
@@ -29,6 +48,32 @@ class PlayerService {
   Future<PlayerStats> getPlayerStats(int userId) async {
     final conn = await DatabaseConnection.getConnection();
     try {
+      // Primero verificar si es un admin
+      var adminResults = await conn.query(
+        'SELECT id FROM admins WHERE id = ?',
+        [userId],
+      );
+
+      if (adminResults.isNotEmpty) {
+        var results = await conn.query(
+          'SELECT * FROM admin_stats WHERE admin_id = ?',
+          [userId],
+        );
+
+        if (results.isEmpty) {
+          await conn.query(
+            'INSERT INTO admin_stats (admin_id) VALUES (?)',
+            [userId],
+          );
+          results = await conn.query(
+            'SELECT * FROM admin_stats WHERE admin_id = ?',
+            [userId],
+          );
+        }
+        return PlayerStats.fromMap(results.first.fields);
+      }
+
+      // Si no es admin, continuar con la lógica existente para usuarios normales
       var results = await conn.query(
         'SELECT * FROM player_stats WHERE user_id = ?',
         [userId],
@@ -102,10 +147,23 @@ class PlayerService {
   Future<void> registerGamePlay(int userId, int gameType, int score, int duration) async {
     final conn = await DatabaseConnection.getConnection();
     try {
-      await conn.query(
-        'INSERT INTO game_history (user_id, game_type, score, duration) VALUES (?, ?, ?, ?)',
-        [userId, gameType, score, duration],
+      // Verificar si es un admin
+      var adminResults = await conn.query(
+        'SELECT id FROM admins WHERE id = ?',
+        [userId],
       );
+
+      if (adminResults.isNotEmpty) {
+        await conn.query(
+          'INSERT INTO admin_game_history (admin_id, game_type, score, duration) VALUES (?, ?, ?, ?)',
+          [userId, gameType, score, duration],
+        );
+      } else {
+        await conn.query(
+          'INSERT INTO game_history (user_id, game_type, score, duration) VALUES (?, ?, ?, ?)',
+          [userId, gameType, score, duration],
+        );
+      }
     } finally {
       await conn.close();
     }
@@ -114,6 +172,20 @@ class PlayerService {
   Future<List<Map<String, dynamic>>> getGameHistory(int userId) async {
     final conn = await DatabaseConnection.getConnection();
     try {
+      // Verificar si es un admin
+      var adminResults = await conn.query(
+        'SELECT id FROM admins WHERE id = ?',
+        [userId],
+      );
+
+      if (adminResults.isNotEmpty) {
+        var results = await conn.query(
+          'SELECT * FROM admin_game_history WHERE admin_id = ? ORDER BY played_at DESC',
+          [userId],
+        );
+        return results.map((row) => row.fields).toList();
+      }
+
       var results = await conn.query(
         'SELECT * FROM game_history WHERE user_id = ? ORDER BY played_at DESC',
         [userId],
@@ -174,12 +246,12 @@ class PlayerService {
     }
   }
   
-  Future<void> updateUnlockedAvatars(int userId, String unlockedAvatars) async {
+  Future<void> updateUnlockedPremiumAvatars(int userId, List<String> avatars) async {
     final conn = await DatabaseConnection.getConnection();
     try {
       await conn.query(
         'UPDATE player_stats SET unlocked_premium_avatars = ? WHERE user_id = ?',
-        [unlockedAvatars, userId],
+        [avatars.join(','), userId],
       );
     } finally {
       await conn.close();
@@ -190,6 +262,49 @@ class PlayerService {
     final conn = await DatabaseConnection.getConnection();
     try {
       await conn.query('DELETE FROM player_stats WHERE user_id = ?', [userId]);
+    } finally {
+      await conn.close();
+    }
+  }
+
+  Future<void> updatePlayerStats(int userId, int renameTickets, int coins, int ticketsGame2) async {
+    final conn = await DatabaseConnection.getConnection();
+    try {
+      await conn.query(
+        'UPDATE player_stats SET rename_tickets = ?, coins = ?, tickets_game2 = ? WHERE user_id = ?',
+        [renameTickets, coins, ticketsGame2, userId]
+      );
+    } finally {
+      await conn.close();
+    }
+  }
+
+  Future<bool> unlockPremiumAvatar(int userId, String avatarPath) async {
+    final conn = await DatabaseConnection.getConnection();
+    try {
+      // Verificar que el avatar sea premium
+      if (!PlayerStats.premiumAvatars.contains(avatarPath)) {
+        return false;
+      }
+      
+      var stats = await getPlayerStats(userId);
+      
+      // Si ya tiene el avatar, no hacer nada
+      if (stats.hasPremiumAvatar(avatarPath)) {
+        return true;
+      }
+      
+      // Agregar el nuevo avatar a la lista de avatares desbloqueados
+      List<String> unlockedAvatars = stats.unlockedPremiumAvatars;
+      unlockedAvatars.add(avatarPath);
+      
+      // Actualizar la base de datos
+      await conn.query(
+        'UPDATE player_stats SET unlocked_premium_avatars = ? WHERE user_id = ?',
+        [unlockedAvatars.join(','), userId],
+      );
+      
+      return true;
     } finally {
       await conn.close();
     }

@@ -71,109 +71,94 @@ class SharedTopBar extends StatelessWidget {
     );
   }
 
-  Future<void> _showProfilePictureDialog(BuildContext context) async {
+  void _showProfilePictureDialog(BuildContext context) {
     showDialog(
       context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Seleccionar Foto de Perfil'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text('Avatares Gratuitos',
-                    style: TextStyle(fontWeight: FontWeight.bold)),
-                Wrap(
-                  spacing: 10,
-                  runSpacing: 10,
-                  children: List.generate(5, (index) {
-                    String avatarPath = 'assets/perfil/gratis/perfil${index + 1}.png';
-                    return GestureDetector(
-                      onTap: () async {
-                        await _playerService.updateProfilePicture(
-                          playerStats.userId,
-                          avatarPath
+      builder: (context) => AlertDialog(
+        title: const Text('Seleccionar Avatar'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('Avatares Gratuitos',
+                  style: TextStyle(fontWeight: FontWeight.bold)),
+              Wrap(
+                spacing: 10,
+                runSpacing: 10,
+                children: List.generate(5, (index) {
+                  String avatarPath = 'assets/perfil/gratis/perfil${index + 1}.png';
+                  return GestureDetector(
+                    onTap: () async {
+                      await _playerService.updateProfilePicture(
+                        playerStats.userId,
+                        avatarPath
+                      );
+                      if (context.mounted) {
+                        Navigator.pop(context);
+                        Navigator.pushReplacementNamed(
+                          context,
+                          '/menu',
+                          arguments: {
+                            'userId': playerStats.userId,
+                            'username': username
+                          }
                         );
-                        if (context.mounted) {
-                          Navigator.pop(context);
-                          Navigator.pushReplacementNamed(
-                            context,
-                            '/menu',
-                            arguments: {
-                              'userId': playerStats.userId,
-                              'username': username
-                            }
+                      }
+                    },
+                    child: CircleAvatar(
+                      radius: 30,
+                      backgroundImage: AssetImage(avatarPath),
+                    ),
+                  );
+                }),
+              ),
+              const SizedBox(height: 20),
+              const Text('Avatares Premium',
+                  style: TextStyle(fontWeight: FontWeight.bold)),
+              Wrap(
+                spacing: 10,
+                runSpacing: 10,
+                children: List.generate(3, (index) {
+                  String avatarPath = 'assets/perfil/premium/perfil${index + 6}.png';
+                  bool hasAccess = playerStats.unlockedPremiumAvatars.contains(avatarPath);
+                  
+                  return Stack(
+                    children: [
+                      GestureDetector(
+                        onTap: hasAccess ? () async {
+                          await _playerService.updateProfilePicture(
+                            playerStats.userId,
+                            avatarPath
                           );
-                        }
-                      },
-                      child: CircleAvatar(
-                        radius: 30,
-                        backgroundImage: AssetImage(avatarPath),
-                      ),
-                    );
-                  }),
-                ),
-                const SizedBox(height: 20),
-                const Text('Avatares Premium',
-                    style: TextStyle(fontWeight: FontWeight.bold)),
-                Wrap(
-                  spacing: 10,
-                  runSpacing: 10,
-                  children: List.generate(3, (index) {
-                    String avatarPath = 'assets/perfil/premium/perfil${index + 6}.png';
-                    bool hasAccess = playerStats.hasPremiumAvatar(avatarPath);
-                    return Stack(
-                      children: [
-                        CircleAvatar(
+                          if (context.mounted) {
+                            Navigator.pop(context);
+                            Navigator.pushReplacementNamed(
+                              context,
+                              '/menu',
+                              arguments: {
+                                'userId': playerStats.userId,
+                                'username': username
+                              }
+                            );
+                          }
+                        } : null,
+                        child: CircleAvatar(
                           radius: 30,
                           backgroundImage: AssetImage(avatarPath),
-                          child: !hasAccess
-                              ? const Icon(Icons.lock, color: Colors.white)
-                              : null,
+                          child: !hasAccess ? const Icon(
+                            Icons.lock,
+                            color: Colors.white,
+                          ) : null,
                         ),
-                        if (hasAccess)
-                          GestureDetector(
-                            onTap: () async {
-                              await _playerService.updateProfilePicture(
-                                playerStats.userId,
-                                avatarPath
-                              );
-                              if (context.mounted) {
-                                Navigator.pop(context);
-                                Navigator.pushReplacementNamed(
-                                  context,
-                                  '/menu',
-                                  arguments: {
-                                    'userId': playerStats.userId,
-                                    'username': username
-                                  }
-                                );
-                              }
-                            },
-                            child: Container(
-                              width: 60,
-                              height: 60,
-                              decoration: const BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: Colors.transparent,
-                              ),
-                            ),
-                          ),
-                      ],
-                    );
-                  }),
-                ),
-              ],
-            ),
+                      ),
+                    ],
+                  );
+                }),
+              ),
+            ],
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancelar'),
-            ),
-          ],
-        );
-      },
+        ),
+      ),
     );
   }
 }
