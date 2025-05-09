@@ -1,4 +1,5 @@
 import 'package:oscarruizcode_pingu/dependencias/imports.dart';
+import 'package:flutter/services.dart';
 
 class MenuHistorial extends StatefulWidget {
   final int userId;
@@ -40,6 +41,10 @@ class _MenuHistorialState extends State<MenuHistorial> {
 
   @override
   Widget build(BuildContext context) {
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+    ]);
     return Container(
       decoration: const BoxDecoration(
         image: DecorationImage(

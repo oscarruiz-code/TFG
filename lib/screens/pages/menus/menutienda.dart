@@ -1,4 +1,5 @@
 import 'package:oscarruizcode_pingu/dependencias/imports.dart';
+import 'package:flutter/services.dart';
 
 class MenuTienda extends StatefulWidget {
   final int userId;
@@ -23,6 +24,10 @@ class _MenuTiendaState extends State<MenuTienda> {
 
   @override
   Widget build(BuildContext context) {
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+    ]);
     return SafeArea(
       child: Column(
         children: [
@@ -76,10 +81,7 @@ class _MenuTiendaState extends State<MenuTienda> {
   }
 
   Widget _buildStoreItem(String title, String imagePath, String price, VoidCallback onTap) {
-    bool isAvatarUnlocked = false;
-    if (imagePath.contains('premium')) {
-      isAvatarUnlocked = widget.playerStats.unlockedPremiumAvatars.contains(imagePath);
-    }
+    bool isAvatarUnlocked = widget.playerStats.unlockedPremiumAvatars.contains(imagePath);
 
     return Container(
       margin: const EdgeInsets.all(10),
@@ -147,15 +149,13 @@ class _MenuTiendaState extends State<MenuTienda> {
   }
 
   Future<void> _showPurchaseDialog(BuildContext context, String itemType, int cost) async {
+    String? avatarPath;
     if (itemType.startsWith('premium_avatar')) {
-      String avatarPath = 'assets/perfil/premium/perfil${itemType.substring(13)}.png';
+      // Ajusta el mapeo aquí:
+      int avatarNumber = int.parse(itemType.substring(14)); // premium_avatar1 -> 1
+      int realAvatar = avatarNumber + 5; // 1->6, 2->7, 3->8
+      avatarPath = 'assets/perfil/premium/perfil$realAvatar.png';
       if (widget.playerStats.unlockedPremiumAvatars.contains(avatarPath)) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('¡Ya tienes este avatar!'),
-            backgroundColor: Colors.green,
-          ),
-        );
         return;
       }
     }
@@ -190,30 +190,13 @@ class _MenuTiendaState extends State<MenuTienda> {
 
     if (confirmed == true && context.mounted) {
       try {
-        if (itemType.startsWith('premium_avatar')) {
-          String avatarPath = 'assets/perfil/premium/perfil${itemType.substring(13)}.png';
-          List<String> updatedAvatars = [...widget.playerStats.unlockedPremiumAvatars, avatarPath];
-          await _playerService.updateUnlockedPremiumAvatars(widget.userId, updatedAvatars);
+        if (itemType.startsWith('premium_avatar') && avatarPath != null) {
+          await _playerService.unlockPremiumAvatar(widget.userId, avatarPath);
           await _playerService.updateCoins(widget.userId, widget.playerStats.coins - cost);
-          
           setState(() {
-            widget.playerStats.unlockedPremiumAvatars.add(avatarPath);
+            widget.playerStats.unlockedPremiumAvatars.add(avatarPath!);
             widget.playerStats.coins -= cost;
           });
-          
-          // Forzar actualización de la UI
-          if (mounted) {
-            setState(() {});
-          }
-          
-          if (context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('¡Avatar premium desbloqueado!'),
-                backgroundColor: Colors.green,
-              ),
-            );
-          }
         } else if (itemType == 'ticket') {
           await _playerService.updateTicketsGame2(widget.userId, widget.playerStats.ticketsGame2 + 1);
           await _playerService.updateCoins(widget.userId, widget.playerStats.coins - cost);
@@ -222,15 +205,6 @@ class _MenuTiendaState extends State<MenuTienda> {
             widget.playerStats.ticketsGame2 += 1;
             widget.playerStats.coins -= cost;
           });
-          
-          if (context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('¡Ticket comprado con éxito!'),
-                backgroundColor: Colors.green,
-              ),
-            );
-          }
         } else if (itemType == 'rename') {
           await _playerService.updateRenameTickets(widget.userId, widget.playerStats.renameTickets + 1);
           await _playerService.updateCoins(widget.userId, widget.playerStats.coins - cost);
@@ -239,15 +213,6 @@ class _MenuTiendaState extends State<MenuTienda> {
             widget.playerStats.renameTickets += 1;
             widget.playerStats.coins -= cost;
           });
-          
-          if (context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('¡Ticket de renombre comprado con éxito!'),
-                backgroundColor: Colors.green,
-              ),
-            );
-          }
         }
       } catch (e) {
         if (context.mounted) {

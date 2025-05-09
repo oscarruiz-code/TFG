@@ -1,15 +1,16 @@
 import 'package:oscarruizcode_pingu/dependencias/imports.dart';
+import 'package:flutter/services.dart';
 
 class MenuInicio extends StatefulWidget {
   final int userId;
   final String username;
-  final PlayerStats initialStats;  // Agregar este parámetro
+  final PlayerStats initialStats;
 
   const MenuInicio({
     super.key, 
     required this.userId,
     required this.username,
-    required this.initialStats,  // Agregar este parámetro
+    required this.initialStats,
   });
 
   @override
@@ -25,6 +26,11 @@ class _MenuInicioState extends State<MenuInicio> {
   @override
   void initState() {
     super.initState();
+    // Forzar orientación vertical al entrar al menú de inicio
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+    ]);
     // Eliminar esta línea que detiene el video
     // VideoBackground.disposeVideo();
     _statsStream = Stream.periodic(const Duration(seconds: 1))
@@ -89,9 +95,18 @@ class _MenuInicioState extends State<MenuInicio> {
             playerStats: playerStats,
           ),
           const Spacer(),
-          _buildGameButtons(playerStats),
-          const SizedBox(height: 20),
-          _buildHistoryButton(playerStats), 
+          // Zona de vitrina para el sprite y futuros skins
+          Container(
+            height: 120,
+            alignment: Alignment.center,
+            child: Image.asset(
+              'assets/personajes/principal/andar/andar1.png',
+              width: 100,
+              height: 100,
+            ),
+          ),
+          const SizedBox(height: 30), // Aumenta el espacio entre el sprite y los botones
+          _buildGameAndHistoryButtons(playerStats),
           const Spacer(),
           SharedBottomNav(pageController: _pageController),
         ],
@@ -99,104 +114,116 @@ class _MenuInicioState extends State<MenuInicio> {
     );
   }
 
-  Widget _buildGameButtons(PlayerStats playerStats) {
+  Widget _buildGameAndHistoryButtons(PlayerStats playerStats) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
-        _buildGameButton('Game 1', () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const Game1()),
-          );
-        }),
-        _buildGameButton('Game 2', () async {
-          if (playerStats.ticketsGame2 > 0) {
-            // Descontar un ticket antes de iniciar el juego
-            await _playerService.updateTicketsGame2(widget.userId, playerStats.ticketsGame2 - 1);
-            
-            if (!mounted) return;
+        _buildGameButtonWithLabel(
+          icon: Icons.videogame_asset,
+          label: 'Game 1',
+          onPressed: () {
             Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => const Game2()),
+              MaterialPageRoute(builder: (context) => const TransicionGame1()),
             );
-          } else {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Necesitas un ticket para jugar Game 2')),
-            );
-          }
-        }),
+          },
+        ),
+        _buildGameButtonWithLabel(
+          icon: Icons.videogame_asset_outlined,
+          label: 'Game 2',
+          onPressed: () async {
+            if (playerStats.ticketsGame2 > 0) {
+              await _playerService.updateTicketsGame2(widget.userId, playerStats.ticketsGame2 - 1);
+              if (!mounted) return;
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const Game2()),
+              );
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Necesitas un ticket para jugar Game 2')),
+              );
+            }
+          },
+        ),
+        _buildHistoryButtonWithLabel(playerStats),
       ],
     );
   }
 
-  Widget _buildGameButton(String title, VoidCallback onPressed) {
-    return SizedBox(
-      width: 150,
-      height: 150,
-      child: GlassContainer(
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: onPressed,
-            borderRadius: BorderRadius.circular(15),
-            child: Center(
-              child: Text(
-                title,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
+  Widget _buildGameButtonWithLabel({required IconData icon, required String label, required VoidCallback onPressed}) {
+    return Column(
+      children: [
+        SizedBox(
+          width: 80,
+          height: 80,
+          child: GlassContainer(
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: onPressed,
+                borderRadius: BorderRadius.circular(15),
+                child: Center(
+                  child: Icon(icon, color: Colors.white, size: 40),
                 ),
               ),
             ),
           ),
         ),
-      ),
+        const SizedBox(height: 5),
+        Text(
+          label,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ],
     );
   }
 
-  Widget _buildHistoryButton(PlayerStats playerStats) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 40),
-      child: Material(
-        color: const Color.fromRGBO(0, 32, 96, 1),
-        elevation: 4,
-        borderRadius: BorderRadius.circular(15),
-        child: InkWell(
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => MenuHistorial(
-                  userId: widget.userId,
-                  username: widget.username,
-                  playerStats: playerStats,
-                  pageController: _pageController,
+  Widget _buildHistoryButtonWithLabel(PlayerStats playerStats) {
+    return Column(
+      children: [
+        SizedBox(
+          width: 80,
+          height: 80,
+          child: GlassContainer(
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => MenuHistorial(
+                        userId: widget.userId,
+                        username: widget.username,
+                        playerStats: playerStats,
+                        pageController: _pageController,
+                      ),
+                    ),
+                  );
+                },
+                borderRadius: BorderRadius.circular(15),
+                child: Center(
+                  child: Icon(Icons.history, color: Colors.white, size: 40),
                 ),
               ),
-            );
-          },
-          borderRadius: BorderRadius.circular(15),
-          child: Container(
-            padding: const EdgeInsets.symmetric(vertical: 15),
-            child: const Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.history, color: Colors.white),
-                SizedBox(width: 10),
-                Text(
-                  'Historial de Partidas',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
             ),
           ),
         ),
-      ),
+        const SizedBox(height: 5),
+        const Text(
+          'Historial',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ],
     );
   }
 }

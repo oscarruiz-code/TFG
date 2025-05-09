@@ -41,6 +41,7 @@ flutter:
   assets:
    - assets/imagenes/fondo.png
    - assets/imagenes/logo.png
+   - assets/imagenes/juego.png
    - assets/videos/fondo_inicio.mp4
    - assets/sonidos/musica.mp3
    - assets/personajes/principal/andar/andar1.png
@@ -50,6 +51,13 @@ flutter:
    - assets/personajes/principal/andar/andar5.png
    - assets/personajes/principal/andar/andar6.png
    - assets/personajes/principal/andar/andar7.png
+   - assets/personajes/principal/deslizarse/deslizarse1.png
+   - assets/personajes/principal/deslizarse/deslizarse2.png
+   - assets/personajes/principal/deslizarse/deslizarse3.png
+   - assets/personajes/principal/deslizarse/deslizarse4.png
+   - assets/personajes/principal/saltar/saltar1.png
+   - assets/personajes/principal/saltar/saltar2.png
+   - assets/personajes/principal/saltar/saltar3.png
    - assets/perfil/gratis/
    - assets/perfil/premium/
    - assets/etiquetas/

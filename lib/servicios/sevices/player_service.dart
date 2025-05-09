@@ -279,32 +279,20 @@ class PlayerService {
     }
   }
 
-  Future<bool> unlockPremiumAvatar(int userId, String avatarPath) async {
+  Future<void> unlockPremiumAvatar(int userId, String avatarPath) async {
     final conn = await DatabaseConnection.getConnection();
     try {
-      // Verificar que el avatar sea premium
-      if (!PlayerStats.premiumAvatars.contains(avatarPath)) {
-        return false;
-      }
-      
+      // Obtener los avatares desbloqueados actuales
       var stats = await getPlayerStats(userId);
-      
-      // Si ya tiene el avatar, no hacer nada
-      if (stats.hasPremiumAvatar(avatarPath)) {
-        return true;
+      List<String> unlocked = List<String>.from(stats.unlockedPremiumAvatars);
+      if (!unlocked.contains(avatarPath)) {
+        unlocked.add(avatarPath);
+        String updatedAvatars = unlocked.join(',');
+        await conn.query(
+          'UPDATE player_stats SET unlocked_premium_avatars = ? WHERE user_id = ?',
+          [updatedAvatars, userId],
+        );
       }
-      
-      // Agregar el nuevo avatar a la lista de avatares desbloqueados
-      List<String> unlockedAvatars = stats.unlockedPremiumAvatars;
-      unlockedAvatars.add(avatarPath);
-      
-      // Actualizar la base de datos
-      await conn.query(
-        'UPDATE player_stats SET unlocked_premium_avatars = ? WHERE user_id = ?',
-        [unlockedAvatars.join(','), userId],
-      );
-      
-      return true;
     } finally {
       await conn.close();
     }

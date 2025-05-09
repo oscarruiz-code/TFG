@@ -1,4 +1,5 @@
 import 'package:oscarruizcode_pingu/dependencias/imports.dart';
+import 'package:flutter/services.dart';
 
 class MenuEditarPerfil extends StatelessWidget {
   final int userId;
@@ -17,6 +18,10 @@ class MenuEditarPerfil extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+    ]);
     return Container(
       decoration: const BoxDecoration(
         image: DecorationImage(

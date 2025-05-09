@@ -62,11 +62,18 @@ class _AdminMenuScreenState extends State<AdminMenuScreen> {
                   const SizedBox(height: 30),
                   ElevatedButton(
                     onPressed: () async {
-                      final playerService = PlayerService();
-                      final playerStats = await playerService.getPlayerStats(widget.userId);
-                      
+                      // Si es admin o subadmin, cargar admin_stats, si no, player_stats
+                      PlayerStats playerStats;
+                      if (widget.isAdmin) {
+                        final adminService = AdminService();
+                        playerStats = await adminService.getAdminStats(widget.userId);
+                      } else {
+                        final playerService = PlayerService();
+                        playerStats = await playerService.getPlayerStats(widget.userId);
+                      }
+
                       if (!mounted) return;
-                      
+
                       Navigator.pushReplacement(
                         context,
                         MaterialPageRoute(

@@ -125,30 +125,32 @@ class SharedTopBar extends StatelessWidget {
                   return Stack(
                     children: [
                       GestureDetector(
-                        onTap: hasAccess ? () async {
-                          await _playerService.updateProfilePicture(
-                            playerStats.userId,
-                            avatarPath
-                          );
-                          if (context.mounted) {
-                            Navigator.pop(context);
-                            Navigator.pushReplacementNamed(
-                              context,
-                              '/menu',
-                              arguments: {
-                                'userId': playerStats.userId,
-                                'username': username
+                        onTap: hasAccess
+                            ? () async {
+                                await _playerService.updateProfilePicture(
+                                  playerStats.userId,
+                                  avatarPath
+                                );
+                                if (context.mounted) {
+                                  Navigator.pop(context);
+                                  Navigator.pushReplacementNamed(
+                                    context,
+                                    '/menu',
+                                    arguments: {
+                                      'userId': playerStats.userId,
+                                      'username': username
+                                    }
+                                  );
+                                }
                               }
-                            );
-                          }
-                        } : null,
+                            : null,
                         child: CircleAvatar(
                           radius: 30,
                           backgroundImage: AssetImage(avatarPath),
-                          child: !hasAccess ? const Icon(
-                            Icons.lock,
-                            color: Colors.white,
-                          ) : null,
+                          foregroundColor: hasAccess ? null : Colors.black.withOpacity(0.5),
+                          child: !hasAccess
+                              ? const Icon(Icons.lock, color: Colors.white)
+                              : null,
                         ),
                       ),
                     ],
@@ -175,26 +177,67 @@ class SharedBottomNav extends StatelessWidget {
   Widget build(BuildContext context) {
     return GlassContainer(
       padding: const EdgeInsets.symmetric(vertical: 10),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          IconButton(
-            icon: const Icon(Icons.settings, color: Colors.white),
-            onPressed: () => pageController.animateToPage(0,
-                duration: const Duration(milliseconds: 300),
-                curve: Curves.easeInOut),
-          ),
-          IconButton(
-            icon: const Icon(Icons.home, color: Colors.white),
-            onPressed: () => pageController.animateToPage(1,
-                duration: const Duration(milliseconds: 300),
-                curve: Curves.easeInOut),
-          ),
-          IconButton(
-            icon: const Icon(Icons.store, color: Colors.white),
-            onPressed: () => pageController.animateToPage(2,
-                duration: const Duration(milliseconds: 300),
-                curve: Curves.easeInOut),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              Column(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.settings, color: Colors.white),
+                    onPressed: () => pageController.animateToPage(0,
+                        duration: const Duration(milliseconds: 300),
+                        curve: Curves.easeInOut),
+                  ),
+                  const Text(
+                    'Ajustes',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+              Column(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.home, color: Colors.white),
+                    onPressed: () => pageController.animateToPage(1,
+                        duration: const Duration(milliseconds: 300),
+                        curve: Curves.easeInOut),
+                  ),
+                  const Text(
+                    'Inicio',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+              Column(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.store, color: Colors.white),
+                    onPressed: () => pageController.animateToPage(2,
+                        duration: const Duration(milliseconds: 300),
+                        curve: Curves.easeInOut),
+                  ),
+                  const Text(
+                    'Tienda',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
         ],
       ),

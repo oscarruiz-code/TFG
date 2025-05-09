@@ -1,4 +1,5 @@
 import 'package:oscarruizcode_pingu/dependencias/imports.dart';
+import 'package:flutter/services.dart';
 
 class MenuOpciones extends StatelessWidget {
   final int userId;
@@ -18,6 +19,10 @@ class MenuOpciones extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+    ]);
     return SafeArea(
       child: Column(
         children: [
@@ -207,6 +212,7 @@ class MenuOpciones extends StatelessWidget {
                       onPressed: () async {
                         debugPrint('[Cerrar Sesión] Iniciando cierre de sesión...');
                         try {
+                          await _musicService.stopBackgroundMusic();
                           await VideoBackground.preloadVideo();
                           debugPrint('[Cerrar Sesión] Video precargado');
                           if (!context.mounted) {
