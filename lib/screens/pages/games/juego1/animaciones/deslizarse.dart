@@ -6,7 +6,7 @@ class AnimacionDeslizarse {
     'assets/personajes/principal/deslizarse/deslizarse4.png',
   ];
   
-  static const double velocidad = 300.0;
-  static const double distancia = 150.0;
-  static const double frameTime = 0.1;
+  static const double velocidad = 200.0; 
+  static const double distancia = 100.0;
+  static const double frameTime = 0.08; 
 }

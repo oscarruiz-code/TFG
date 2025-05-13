@@ -12,4 +12,8 @@ class GestorColisiones {
   bool verificarColisionItem(Player player, Rect itemHitbox) {
     return player.hitbox.overlaps(itemHitbox);
   }
+  
+  bool verificarColisionRampa(Player player, Rect rampaHitbox) {
+    return player.hitbox.overlaps(rampaHitbox);
+  }
 }

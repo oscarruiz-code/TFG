@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'game1.dart';
+import '../../screens/pages/games/juego1/pages/game1.dart';
 
 class TransicionGame1 extends StatefulWidget {
   const TransicionGame1({super.key});

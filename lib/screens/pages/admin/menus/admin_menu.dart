@@ -4,12 +4,14 @@ class AdminMenuScreen extends StatefulWidget {
   final bool isAdmin;
   final String username;
   final int userId;
+  final String? role;
 
   const AdminMenuScreen({
     super.key,
     required this.isAdmin,
     required this.username,
     required this.userId,
+    this.role,
   });
 
   @override
@@ -62,9 +64,10 @@ class _AdminMenuScreenState extends State<AdminMenuScreen> {
                   const SizedBox(height: 30),
                   ElevatedButton(
                     onPressed: () async {
-                      // Si es admin o subadmin, cargar admin_stats, si no, player_stats
+                      // Usar el campo role para decidir qué stats cargar
                       PlayerStats playerStats;
-                      if (widget.isAdmin) {
+                      final role = widget.role ?? (widget.isAdmin ? 'admin' : 'user');
+                      if (role == 'admin' || role == 'subadmin') {
                         final adminService = AdminService();
                         playerStats = await adminService.getAdminStats(widget.userId);
                       } else {

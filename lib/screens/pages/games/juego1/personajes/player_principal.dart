@@ -13,14 +13,16 @@ class Player {
   double x;
   double y;
   double velocidadVertical = 0;
-  double gravedad = 800;
-  double fuerzaSalto = -400;
+  double gravedad = AnimacionSalto.gravedad;
+  double fuerzaSalto = -AnimacionSalto.fuerzaSalto;
   double size = defaultHeight;
   bool isJumping = false;
   bool isSliding = false;
   bool isFacingRight = true;
-  double speed = 5.0;
+  double speed = AnimacionAndar.velocidad;
   double lastMoveDirection = 0;
+  bool canSlide = true;
+  bool canJump = true;
   
   PenguinPlayerState currentState = PenguinPlayerState.idle;
   double animationTime = 0;
@@ -59,25 +61,40 @@ class Player {
   }
   
   void jump() {
-    if (!isJumping && !isSliding) {
+    if (!isJumping && !isSliding && canJump) {
       isJumping = true;
+      canJump = false;
       velocidadVertical = fuerzaSalto;
       currentState = PenguinPlayerState.jumping;
       _eventBus.emit(GameEvents.playerJump);
+    
+      if (lastMoveDirection != 0) {
+        x += lastMoveDirection * speed * 0.8;
+      }
     }
   }
   
   void slide() {
-    if (!isSliding && !isJumping) {
+    if (!isSliding && !isJumping && canSlide) {
       isSliding = true;
+      canSlide = false;
       currentState = PenguinPlayerState.sliding;
       _eventBus.emit(GameEvents.playerSlide);
       
-      Future.delayed(const Duration(milliseconds: 1000), () {
+      double slideDirection = lastMoveDirection != 0 ? lastMoveDirection : (isFacingRight ? 1 : -1);
+      double slideDistance = AnimacionDeslizarse.distancia * slideDirection;
+      
+      x += slideDistance;
+      
+      Future.delayed(const Duration(milliseconds: 800), () {
         isSliding = false;
         currentState = lastMoveDirection != 0 ? 
           PenguinPlayerState.walking : PenguinPlayerState.idle;
         _eventBus.emit(GameEvents.playerEndSlide);
+        
+        Future.delayed(const Duration(milliseconds: 400), () {
+          canSlide = true;
+        });
       });
     }
   }
@@ -87,6 +104,19 @@ class Player {
     if (isJumping) {
       velocidadVertical += gravedad * dt;
       y += velocidadVertical * dt;
+      
+      // Limitar la velocidad de caída
+      if (velocidadVertical > 600) {
+        velocidadVertical = 600;
+      }
+      
+      if (y < 0) y = 0;
+      
+      
+      if (lastMoveDirection != 0) {
+        x += lastMoveDirection * speed * 0.7;
+      }
+      
       _eventBus.emit(GameEvents.playerUpdatePosition, {
         'x': x,
         'y': y,
@@ -97,21 +127,34 @@ class Player {
   
   void handleCollision(String collisionType) {
     _eventBus.emit(GameEvents.playerCollision, {'type': collisionType});
+    
+    if (collisionType == 'ground') {
+      isJumping = false;
+      canJump = true;
+      velocidadVertical = 0;
+    }
   }
   
   String getCurrentSprite() {
     switch (currentState) {
       case PenguinPlayerState.idle:
-        return 'assets/personajes/principal/idle/idle1.png';
+        return AnimacionAndar.sprites[0];
       case PenguinPlayerState.walking:
-        int frame = (animationTime * 10).floor() % 3 + 1;
-        return 'assets/personajes/principal/andar/andar$frame.png';
+        int frame = (animationTime ~/ AnimacionAndar.frameTime) % AnimacionAndar.sprites.length;
+        return AnimacionAndar.sprites[frame];
       case PenguinPlayerState.jumping:
-        int frame = velocidadVertical <= 0 ? 1 : 
-                   velocidadVertical < 200 ? 2 : 3;
-        return 'assets/personajes/principal/saltar/saltar$frame.png';
+        int frame;
+        if (velocidadVertical <= 0) {
+          frame = 0;
+        } else if (velocidadVertical < 200) {
+          frame = 1; 
+        } else {
+          frame = 2; 
+        }
+        return AnimacionSalto.sprites[frame];
       case PenguinPlayerState.sliding:
-        return 'assets/personajes/principal/deslizar/deslizar1.png';
+        int frame = (animationTime ~/ AnimacionDeslizarse.frameTime) % AnimacionDeslizarse.sprites.length;
+        return AnimacionDeslizarse.sprites[frame];
     }
   }
 }

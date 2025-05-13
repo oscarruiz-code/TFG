@@ -11,10 +11,10 @@ export 'dart:async';
 
 export 'package:oscarruizcode_pingu/screens/Splash/logo.dart';
 
-export 'package:oscarruizcode_pingu/screens/pages/admin/admin_menu.dart';
-export 'package:oscarruizcode_pingu/screens/pages/admin/user_detail.dart';
-export 'package:oscarruizcode_pingu/screens/pages/admin/user_list.dart';
-export 'package:oscarruizcode_pingu/screens/pages/admin/admin_register.dart';
+export 'package:oscarruizcode_pingu/screens/pages/admin/menus/admin_menu.dart';
+export 'package:oscarruizcode_pingu/screens/pages/admin/listas/user_detail.dart';
+export 'package:oscarruizcode_pingu/screens/pages/admin/listas/user_list.dart';
+export 'package:oscarruizcode_pingu/screens/pages/admin/menus/admin_register.dart';
 
 export 'package:oscarruizcode_pingu/screens/pages/iniciales/login.dart';
 export 'package:oscarruizcode_pingu/screens/pages/iniciales/register.dart';
@@ -28,12 +28,13 @@ export 'package:oscarruizcode_pingu/screens/pages/menus/menu_editar_perfil.dart'
 export 'package:oscarruizcode_pingu/screens/pages/games/juego1/eventos/eventos.dart';
 export 'package:oscarruizcode_pingu/screens/pages/games/juego1/eventos/game_eventos.dart';
 export 'package:oscarruizcode_pingu/screens/pages/games/juego1/personajes/player_principal.dart';
-export 'package:oscarruizcode_pingu/screens/pages/games/juego1/pages/transicion.dart';
+export 'package:oscarruizcode_pingu/widgets/animacion/transicion.dart';
 export 'package:oscarruizcode_pingu/screens/pages/games/juego1/animaciones/deslizarse.dart';
 export 'package:oscarruizcode_pingu/screens/pages/games/juego1/animaciones/andar.dart';
 export 'package:oscarruizcode_pingu/screens/pages/games/juego1/animaciones/salto.dart';
 export 'package:oscarruizcode_pingu/screens/pages/games/juego1/colisiones/colision_suelo.dart';
 export 'package:oscarruizcode_pingu/screens/pages/games/juego1/components/joystick.dart';
+export 'package:oscarruizcode_pingu/screens/pages/games/juego1/mapa/mapa1.dart';
 export 'package:oscarruizcode_pingu/screens/pages/games/juego1/funcionalidades/action_buttons.dart';
 
 export 'package:oscarruizcode_pingu/screens/pages/games/juego2/game2.dart';

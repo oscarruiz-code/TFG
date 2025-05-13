@@ -13,7 +13,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
   final MusicService _musicService = MusicService();
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();  // Add this line
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>(); 
   
   late AnimationController _fadeController;
   late Animation<double> _fadeAnimation;
@@ -229,6 +229,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
               isAdmin: adminInfo['role'] == 'admin',
               username: adminInfo['username'],
               userId: adminInfo['id'] as int,
+              role: adminInfo['role'],
             ),
           ),
         );

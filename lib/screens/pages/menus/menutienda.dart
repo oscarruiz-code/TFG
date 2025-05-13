@@ -104,7 +104,7 @@ class _MenuTiendaState extends State<MenuTienda> {
                         height: 64,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: Colors.green.withOpacity(0.3),
+                          color: Colors.blue.withOpacity(0.3),
                         ),
                         child: const Icon(
                           Icons.check,
@@ -128,14 +128,14 @@ class _MenuTiendaState extends State<MenuTienda> {
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                   decoration: BoxDecoration(
                     color: isAvatarUnlocked 
-                      ? Colors.green.withOpacity(0.2) 
+                      ? Colors.blue.withOpacity(0.2) 
                       : Colors.white.withAlpha(26),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Text(
                     isAvatarUnlocked ? '¡YA LO TIENES!' : price,
                     style: TextStyle(
-                      color: isAvatarUnlocked ? Colors.green : Colors.white,
+                      color: isAvatarUnlocked ? const Color.fromARGB(255, 1, 33, 175) : Colors.white,
                       fontWeight: FontWeight.bold,
                     ),
                   ),

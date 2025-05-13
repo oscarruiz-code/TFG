@@ -5,7 +5,7 @@ class AnimacionSalto {
     'assets/personajes/principal/saltar/saltar3.png',
   ];
   
-  static const double fuerzaSalto = -400.0;
-  static const double gravedad = 800.0;
-  static const double frameTime = 0.1;
+  static const double fuerzaSalto = 600.0;
+  static const double gravedad = 1200.0;
+  static const double frameTime = 0.08;
 }
