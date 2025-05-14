@@ -62,9 +62,10 @@ flutter:
    - assets/perfil/premium/
    - assets/etiquetas/
    - assets/avatar/defecto.png
-   - assets/objetos/suelo.png
-   - assets/objetos/suelo2.png
-   - assets/objetos/rampa.png
+   - assets/objetos/suelo/suelo.png
+   - assets/objetos/suelo/suelo2.png
+   - assets/objetos/rampa/rampa.png
+   - assets/objetos/rampa/rampa_invertida.png
 
   
 

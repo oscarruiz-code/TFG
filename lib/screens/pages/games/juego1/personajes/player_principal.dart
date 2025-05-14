@@ -103,15 +103,13 @@ class Player {
     animationTime += dt;
     if (isJumping) {
       velocidadVertical += gravedad * dt;
+      velocidadVertical = velocidadVertical.clamp(-800.0, 800.0);
       y += velocidadVertical * dt;
       
-      // Limitar la velocidad de caída
-      if (velocidadVertical > 600) {
-        velocidadVertical = 600;
+      if (y < 0) {
+        y = 0;
+        velocidadVertical = 0;
       }
-      
-      if (y < 0) y = 0;
-      
       
       if (lastMoveDirection != 0) {
         x += lastMoveDirection * speed * 0.7;
@@ -132,6 +130,12 @@ class Player {
       isJumping = false;
       canJump = true;
       velocidadVertical = 0;
+      
+      // Restaurar estado después de aterrizar
+      if (currentState == PenguinPlayerState.jumping) {
+        currentState = lastMoveDirection != 0 ? 
+          PenguinPlayerState.walking : PenguinPlayerState.idle;
+      }
     }
   }
   
@@ -140,21 +144,35 @@ class Player {
       case PenguinPlayerState.idle:
         return AnimacionAndar.sprites[0];
       case PenguinPlayerState.walking:
-        int frame = (animationTime ~/ AnimacionAndar.frameTime) % AnimacionAndar.sprites.length;
+        // Sincronizar la animación con el movimiento
+        int frame = ((animationTime / AnimacionAndar.frameTime) * speed).floor() % AnimacionAndar.sprites.length;
         return AnimacionAndar.sprites[frame];
       case PenguinPlayerState.jumping:
-        int frame;
-        if (velocidadVertical <= 0) {
-          frame = 0;
+        if (velocidadVertical < -200) {
+          double frameTime = velocidadVertical < 0 ? 
+            AnimacionSalto.frameTime : AnimacionSalto.frameTimeCaida;
+          int frame = (animationTime / frameTime).floor() % AnimacionSalto.sprites.length;
+          return AnimacionSalto.sprites[frame];
         } else if (velocidadVertical < 200) {
-          frame = 1; 
+          return AnimacionSalto.sprites[1];
         } else {
-          frame = 2; 
+          return AnimacionSalto.sprites[2];
         }
-        return AnimacionSalto.sprites[frame];
+      
       case PenguinPlayerState.sliding:
-        int frame = (animationTime ~/ AnimacionDeslizarse.frameTime) % AnimacionDeslizarse.sprites.length;
-        return AnimacionDeslizarse.sprites[frame];
+        double tiempoTotal = 0.8;
+        double tiempoTranscurrido = (animationTime % tiempoTotal) / tiempoTotal;
+        
+        if (tiempoTranscurrido < 0.25) {
+          return AnimacionDeslizarse.sprites[0];
+        } else if (tiempoTranscurrido < 0.5) {
+          return AnimacionDeslizarse.sprites[1];
+        } else if (tiempoTranscurrido < 0.75) {
+          return AnimacionDeslizarse.sprites[2];
+        } else {
+          return AnimacionDeslizarse.sprites[3];
+        }
     }
   }
+
 }

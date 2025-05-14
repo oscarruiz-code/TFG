@@ -31,6 +31,9 @@ class _Game1State extends State<Game1> {
       DeviceOrientation.landscapeLeft,
       DeviceOrientation.landscapeRight,
     ]);
+    // Detener la música al iniciar el juego
+    final MusicService _musicService = MusicService();
+    _musicService.stopBackgroundMusic();
     gestorColisiones = GestorColisiones();
     _setupEventListeners();
   }
@@ -75,8 +78,9 @@ class _Game1State extends State<Game1> {
     groundLevel = size.height * 0.8;
     maxWorldOffset = 0;
     minWorldOffset = -(size.width * 4);
+    // Posicionar el jugador en el centro
     player = Player(
-      x: size.width * 0.2,
+      x: size.width * 0.5, // Cambiado de 0.2 a 0.5 para centrarlo
       y: groundLevel - Player.defaultHeight * 1.5,
     );
     mapa = Mapa1();
@@ -89,45 +93,33 @@ class _Game1State extends State<Game1> {
         setState(() {
           player.updateAnimation(0.016);
 
+          // Verificar colisiones con el suelo
+          bool enSuelo = gestorColisiones.verificarColisionSuelo(player, mapa.suelos);
+          double alturaDelSuelo = gestorColisiones.obtenerAlturaDelSuelo(player, mapa.suelos);
+          
+          if (enSuelo && player.velocidadVertical >= 0) {
+            player.y = alturaDelSuelo - player.size * 0.5;
+            player.handleCollision('ground');
+          } else if (!enSuelo && !player.isJumping) {
+            player.isJumping = true;
+            player.velocidadVertical = 0;
+          }
+
+          // Actualizar el offset del mundo basado en la posición del jugador
           if (player.currentState == PenguinPlayerState.walking ||
               player.currentState == PenguinPlayerState.sliding ||
               (player.isJumping && player.lastMoveDirection != 0)) {
-            if (player.isFacingRight) {
-              worldOffset = (worldOffset - player.speed * 0.3).clamp(minWorldOffset, maxWorldOffset);
-            } else {
-              worldOffset = (worldOffset + player.speed * 0.3).clamp(minWorldOffset, maxWorldOffset);
-            }
-          }
-
-          final playerFeet = player.y + player.size * 0.5;
-          final playerCenterX = player.x - worldOffset;
-          var sueloDebajo = mapa.objetos.firstWhere(
-            (obj) =>
-              playerCenterX + player.size * 0.4 > obj.x &&
-              playerCenterX - player.size * 0.4 < obj.x + obj.width &&
-              (playerFeet >= obj.y && playerFeet <= obj.y + obj.height + 10),
-            orElse: () => null,
-          );
-
-          if (sueloDebajo != null) {
-            double sueloTop = sueloDebajo.y;
-            if (player.y + player.size * 0.5 > sueloTop &&
-                player.velocidadVertical >= 0) {
-              player.y = sueloTop - player.size * 0.5;
-              player.velocidadVertical = 0;
-              if (player.isJumping) {
-                player.isJumping = false;
-                if (player.currentState == PenguinPlayerState.jumping) {
-                  player.currentState = player.lastMoveDirection != 0
-                      ? PenguinPlayerState.walking
-                      : PenguinPlayerState.idle;
-                }
-                _eventBus.emit(GameEvents.playerLand);
-              }
-            }
-          } else {
-            player.isJumping = true;
-          }
+          
+          // Calcular el centro de la pantalla
+          final screenCenter = MediaQuery.of(context).size.width * 0.5;
+          // Calcular cuánto debe moverse el mundo para mantener al jugador centrado
+          final targetOffset = -(player.x - screenCenter);
+          
+          // Suavizar el movimiento
+          worldOffset += (targetOffset - worldOffset) * 0.1;
+          // Mantener el offset dentro de los límites
+          worldOffset = worldOffset.clamp(minWorldOffset, maxWorldOffset);
+        }
 
           if (player.currentState == PenguinPlayerState.walking ||
               player.currentState == PenguinPlayerState.sliding) {
@@ -140,27 +132,28 @@ class _Game1State extends State<Game1> {
     });
 }
 
-  Widget _buildMapObjects() {
-    return Stack(
-      children: mapa.objetos.map((objeto) {
-        return Positioned(
-          left: objeto.x + worldOffset,
-          top: objeto.y,
-          child: Container(
-            color: Colors.blue.withOpacity(0.3),
+Widget _buildMapObjects() {
+  return Stack(
+    children: mapa.objetos.map((objeto) {
+      return Positioned(
+        left: objeto.x + worldOffset,
+        top: objeto.y,
+        child: Container(
+          // Eliminamos el color de debug
+          // color: Colors.blue.withOpacity(0.3),
+          width: objeto.width,
+          height: objeto.height,
+          child: Image.asset(
+            objeto.sprite,
             width: objeto.width,
             height: objeto.height,
-            child: Image.asset(
-              objeto.sprite,
-              width: objeto.width,
-              height: objeto.height,
-              fit: BoxFit.fill,
-            ),
+            fit: BoxFit.cover, // Cambiado de fill a cover para mejor unión
           ),
-        );
-      }).toList(),
-    );
-  }
+        ),
+      );
+    }).toList(),
+  );
+}
 
   Widget _buildPlayer() {
     return Positioned(
@@ -185,8 +178,8 @@ class _Game1State extends State<Game1> {
     return Stack(
       children: [
         Positioned(
-          left: 50,
-          bottom: 30,
+          left: 20, // Ajustado más a la izquierda
+          bottom: 20,
           child: ActionButtons(
             onJump: () => setState(() {
               player.jump();
@@ -201,8 +194,8 @@ class _Game1State extends State<Game1> {
           ),
         ),
         Positioned(
-          right: 50,
-          bottom: 30,
+          right: 20, // Ajustado más a la derecha
+          bottom: 20,
           child: Joystick(
             onDirectionChanged: (dx, dy) {
               setState(() {
@@ -218,15 +211,84 @@ class _Game1State extends State<Game1> {
 
   Widget _buildStats() {
     return Positioned(
-      top: 20,
-      left: 20,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Monedas: $monedas', style: const TextStyle(color: Colors.white)),
-          Text('Vida: $vida', style: const TextStyle(color: Colors.white)),
-          Text('Distancia: $distancia', style: const TextStyle(color: Colors.white)),
-        ],
+      bottom: 10, // Más pegado al borde inferior
+      left: MediaQuery.of(context).size.width * 0.2, // 20% desde la izquierda
+      right: MediaQuery.of(context).size.width * 0.2, // 20% desde la derecha
+      child: Container(
+        height: 30, // Altura reducida para hacerla más fina
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        decoration: BoxDecoration(
+          color: Colors.black.withOpacity(0.6),
+          borderRadius: BorderRadius.circular(15),
+          border: Border.all(
+            color: Colors.white.withOpacity(0.3),
+            width: 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.2),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.monetization_on, color: Colors.amber, size: 20),
+                const SizedBox(width: 5),
+                Text(
+                  '$monedas',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            Container(
+              height: 20,
+              width: 1,
+              color: Colors.white.withOpacity(0.3),
+            ),
+            Row(
+              children: [
+                const Icon(Icons.favorite, color: Colors.red, size: 20),
+                const SizedBox(width: 5),
+                Text(
+                  '$vida',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            Container(
+              height: 20,
+              width: 1,
+              color: Colors.white.withOpacity(0.3),
+            ),
+            Row(
+              children: [
+                const Icon(Icons.speed, color: Colors.blue, size: 20),
+                const SizedBox(width: 5),
+                Text(
+                  '$distancia m',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

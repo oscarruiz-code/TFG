@@ -12,7 +12,7 @@ class Suelo {
     required this.y,
     required this.width,
     required this.height,
-    this.sprite = 'assets/objetos/suelo.png',
+    this.sprite = 'assets/objetos/suelo/suelo.png',
   });
 
   Rect get hitbox => Rect.fromLTWH(x, y, width, height);

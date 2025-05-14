@@ -27,6 +27,8 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     );
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(_fadeController);
     _fadeController.forward();
+    // Detener la música al iniciar sesión
+    _musicService.stopBackgroundMusic();
   }
 
   @override

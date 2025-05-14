@@ -5,14 +5,18 @@ class Rampa {
   final double y;
   final double width;
   final double height;
-  final String sprite;
-
+  final bool invertida;
+  
+  String get sprite => invertida ? 
+    'assets/objetos/rampa/rampa_invertida.png' : 
+    'assets/objetos/rampa/rampa.png';
+  
   Rampa({
     required this.x,
     required this.y,
     required this.width,
     required this.height,
-    this.sprite = 'assets/objetos/rampa.png',
+    this.invertida = false,
   });
 
   Rect get hitbox => Rect.fromLTWH(x, y, width, height);
