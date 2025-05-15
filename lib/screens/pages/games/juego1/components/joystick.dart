@@ -20,7 +20,6 @@ class _JoystickState extends State<Joystick> {
   void _updatePosition(Offset position) {
     if (_isDragging) {
       final delta = position - _startPosition;
-      // Calculamos la dirección manualmente ya que Offset no tiene normalize()
       final distance = math.sqrt(delta.dx * delta.dx + delta.dy * delta.dy);
       if (distance > 0) {
         final normalizedDx = delta.dx / distance;
@@ -48,16 +47,27 @@ class _JoystickState extends State<Joystick> {
         width: 120,
         height: 120,
         decoration: BoxDecoration(
-          color: Colors.blue.withOpacity(0.5),
+          color: Colors.blue.withOpacity(0.3),
           shape: BoxShape.circle,
+          border: Border.all(
+            color: Colors.white.withOpacity(0.5),
+            width: 2,
+          ),
         ),
         child: Center(
           child: Container(
             width: 60,
             height: 60,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.8),
+              color: Colors.white.withOpacity(0.6),
               shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.2),
+                  blurRadius: 4,
+                  spreadRadius: 1,
+                ),
+              ],
             ),
           ),
         ),

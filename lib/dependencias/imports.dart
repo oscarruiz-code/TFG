@@ -32,6 +32,8 @@ export 'package:oscarruizcode_pingu/widgets/animacion/transicion.dart';
 export 'package:oscarruizcode_pingu/screens/pages/games/juego1/animaciones/deslizarse.dart';
 export 'package:oscarruizcode_pingu/screens/pages/games/juego1/animaciones/andar.dart';
 export 'package:oscarruizcode_pingu/screens/pages/games/juego1/animaciones/salto.dart';
+export 'package:oscarruizcode_pingu/screens/pages/games/juego1/animaciones/agacharse.dart';
+export 'package:oscarruizcode_pingu/screens/pages/games/juego1/animaciones/andar_agachado.dart';
 export 'package:oscarruizcode_pingu/screens/pages/games/juego1/colisiones/colision_suelo.dart';
 export 'package:oscarruizcode_pingu/screens/pages/games/juego1/components/joystick.dart';
 export 'package:oscarruizcode_pingu/screens/pages/games/juego1/mapa/mapa1.dart';

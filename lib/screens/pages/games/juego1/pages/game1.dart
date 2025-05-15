@@ -8,21 +8,20 @@ class Game1 extends StatefulWidget {
   State<Game1> createState() => _Game1State();
 }
 
-class _Game1State extends State<Game1> {
-  late Player player;
-  late GestorColisiones gestorColisiones;
-  double groundLevel = 0.0;
+class _Game1State extends State<Game1> with TickerProviderStateMixin {
   bool isGameActive = true;
   bool _isFirstBuild = true;
   double worldOffset = 0.0;
   late double maxWorldOffset;
   late double minWorldOffset;
   final GameEventBus _eventBus = GameEventBus();
-
+  late Mapa1 mapa;
+  late Player player;
+  late AnimationController _gameLoopController;
+  
   int monedas = 0;
   int vida = 100;
   int distancia = 0;
-  late Mapa1 mapa;
 
   @override
   void initState() {
@@ -31,36 +30,62 @@ class _Game1State extends State<Game1> {
       DeviceOrientation.landscapeLeft,
       DeviceOrientation.landscapeRight,
     ]);
-    // Detener la música al iniciar el juego
     final MusicService _musicService = MusicService();
     _musicService.stopBackgroundMusic();
-    gestorColisiones = GestorColisiones();
     _setupEventListeners();
+    
+    _gameLoopController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 1),
+    )..repeat();
+    
+    _gameLoopController.addListener(_gameLoop);
+  }
+
+  void _gameLoop() {
+    if (!isGameActive) return;
+    
+    final dt = _gameLoopController.lastElapsedDuration?.inMicroseconds ?? 0;
+    final dtSeconds = dt / 1000000.0;
+    
+    setState(() {
+      player.updateAnimation(dtSeconds);
+      _checkCollisions();
+    });
+  }
+
+  void _checkCollisions() {
+    final gestorColisiones = GestorColisiones();
+    final groundLevel = gestorColisiones.obtenerAlturaDelSuelo(player, mapa.objetos);
+    
+    if (player.isJumping) {
+      if (player.y + player.size * 0.5 >= groundLevel) {
+        player.y = groundLevel - player.size * 0.5;
+        player.isJumping = false;
+        player.velocidadVertical = 0;
+        _eventBus.emit(GameEvents.playerLand);
+      }
+    } else {
+      player.y = groundLevel - player.size * 0.5;
+    }
   }
 
   void _setupEventListeners() {
-    _eventBus.on(GameEvents.playerJump, (_) {
-      // Sonido de salto
+    _eventBus.on(GameEvents.buttonPressed, (data) {
+      if (data['type'] == 'jump') {
+        player.jump();
+      } else if (data['type'] == 'slide') {
+        player.slide();
+      } else if (data['type'] == 'crouch') {
+        player.crouch();
+      }
     });
 
-    _eventBus.on(GameEvents.playerSlide, (_) {
-      // Sonido de deslizamiento
-    });
-
-    _eventBus.on(GameEvents.playerCollision, (data) {
-      setState(() {
-        if (data['type'] == 'damage') {
-          vida = (vida - (data['amount'] as int)).clamp(0, 100);
-        }
-      });
-    });
-
-    _eventBus.on(GameEvents.playerMove, (data) {
-      setState(() {
-        if (data['type'] == 'coin') {
-          monedas++;
-        }
-      });
+    _eventBus.on(GameEvents.joystickMoved, (data) {
+      final dx = data['dx'] as double;
+      final dy = data['dy'] as double;
+      final groundLevel = GestorColisiones().obtenerAlturaDelSuelo(player, mapa.objetos);
+      player.move(dx, dy, groundLevel: groundLevel);
     });
   }
 
@@ -75,102 +100,50 @@ class _Game1State extends State<Game1> {
 
   void _initializeGame() {
     final size = MediaQuery.of(context).size;
-    groundLevel = size.height * 0.8;
     maxWorldOffset = 0;
     minWorldOffset = -(size.width * 4);
-    // Posicionar el jugador en el centro
-    player = Player(
-      x: size.width * 0.5, // Cambiado de 0.2 a 0.5 para centrarlo
-      y: groundLevel - Player.defaultHeight * 1.5,
-    );
     mapa = Mapa1();
-    _startGameLoop();
+    
+    // Inicializar el jugador en el centro de la pantalla
+    player = Player(
+      x: size.width / 2,
+      y: size.height - 100,
+    );
   }
-
-  void _startGameLoop() {
-    Future.delayed(const Duration(milliseconds: 16), () {
-      if (mounted && isGameActive) {
-        setState(() {
-          player.updateAnimation(0.016);
-
-          // Verificar colisiones con el suelo
-          bool enSuelo = gestorColisiones.verificarColisionSuelo(player, mapa.suelos);
-          double alturaDelSuelo = gestorColisiones.obtenerAlturaDelSuelo(player, mapa.suelos);
-          
-          if (enSuelo && player.velocidadVertical >= 0) {
-            player.y = alturaDelSuelo - player.size * 0.5;
-            player.handleCollision('ground');
-          } else if (!enSuelo && !player.isJumping) {
-            player.isJumping = true;
-            player.velocidadVertical = 0;
-          }
-
-          // Actualizar el offset del mundo basado en la posición del jugador
-          if (player.currentState == PenguinPlayerState.walking ||
-              player.currentState == PenguinPlayerState.sliding ||
-              (player.isJumping && player.lastMoveDirection != 0)) {
-          
-          // Calcular el centro de la pantalla
-          final screenCenter = MediaQuery.of(context).size.width * 0.5;
-          // Calcular cuánto debe moverse el mundo para mantener al jugador centrado
-          final targetOffset = -(player.x - screenCenter);
-          
-          // Suavizar el movimiento
-          worldOffset += (targetOffset - worldOffset) * 0.1;
-          // Mantener el offset dentro de los límites
-          worldOffset = worldOffset.clamp(minWorldOffset, maxWorldOffset);
-        }
-
-          if (player.currentState == PenguinPlayerState.walking ||
-              player.currentState == PenguinPlayerState.sliding) {
-            distancia += (player.speed * 0.5).round();
-            _eventBus.emit(GameEvents.distanceUpdated, {'distance': distancia});
-          }
-        });
-        _startGameLoop();
-      }
-    });
-}
-
-Widget _buildMapObjects() {
-  return Stack(
-    children: mapa.objetos.map((objeto) {
-      return Positioned(
-        left: objeto.x + worldOffset,
-        top: objeto.y,
-        child: Container(
-          // Eliminamos el color de debug
-          // color: Colors.blue.withOpacity(0.3),
-          width: objeto.width,
-          height: objeto.height,
-          child: Image.asset(
-            objeto.sprite,
-            width: objeto.width,
-            height: objeto.height,
-            fit: BoxFit.cover, // Cambiado de fill a cover para mejor unión
-          ),
-        ),
-      );
-    }).toList(),
-  );
-}
 
   Widget _buildPlayer() {
     return Positioned(
-      left: player.x,
-      top: player.y,
-      child: Container(
-        color: Colors.red.withOpacity(0.3),
-        child: Transform.scale(
-          scaleX: player.isFacingRight ? 0.7 : -0.7,
-          scaleY: 0.7,
-          child: Image.asset(
-            player.getCurrentSprite(),
-            width: player.size * 0.8,
-            height: player.size * 0.8,
-          ),
+      left: player.x - player.size * 0.5,
+      top: player.y - player.size * 0.5,
+      child: Transform.scale(
+        scaleX: player.isFacingRight ? 1 : -1,
+        child: Image.asset(
+          player.getCurrentSprite(),
+          width: player.size,
+          height: player.size,
         ),
       ),
+    );
+  }
+
+  Widget _buildMapObjects() {
+    return Stack(
+      children: mapa.objetos.map((objeto) {
+        return Positioned(
+          left: objeto.x + worldOffset,
+          top: objeto.y,
+          child: Container(
+            width: objeto.width,
+            height: objeto.height,
+            child: Image.asset(
+              objeto.sprite,
+              width: objeto.width,
+              height: objeto.height,
+              fit: BoxFit.cover,
+            ),
+          ),
+        );
+      }).toList(),
     );
   }
 
@@ -178,28 +151,26 @@ Widget _buildMapObjects() {
     return Stack(
       children: [
         Positioned(
-          left: 20, // Ajustado más a la izquierda
-          bottom: 20,
+          left: 40,
+          bottom: 40,
           child: ActionButtons(
             onJump: () => setState(() {
-              player.jump();
               _eventBus.emit(GameEvents.buttonPressed, {'type': 'jump'});
             }),
             onSlide: () => setState(() {
-              if (!player.isSliding) {
-                player.slide();
-                _eventBus.emit(GameEvents.buttonPressed, {'type': 'slide'});
-              }
+              _eventBus.emit(GameEvents.buttonPressed, {'type': 'slide'});
+            }),
+            onCrouch: () => setState(() {
+              _eventBus.emit(GameEvents.buttonPressed, {'type': 'crouch'});
             }),
           ),
         ),
         Positioned(
-          right: 20, // Ajustado más a la derecha
-          bottom: 20,
+          right: 40,
+          bottom: 40,
           child: Joystick(
             onDirectionChanged: (dx, dy) {
               setState(() {
-                player.move(dx, 0, groundLevel: groundLevel);
                 _eventBus.emit(GameEvents.joystickMoved, {'dx': dx, 'dy': dy});
               });
             },
@@ -211,26 +182,19 @@ Widget _buildMapObjects() {
 
   Widget _buildStats() {
     return Positioned(
-      bottom: 10, // Más pegado al borde inferior
-      left: MediaQuery.of(context).size.width * 0.2, // 20% desde la izquierda
-      right: MediaQuery.of(context).size.width * 0.2, // 20% desde la derecha
+      bottom: 20,
+      left: MediaQuery.of(context).size.width * 0.3,
+      right: MediaQuery.of(context).size.width * 0.3,
       child: Container(
-        height: 30, // Altura reducida para hacerla más fina
+        height: 30,
         padding: const EdgeInsets.symmetric(horizontal: 20),
         decoration: BoxDecoration(
-          color: Colors.black.withOpacity(0.6),
-          borderRadius: BorderRadius.circular(15),
+          color: Colors.black.withOpacity(0.5),
+          borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: Colors.white.withOpacity(0.3),
             width: 1,
           ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.2),
-              blurRadius: 4,
-              offset: const Offset(0, 2),
-            ),
-          ],
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -319,14 +283,9 @@ Widget _buildMapObjects() {
   @override
   void dispose() {
     isGameActive = false;
-    _eventBus.off(GameEvents.playerJump, (_) {});
-    _eventBus.off(GameEvents.playerSlide, (_) {});
-    _eventBus.off(GameEvents.playerCollision, (_) {});
-    _eventBus.off(GameEvents.playerMove, (_) {});
-    _eventBus.off(GameEvents.playerLand, (_) {});
+    _gameLoopController.dispose();
     _eventBus.off(GameEvents.buttonPressed, (_) {});
     _eventBus.off(GameEvents.joystickMoved, (_) {});
-    _eventBus.off(GameEvents.distanceUpdated, (_) {});
 
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,

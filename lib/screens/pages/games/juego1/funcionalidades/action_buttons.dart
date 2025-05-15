@@ -3,27 +3,40 @@ import 'package:flutter/material.dart';
 class ActionButtons extends StatelessWidget {
   final VoidCallback onJump;
   final VoidCallback onSlide;
+  final VoidCallback onCrouch;
 
   const ActionButtons({
     Key? key,
     required this.onJump,
     required this.onSlide,
+    required this.onCrouch,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.end,
       children: [
         _buildActionButton(
           onTap: onJump,
-          icon: Icons.keyboard_arrow_up,
+          icon: Icons.close,
           color: Colors.blue,
         ),
-        const SizedBox(width: 20),
-        _buildActionButton(
-          onTap: onSlide,
-          icon: Icons.keyboard_arrow_down,
-          color: Colors.blue,
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            _buildActionButton(
+              onTap: onCrouch,
+              icon: Icons.change_history,
+              color: Colors.blue,
+            ),
+            const SizedBox(width: 20),
+            _buildActionButton(
+              onTap: onSlide,
+              icon: Icons.circle_outlined,
+              color: Colors.blue,
+            ),
+          ],
         ),
       ],
     );
@@ -40,8 +53,19 @@ class ActionButtons extends StatelessWidget {
         width: 60,
         height: 60,
         decoration: BoxDecoration(
-          color: color.withOpacity(0.5),
+          color: color.withOpacity(0.3),
           shape: BoxShape.circle,
+          border: Border.all(
+            color: Colors.white.withOpacity(0.5),
+            width: 2,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.2),
+              blurRadius: 4,
+              spreadRadius: 1,
+            ),
+          ],
         ),
         child: Icon(
           icon,

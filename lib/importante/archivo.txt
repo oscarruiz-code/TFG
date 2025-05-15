@@ -6,6 +6,10 @@ Para Suelo Rampa(parte baja), x=(la x del suelo mas su width - 17), y=(la y debe
 
 Para Suelo Rampa(parte alta), x=(la x de la rampa mas su width - 23), y=(la y la rampa - 12)
 
+Para Suelo RampaInvertida(parte alta),x(la x del suelo mas su width - 25), y=(la y del suelo + 12)
+
+Para Suelo RampaInvertida(parte abajo),x(la x de la rampa mas su width - 25), y=(la y de la rampa + 23)
+
 Para Suelo Suelo2, x=(la x del suelo mas su width - 10), y=(la y del suelo - 14)
 
 Para Suelo 2 Suelo2, x=(la x del suelo2 mas el width - 5), y=(la misma)
@@ -14,7 +18,13 @@ Para Suelo2 Rampa(parte baja), x=(la x del suelo2 mas el width - 15), y=(la y de
 
 Para Suelo2 Rampa(parte arriba), x=(la x de la rampa mas el width -17), y=(la y de la rampa - 26)
 
+Para Suelo2 RampaInvertida(parte alta), x=(la x del suelo -20), y=(la y del suelo + 26)
+
+Para Suelo2 RampaInvertida(parte baja), x=(la x de la rampa - 10), y=(la y de la rampa + 8)
+
 Para Rampa Rampa, x=(la x de la rampa mas el width - 32),y=(la y de la rampa - 34)
+
+Para Rampa2 Rampa2, x(la x de la rampa - 26), y=(la y de la rampa + 36)
 
 vale los with y los heigth van a ser siempre los mismos
 
@@ -24,6 +34,8 @@ Suelo2 = width= 50 heigth=100
 
 Rampa = width=100 heigth=60
 
-vale los limites x no habria limites pues construir un mapa tan grande como quieras, pero la y si tiene limites puede estar entre 120 y 270
+RampaInvertida = width=100 heigth=60
+
+vale los limites x no habria limites pues construir un mapa tan grande como quieras, pero la y si tiene limites puede estar entre 120 y 280
 
 vale sabiendo ya como va todo creame un mapa parecido al de super mario bros asi chulo, parecido a sonic, a alguno de estos juegos pero dandole un toque personalizado. mapa1.dart

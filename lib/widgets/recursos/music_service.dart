@@ -9,20 +9,35 @@ class MusicService {
   bool _isMuted = false;
 
   Future<void> playBackgroundMusic() async {
-      await _audioPlayer.setSource(AssetSource('sonidos/musica.mp3'));
-      await _audioPlayer.resume();
+    try {
+      await _audioPlayer.setSource(AssetSource('sonidos/musica.mp3'))
+          .timeout(const Duration(seconds: 5)); // Add timeout
+      await _audioPlayer.resume()
+          .timeout(const Duration(seconds: 3)); // Add timeout
+    } catch (e) {
+      _isMuted = true;
+    }
   }
 
   Future<void> stopBackgroundMusic() async {
-    await _audioPlayer.stop();
+    try {
+      await _audioPlayer.stop()
+          .timeout(const Duration(seconds: 3)); // Add timeout
+    } catch (e) {
+      print('Error stopping background music: $e');
+    }
   }
 
   Future<void> toggleSound() async {
     _isMuted = !_isMuted;
-    if (_isMuted) {
-      await stopBackgroundMusic();
-    } else {
-      await playBackgroundMusic();
+    try {
+      if (_isMuted) {
+        await stopBackgroundMusic();
+      } else {
+        await playBackgroundMusic();
+      }
+    } catch (e) {
+      print('Error toggling sound: $e');
     }
   }
 

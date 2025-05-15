@@ -12,4 +12,6 @@ class GameEvents {
   static const String buttonPressed = 'button_pressed';
   static const String joystickMoved = 'joystick_moved';
   static const String distanceUpdated = 'distance_updated';
+  static const String playerCrouch = 'player_crouch';
+  static const String playerStandUp = 'player_stand_up';
 }
