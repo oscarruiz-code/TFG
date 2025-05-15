@@ -67,6 +67,14 @@ flutter:
    - assets/personajes/principal/andar_agachado/andar_agachado4.png
    - assets/personajes/principal/andar_agachado/andar_agachado5.png
    - assets/personajes/principal/andar_agachado/andar_agachado6.png
+   - assets/personajes/principal/deslizarse_agachado/deslizarse_agachado1.png
+   - assets/personajes/principal/deslizarse_agachado/deslizarse_agachado2.png
+   - assets/personajes/principal/deslizarse_agachado/deslizarse_agachado3.png
+   - assets/personajes/principal/saltar_agachado/saltar_agachado1.png
+   - assets/personajes/principal/saltar_agachado/saltar_agachado2.png
+   - assets/personajes/items/monedacoin.png
+   - assets/personajes/items/monedasalto.png
+   - assets/personajes/items/monedavelocidad.png
    - assets/perfil/gratis/
    - assets/perfil/premium/
    - assets/etiquetas/
