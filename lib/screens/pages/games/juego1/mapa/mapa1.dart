@@ -6,42 +6,40 @@ class Mapa1 {
   Mapa1()
       : objetos = [
           // Plataforma inicial
-          Suelo(x: 0, y: 230, width: 100, height: 50),
-          Suelo(x: 81, y: 230, width: 100, height: 50),
-          Suelo(x: 162, y: 230, width: 100, height: 50),
-          Suelo(x: 243, y: 230, width: 100, height: 50),
+          Suelo(x: 0, y: 300, width: 100, height: 50),
+          Suelo(x: 81, y: 300, width: 100, height: 50),
+          Suelo(x: 162, y: 300, width: 100, height: 50),
+          Suelo(x: 243, y: 300, width: 100, height: 50),
+          Suelo(x:324, y: 300, width: 100, height: 50),
+          Suelo(x:405, y: 300, width: 100, height: 50),
+          Suelo(x:486, y: 300, width: 100, height: 50),
+          Suelo(x:567, y: 300, width: 100, height: 50),
+          Suelo(x:648, y: 300, width: 100, height: 50),
+          Suelo(x:729, y: 300, width: 100, height: 50),
+          Suelo(x:810, y: 300, width: 100, height: 50),
+          Suelo(x:891, y: 300, width: 100, height: 50),
           
-          // Primera sección - Rampa ascendente
-          Rampa(x: 324, y: 207, width: 100, height: 60),
-          Rampa(x: 392, y: 173, width: 100, height: 60),
+
+          //PLATAFORMA FLOTANTES
+          Suelo(x: 729, y: 190, width: 100, height: 50),
+          Suelo(x: 810, y: 190, width: 100, height: 50),
+          Suelo2(x: 795, y: 70, width: 50, height: 100),
           
-          // Plataforma elevada
-          Suelo(x: 473, y: 173, width: 100, height: 50),
-          Suelo(x: 554, y: 173, width: 100, height: 50),
-          
-          // Descenso con rampa invertida
-          Rampa(x: 629, y: 185, width: 100, height: 60, invertida: true),
-          Rampa(x: 704, y: 221, width: 100, height: 60, invertida: true),
-          
-          // Sección de plataformas alternadas
-          Suelo2(x: 785, y: 180, width: 50, height: 100),
-          Suelo2(x: 830, y: 180, width: 50, height: 100),
-          
-          // Plataforma baja con rampa
-          Suelo(x: 875, y: 230, width: 100, height: 50),
-          Rampa(x: 958, y: 207, width: 100, height: 60),
-          
-          // Sección elevada con plataformas
-          Suelo(x: 1041, y: 173, width: 100, height: 50),
-          Suelo(x: 1122, y: 173, width: 100, height: 50),
-          
-          // Descenso gradual
-          Rampa(x: 1197, y: 185, width: 100, height: 60, invertida: true),
-          Suelo(x: 1272, y: 230, width: 100, height: 50),
-          
-          // Final del nivel
-          Suelo(x: 1353, y: 230, width: 100, height: 50),
-          Suelo(x: 1434, y: 230, width: 100, height: 50),
+
+          //SIGUIENTE PLATAFORMA
+          Suelo(x: 972, y: 300, width: 100, height: 50),
+          Suelo(x: 1053, y: 300, width: 100, height: 50),
+          Rampa(x: 1136, y: 277, width: 100, height: 60),
+          Rampa(x: 1202, y: 243, width: 100, height: 60),
+          Rampa(x: 1270, y: 209, width: 100, height: 60),
+          Rampa(x: 1338, y: 175, width: 100, height: 60),
+          Suelo(x: 1415, y: 163, width: 100, height: 50),
+          Suelo(x: 1496, y: 163, width: 100, height: 50),
+          Suelo(x: 1577, y: 163, width: 100, height: 50),
+          Suelo(x: 1658, y: 163, width: 100, height: 50),
+          Suelo(x: 1739, y: 163, width: 100, height: 50),
+
+
         ];
 
   List<dynamic> get suelos => objetos.where((obj) => obj is Suelo || obj is Suelo2).toList();

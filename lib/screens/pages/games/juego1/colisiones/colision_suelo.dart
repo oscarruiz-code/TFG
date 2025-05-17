@@ -2,38 +2,37 @@ import '../../../../../dependencias/imports.dart';
 
 class GestorColisiones {
   bool verificarColisionSuelo(Player player, List<dynamic> suelos) {
-    final playerFeet = player.y + player.size * 0.5;
+    final playerFeet = player.y + player.size * 0.45; // Ajustado para mejor precisión
     final playerCenterX = player.x;
-    final playerWidth = player.size * 0.8;
+    final playerWidth = player.size * 0.85; // Aumentado para mejor cobertura
     
     for (var suelo in suelos) {
-      if (suelo is Rampa) {
-        // Colisión especial para rampas
-        if (playerCenterX + playerWidth * 0.4 > suelo.x &&
-            playerCenterX - playerWidth * 0.4 < suelo.x + suelo.width) {
-          // Calcular altura de la rampa en la posición actual del jugador
-          double porcentajeX = (playerCenterX - suelo.x) / suelo.width;
+      if (suelo is Rampa || suelo is RampaInvertida) {
+        // Verificación de colisión con rampas
+        if (playerCenterX + playerWidth * 0.5 > suelo.x &&
+            playerCenterX - playerWidth * 0.5 < suelo.x + suelo.width) {
           double alturaRampa;
           
-          if (suelo.invertida) {
-            // Para rampas invertidas, la altura disminuye de izquierda a derecha
-            alturaRampa = suelo.y + (suelo.height * (1 - porcentajeX));
+          if (suelo is RampaInvertida) {
+            alturaRampa = suelo.getAlturaEnPunto(playerCenterX);
+          } else if (suelo is Rampa) {
+            alturaRampa = suelo.getAlturaEnPunto(playerCenterX);
           } else {
-            // Para rampas normales, la altura aumenta de izquierda a derecha
-            alturaRampa = suelo.y + (suelo.height * porcentajeX);
+            continue;
           }
           
-          // Margen de colisión más preciso para rampas
+          // Margen de tolerancia ajustado para mejor detección
           if (playerFeet >= alturaRampa - 5 && playerFeet <= alturaRampa + 5) {
             return true;
           }
         }
       } else {
-        // Colisión con suelos normales y suelo2
-        if (playerCenterX + playerWidth * 0.4 > suelo.x &&
-            playerCenterX - playerWidth * 0.4 < suelo.x + suelo.width &&
-            playerFeet >= suelo.y &&
-            playerFeet <= suelo.y + 10) {
+        // Verificación de colisión con suelos normales
+        Rect sueloHitbox = suelo.hitbox;
+        if (playerCenterX + playerWidth * 0.5 > sueloHitbox.left &&
+            playerCenterX - playerWidth * 0.5 < sueloHitbox.right &&
+            playerFeet >= sueloHitbox.top &&
+            playerFeet <= sueloHitbox.top + 5) {
           return true;
         }
       }
@@ -43,77 +42,61 @@ class GestorColisiones {
 
   double obtenerAlturaDelSuelo(Player player, List<dynamic> suelos) {
     final playerCenterX = player.x;
-    final playerWidth = player.size * 0.8;
+    final playerWidth = player.size * 0.85;
     double alturaMinima = double.infinity;
     
     for (var suelo in suelos) {
-      if (playerCenterX + playerWidth * 0.4 > suelo.x &&
-          playerCenterX - playerWidth * 0.4 < suelo.x + suelo.width) {
+      // Usamos la posición absoluta del suelo sin modificar
+      if (playerCenterX + playerWidth * 0.5 > suelo.x &&
+          playerCenterX - playerWidth * 0.5 < suelo.x + suelo.width) {
         
-        if (suelo is Rampa) {
-          // Calcular altura precisa en la rampa
-          double porcentajeX = (playerCenterX - suelo.x) / suelo.width;
+        if (suelo is Rampa || suelo is RampaInvertida) {
           double alturaRampa;
           
-          if (suelo.invertida) {
-            alturaRampa = suelo.y + (suelo.height * (1 - porcentajeX));
+          if (suelo is RampaInvertida) {
+            alturaRampa = suelo.getAlturaEnPunto(playerCenterX);
+          } else if (suelo is Rampa) {
+            alturaRampa = suelo.getAlturaEnPunto(playerCenterX);
           } else {
-            alturaRampa = suelo.y + (suelo.height * porcentajeX);
+            continue;
           }
           
           if (alturaRampa < alturaMinima) {
             alturaMinima = alturaRampa;
           }
         } else {
-          // Para suelos normales y suelo2
-          if (suelo.y < alturaMinima) {
-            alturaMinima = suelo.y;
+          if (suelo.hitbox.top < alturaMinima) {
+            alturaMinima = suelo.hitbox.top;
           }
         }
       }
     }
-    return alturaMinima;
+    return alturaMinima == double.infinity ? 1000 : alturaMinima;
   }
 
   bool verificarColisionObstaculo(Player player, Rect obstaculoHitbox) {
-    // Colisión más precisa considerando el estado del jugador
-    Rect playerHitbox = player.hitbox;
-    if (player.isSliding) {
-      // Ajustar hitbox cuando el jugador está deslizándose
-      playerHitbox = Rect.fromLTWH(
-        player.x - (player.size * 0.4),
-        player.y - (player.size * 0.25), // Mitad de altura normal
-        player.size * 0.8,
-        player.size * 0.5,
-      );
-    }
+    // Ajuste del hitbox según el estado del jugador
+    Rect playerHitbox = player.isSliding 
+        ? Rect.fromLTWH(
+            player.x - (player.size * 0.425),
+            player.y - (player.size * 0.2),
+            player.size * 0.85,
+            player.size * 0.4,
+          )
+        : player.isCrouching
+            ? Rect.fromLTWH(
+                player.x - (player.size * 0.425),
+                player.y - (player.size * 0.3),
+                player.size * 0.85,
+                player.size * 0.6,
+              )
+            : player.hitbox;
+    
     return playerHitbox.overlaps(obstaculoHitbox);
   }
 
   bool verificarColisionItem(Player player, Rect itemHitbox) {
-    // Usar el hitbox normal del jugador para items
+    // Usar el hitbox del jugador directamente para items
     return player.hitbox.overlaps(itemHitbox);
-  }
-  
-  bool verificarColisionRampa(Player player, List<Rampa> rampas) {
-    final playerFeet = player.y + player.size * 0.5;
-    final playerCenterX = player.x;
-    final playerWidth = player.size * 0.8;
-    
-    for (var rampa in rampas) {
-      if (playerCenterX + playerWidth * 0.4 > rampa.x &&
-          playerCenterX - playerWidth * 0.4 < rampa.x + rampa.width) {
-        // Calcular punto exacto de colisión en la rampa
-        double porcentajeX = (playerCenterX - rampa.x) / rampa.width;
-        double alturaRampa = rampa.invertida ?
-          rampa.y + (rampa.height * (1 - porcentajeX)) :
-          rampa.y + (rampa.height * porcentajeX);
-          
-        if (playerFeet >= alturaRampa - 5 && playerFeet <= alturaRampa + 5) {
-          return true;
-        }
-      }
-    }
-    return false;
   }
 }

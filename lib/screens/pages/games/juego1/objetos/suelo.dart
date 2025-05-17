@@ -15,5 +15,10 @@ class Suelo {
     this.sprite = 'assets/objetos/suelo/suelo.png',
   });
 
-  Rect get hitbox => Rect.fromLTWH(x, y, width, height);
+  Rect get hitbox => Rect.fromLTWH(
+    x + (width * 0.05),
+    y + (height * 0.40),
+    width * 0.88,
+    height * 0.7,
+  );
 }

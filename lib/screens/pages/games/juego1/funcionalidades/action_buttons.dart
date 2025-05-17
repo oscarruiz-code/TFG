@@ -50,18 +50,18 @@ class ActionButtons extends StatelessWidget {
     return GestureDetector(
       onTapDown: (_) => onTap(),
       child: Container(
-        width: 60,
-        height: 60,
+        width: 50, // Reducido de 60 a 50
+        height: 50, // Reducido de 60 a 50
         decoration: BoxDecoration(
-          color: color.withOpacity(0.3),
+          color: color.withOpacity(0.6),
           shape: BoxShape.circle,
           border: Border.all(
-            color: Colors.white.withOpacity(0.5),
+            color: Colors.white.withOpacity(0.7),
             width: 2,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.2),
+              color: Colors.black.withOpacity(0.3),
               blurRadius: 4,
               spreadRadius: 1,
             ),
@@ -69,8 +69,8 @@ class ActionButtons extends StatelessWidget {
         ),
         child: Icon(
           icon,
-          color: Colors.white,
-          size: 40,
+          color: Colors.white.withOpacity(0.9),
+          size: 30, // Reducido de 40 a 30
         ),
       ),
     );

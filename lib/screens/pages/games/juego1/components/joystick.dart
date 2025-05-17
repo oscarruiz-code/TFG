@@ -44,26 +44,26 @@ class _JoystickState extends State<Joystick> {
         widget.onDirectionChanged(0, 0);
       },
       child: Container(
-        width: 120,
-        height: 120,
+        width: 100, // Reducido de 120 a 100
+        height: 100, // Reducido de 120 a 100
         decoration: BoxDecoration(
-          color: Colors.blue.withOpacity(0.3),
+          color: Colors.blue.withOpacity(0.6),
           shape: BoxShape.circle,
           border: Border.all(
-            color: Colors.white.withOpacity(0.5),
+            color: Colors.white.withOpacity(0.7),
             width: 2,
           ),
         ),
         child: Center(
           child: Container(
-            width: 60,
-            height: 60,
+            width: 50, // Reducido de 60 a 50
+            height: 50, // Reducido de 60 a 50
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.6),
+              color: Colors.white.withOpacity(0.8),
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.2),
+                  color: Colors.black.withOpacity(0.3),
                   blurRadius: 4,
                   spreadRadius: 1,
                 ),

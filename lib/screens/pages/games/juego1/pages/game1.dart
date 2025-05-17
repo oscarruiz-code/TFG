@@ -49,13 +49,24 @@ class _Game1State extends State<Game1> with TickerProviderStateMixin {
     final dtSeconds = dt / 1000000.0;
     
     setState(() {
-      player.updateAnimation(dtSeconds);
+      // Actualizar la física del jugador
+      if (player.isJumping) {
+        player.velocidadVertical += player.gravedad * dtSeconds;
+        player.y += player.velocidadVertical * dtSeconds;
+      }
+      
+      player.animationTime += dtSeconds;
       _checkCollisions();
+      
+      // Emitir evento de actualización de distancia
+      _eventBus.emit(GameEvents.distanceUpdated, {'distancia': distancia});
     });
   }
 
   void _checkCollisions() {
     final gestorColisiones = GestorColisiones();
+    // Ajustamos la posición del jugador con el worldOffset para las colisiones
+    player.x = MediaQuery.of(context).size.width / 2 - worldOffset;
     final groundLevel = gestorColisiones.obtenerAlturaDelSuelo(player, mapa.objetos);
     
     if (player.isJumping) {
@@ -72,78 +83,129 @@ class _Game1State extends State<Game1> with TickerProviderStateMixin {
 
   void _setupEventListeners() {
     _eventBus.on(GameEvents.buttonPressed, (data) {
+      if (!mounted) return;
       if (data['type'] == 'jump') {
-        player.jump();
+        setState(() {
+          player.jump();
+          if (player.isCrouching) {
+            player.crouch();
+          }
+        });
       } else if (data['type'] == 'slide') {
-        player.slide();
+        setState(() {
+          player.slide();
+          if (player.isCrouching) {
+            player.standUp();
+          }
+        });
       } else if (data['type'] == 'crouch') {
-        player.crouch();
+        setState(() {
+          if (player.isCrouching) {
+            player.standUp();
+          } else {
+            player.crouch();
+          }
+        });
       }
     });
 
     _eventBus.on(GameEvents.joystickMoved, (data) {
+      if (!mounted) return;
       final dx = data['dx'] as double;
       final dy = data['dy'] as double;
-      final groundLevel = GestorColisiones().obtenerAlturaDelSuelo(player, mapa.objetos);
-      player.move(dx, dy, groundLevel: groundLevel);
+      
+      setState(() {
+        if (dx != 0) {
+          worldOffset += dx * -5;
+          worldOffset = worldOffset.clamp(minWorldOffset, maxWorldOffset);
+        }
+        
+        distancia = (-worldOffset ~/ 100).abs();
+        
+        final groundLevel = GestorColisiones().obtenerAlturaDelSuelo(player, mapa.objetos);
+        player.move(dx, dy, groundLevel: groundLevel);
+      });
     });
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (_isFirstBuild) {
-      _isFirstBuild = false;
-      _initializeGame();
-    }
-  }
-
-  void _initializeGame() {
-    final size = MediaQuery.of(context).size;
-    maxWorldOffset = 0;
-    minWorldOffset = -(size.width * 4);
-    mapa = Mapa1();
-    
-    // Inicializar el jugador en el centro de la pantalla
-    player = Player(
-      x: size.width / 2,
-      y: size.height - 100,
-    );
-  }
-
-  Widget _buildPlayer() {
-    return Positioned(
-      left: player.x - player.size * 0.5,
-      top: player.y - player.size * 0.5,
-      child: Transform.scale(
-        scaleX: player.isFacingRight ? 1 : -1,
-        child: Image.asset(
-          player.getCurrentSprite(),
-          width: player.size,
-          height: player.size,
-        ),
-      ),
-    );
   }
 
   Widget _buildMapObjects() {
     return Stack(
       children: mapa.objetos.map((objeto) {
-        return Positioned(
-          left: objeto.x + worldOffset,
-          top: objeto.y,
-          child: Container(
-            width: objeto.width,
-            height: objeto.height,
-            child: Image.asset(
-              objeto.sprite,
-              width: objeto.width,
-              height: objeto.height,
-              fit: BoxFit.cover,
+        // Obtener el hitbox real del objeto
+        final hitbox = objeto.hitbox;
+        return Stack(
+          children: [
+            // Hitbox del suelo (visualización)
+            Positioned(
+              left: hitbox.left + worldOffset,  // Usar la posición real del hitbox
+              top: hitbox.top,  // Usar la posición real del hitbox
+              child: Container(
+                width: hitbox.width,  // Usar el ancho real del hitbox
+                height: hitbox.height,  // Usar el alto real del hitbox
+                decoration: BoxDecoration(
+                  color: Colors.blue.withOpacity(0.3),
+                  border: Border.all(
+                    color: Colors.blue,
+                    width: 1,
+                  ),
+                ),
+              ),
             ),
-          ),
+            // Sprite del suelo
+            Positioned(
+              left: objeto.x + worldOffset,
+              top: objeto.y,
+              child: Container(
+                width: objeto.width,
+                height: objeto.height,
+                child: Image.asset(
+                  objeto.sprite,
+                  width: objeto.width,
+                  height: objeto.height,
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
+          ],
         );
       }).toList(),
+    );
+  }
+
+  Widget _buildPlayer() {
+    final playerCenterX = MediaQuery.of(context).size.width / 2;
+    return Stack(
+      children: [
+        // Hitbox del jugador (visualización)
+        Positioned(
+          left: playerCenterX - player.size * 0.46, // Ajustado para coincidir con el sprite
+          top: player.y - player.size * 0.45, // Ajustado para coincidir con el sprite
+          child: Container(
+            width: player.size * 0.85,
+            height: player.size * (player.isSliding ? 0.4 : 0.94),
+            decoration: BoxDecoration(
+              color: Colors.red.withOpacity(0.3),
+              border: Border.all(
+                color: Colors.red,
+                width: 1,
+              ),
+            ),
+          ),
+        ),
+        // Sprite del jugador
+        Positioned(
+          left: playerCenterX - player.size * 0.5,
+          top: player.y - player.size * 0.5,
+          child: Transform.scale(
+            scaleX: player.isFacingRight ? 1 : -1,
+            child: Image.asset(
+              player.getCurrentSprite(),
+              width: player.size,
+              height: player.size,
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -183,14 +245,14 @@ class _Game1State extends State<Game1> with TickerProviderStateMixin {
   Widget _buildStats() {
     return Positioned(
       bottom: 20,
-      left: MediaQuery.of(context).size.width * 0.3,
-      right: MediaQuery.of(context).size.width * 0.3,
+      left: MediaQuery.of(context).size.width * 0.35, // Reducido de 0.4 a 0.35
+      right: MediaQuery.of(context).size.width * 0.35, // Reducido de 0.4 a 0.35
       child: Container(
-        height: 30,
-        padding: const EdgeInsets.symmetric(horizontal: 20),
+        height: 30, // Aumentado de 25 a 30
+        padding: const EdgeInsets.symmetric(horizontal: 20), // Aumentado de 15 a 20
         decoration: BoxDecoration(
           color: Colors.black.withOpacity(0.5),
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(20), // Aumentado de 15 a 20
           border: Border.all(
             color: Colors.white.withOpacity(0.3),
             width: 1,
@@ -201,51 +263,32 @@ class _Game1State extends State<Game1> with TickerProviderStateMixin {
           children: [
             Row(
               children: [
-                const Icon(Icons.monetization_on, color: Colors.amber, size: 20),
+                const Icon(Icons.monetization_on, color: Colors.amber, size: 20), // Aumentado de 18 a 20
                 const SizedBox(width: 5),
                 Text(
                   '$monedas',
                   style: const TextStyle(
                     color: Colors.white,
-                    fontSize: 14,
+                    fontSize: 14, // Aumentado de 12 a 14
                     fontWeight: FontWeight.bold,
                   ),
                 ),
               ],
             ),
             Container(
-              height: 20,
+              height: 20, // Aumentado de 15 a 20
               width: 1,
               color: Colors.white.withOpacity(0.3),
             ),
             Row(
               children: [
-                const Icon(Icons.favorite, color: Colors.red, size: 20),
+                const Icon(Icons.favorite, color: Colors.red, size: 20), // Aumentado de 18 a 20
                 const SizedBox(width: 5),
                 Text(
                   '$vida',
                   style: const TextStyle(
                     color: Colors.white,
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-            Container(
-              height: 20,
-              width: 1,
-              color: Colors.white.withOpacity(0.3),
-            ),
-            Row(
-              children: [
-                const Icon(Icons.speed, color: Colors.blue, size: 20),
-                const SizedBox(width: 5),
-                Text(
-                  '$distancia m',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 14,
+                    fontSize: 14, // Aumentado de 12 a 14
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -254,6 +297,27 @@ class _Game1State extends State<Game1> with TickerProviderStateMixin {
           ],
         ),
       ),
+    );
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_isFirstBuild) {
+      _isFirstBuild = false;
+      _initializeGame();
+    }
+  }
+
+  void _initializeGame() {
+    final size = MediaQuery.of(context).size;
+    maxWorldOffset = 0;
+    minWorldOffset = -(size.width * 4);
+    mapa = Mapa1();
+    
+    player = Player(
+      x: size.width / 2,
+      y: size.height - 50, // Reducido de 60 a 45 para mantener la proporción
     );
   }
 
@@ -284,9 +348,12 @@ class _Game1State extends State<Game1> with TickerProviderStateMixin {
   void dispose() {
     isGameActive = false;
     _gameLoopController.dispose();
+    // Remover todos los event listeners
     _eventBus.off(GameEvents.buttonPressed, (_) {});
     _eventBus.off(GameEvents.joystickMoved, (_) {});
+    _eventBus.off(GameEvents.distanceUpdated, (_) {});
 
+    // Restaurar la orientación
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,
       DeviceOrientation.portraitDown,
