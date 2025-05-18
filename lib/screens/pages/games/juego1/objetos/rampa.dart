@@ -16,25 +16,25 @@ class Rampa {
   });
 
   Rect get hitbox => Rect.fromLTWH(
-    x + (width * 0.09),
+    x + (width * 0.3),   // Aumentamos significativamente el offset
     y + (height * 0.01),
-    width * 0.85,
+    width * 0.45,        // Reducimos aún más el ancho del hitbox
     height * 0.95,
   );
 
   // Método para calcular la altura en un punto específico de la rampa
   double getAlturaEnPunto(double puntoX) {
     double porcentajeX = (puntoX - x) / width;
-    // Calculamos la altura base de la rampa
-    double alturaBase = y + (height * 0.75) - (height * 0.85 * porcentajeX);
+    // Calculamos la altura base de la rampa con una pendiente más pronunciada
+    double alturaBase = y + height - (height * porcentajeX);
     
-    // Suavizamos la transición al final de la rampa (último 40%)
-    if (porcentajeX > 0.6) {
-      // Calculamos un factor de suavizado para el final con una curva más suave
-      double factor = ((porcentajeX - 0.6) / 0.4);
-      // Aplicamos una curva de octavo grado para una transición extremadamente suave
-      factor = factor * factor * factor * factor * factor * factor * factor * factor;
-      // Interpolamos suavemente entre la altura de la rampa y la altura del suelo
+    // Suavizamos solo el final de la rampa (último 3%)
+    if (porcentajeX > 0.97) {
+      // Factor de suavizado extremadamente corto
+      double factor = ((porcentajeX - 0.97) / 0.03);
+      // Aplicamos una curva simple para el final
+      factor = factor * factor;
+      // Interpolamos con el suelo
       return alturaBase + (y - alturaBase) * factor;
     }
     

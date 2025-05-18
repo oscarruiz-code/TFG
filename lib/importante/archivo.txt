@@ -25,7 +25,7 @@ Para Suelo2 RampaInvertida(parte baja), x=(la x de la rampa - 10), y=(la y de la
 Para Rampa Rampa, x=(la x de la rampa mas el width - 32),y=(la y de la rampa - 34)
 
 Para Rampa2 Rampa2, x(la x de la rampa - 26), y=(la y de la rampa + 36)
-
+ 
 vale los with y los heigth van a ser siempre los mismos
 
 Suelo = width=100 heigth=50

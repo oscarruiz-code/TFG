@@ -312,7 +312,7 @@ class _Game1State extends State<Game1> with TickerProviderStateMixin {
   void _initializeGame() {
     final size = MediaQuery.of(context).size;
     maxWorldOffset = 0;
-    minWorldOffset = -(size.width * 4);
+    minWorldOffset = -6000; // Ajustado al tamaño real del mapa
     mapa = Mapa1();
     
     player = Player(

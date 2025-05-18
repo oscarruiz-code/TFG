@@ -16,16 +16,28 @@ class RampaInvertida {
   });
 
   Rect get hitbox => Rect.fromLTWH(
-    x + (width * 0.15),
+    x + (width * 0.3),   // Aumentamos el offset como en la rampa normal
     y + (height * 0.1),
-    width * 0.7,
+    width * 0.60,        // Reducimos el ancho del hitbox
     height * 0.85,
   );
 
   // Método para calcular la altura en un punto específico de la rampa
   double getAlturaEnPunto(double puntoX) {
     double porcentajeX = (puntoX - x) / width;
-    // Para rampas invertidas, la altura disminuye de izquierda a derecha
-    return y + (height * (1 - porcentajeX));
+    // Ahora la altura aumenta de izquierda a derecha
+    double alturaBase = y + (height * porcentajeX);
+    
+    // Suavizamos solo el final de la rampa (último 3%)
+    if (porcentajeX > 0.97) {
+      // Factor de suavizado extremadamente corto
+      double factor = ((porcentajeX - 0.97) / 0.03);
+      // Aplicamos una curva simple para el final
+      factor = factor * factor;
+      // Interpolamos con el suelo
+      return alturaBase + (y - alturaBase) * factor;
+    }
+    
+    return alturaBase;
   }
 }
