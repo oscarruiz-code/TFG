@@ -1,4 +1,6 @@
-//DEPENDENCIAS
+//===============================================
+// DEPENDENCIAS EXTERNAS
+//===============================================
 export 'package:flutter/material.dart';
 export 'dart:math';
 export 'package:video_player/video_player.dart';
@@ -7,8 +9,9 @@ export 'package:mysql1/mysql1.dart';
 export 'package:flutter/foundation.dart';
 export 'dart:async';
 
-//CLASES
-
+//===============================================
+// CLASES
+//===============================================
 export 'package:oscarruizcode_pingu/screens/Splash/logo.dart';
 
 export 'package:oscarruizcode_pingu/screens/pages/admin/menus/admin_menu.dart';
@@ -40,10 +43,16 @@ export 'package:oscarruizcode_pingu/screens/pages/games/juego1/colisiones/colisi
 export 'package:oscarruizcode_pingu/screens/pages/games/juego1/components/joystick.dart';
 export 'package:oscarruizcode_pingu/screens/pages/games/juego1/mapa/mapa1.dart';
 export 'package:oscarruizcode_pingu/screens/pages/games/juego1/funcionalidades/action_buttons.dart';
-export 'package:oscarruizcode_pingu/screens/pages/games/juego1/objetos/rampa.dart';
-export 'package:oscarruizcode_pingu/screens/pages/games/juego1/objetos/rampa_invertida.dart';
-export 'package:oscarruizcode_pingu/screens/pages/games/juego1/objetos/suelo.dart';
-export 'package:oscarruizcode_pingu/screens/pages/games/juego1/objetos/suelo2.dart';
+export 'package:oscarruizcode_pingu/screens/pages/games/juego1/objetos/estructuras/rampa.dart';
+export 'package:oscarruizcode_pingu/screens/pages/games/juego1/objetos/estructuras/rampa_invertida.dart';
+export 'package:oscarruizcode_pingu/screens/pages/games/juego1/objetos/estructuras/suelo.dart';
+export 'package:oscarruizcode_pingu/screens/pages/games/juego1/objetos/estructuras/suelo2.dart';
+export 'package:oscarruizcode_pingu/screens/pages/games/juego1/objetos/meta/casa.dart';
+export 'package:oscarruizcode_pingu/screens/pages/games/juego1/objetos/monedas/moneda_base.dart';
+export 'package:oscarruizcode_pingu/screens/pages/games/juego1/objetos/monedas/moneda_normal.dart';
+export 'package:oscarruizcode_pingu/screens/pages/games/juego1/objetos/monedas/moneda_salto.dart';
+export 'package:oscarruizcode_pingu/screens/pages/games/juego1/objetos/monedas/moneda_velocidad.dart';
+export 'package:oscarruizcode_pingu/screens/pages/games/juego1/pages/game1.dart';
 
 
 export 'package:oscarruizcode_pingu/screens/pages/games/juego2/game2.dart';

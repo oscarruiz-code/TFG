@@ -8,6 +8,6 @@ class AnimacionAndarAgachado {
     'assets/personajes/principal/andar_agachado/andar_agachado6.png',
   ];
   
-  static const double velocidad = 1.5;
-  static const double frameTime = 0.12;
+  static const double velocidad = 1.5; // Aumentada pero manteniendo control
+  static const double frameTime = 0.01; // Ajustado para animación más fluida
 }

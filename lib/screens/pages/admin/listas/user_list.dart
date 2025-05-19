@@ -50,10 +50,11 @@ class _UserListScreenState extends State<UserListScreen> with SingleTickerProvid
         // Lógica de permisos de edición
         bool canEdit = false;
         if (widget.isAdmin) {
+          // Si es admin, puede editar a todos excepto otros admins
           canEdit = user.role != 'admin' || user.id == widget.loggedUserId;
         } else {
-          canEdit = user.role != 'admin' && (user.role == 'user' || 
-              (user.role == 'subadmin' && (user.id == widget.loggedUserId || user.role == 'subadmin')));
+          // Si es subadmin, puede editar usuarios normales y otros subadmins
+          canEdit = user.role == 'user' || user.role == 'subadmin';
         }
 
         return ListTile(
@@ -80,6 +81,7 @@ class _UserListScreenState extends State<UserListScreen> with SingleTickerProvid
                         builder: (context) => UserDetailScreen(
                           userId: user.id!,
                           isAdmin: widget.isAdmin,
+                          loggedUserId: widget.loggedUserId,
                         ),
                       ),
                     );
@@ -87,12 +89,21 @@ class _UserListScreenState extends State<UserListScreen> with SingleTickerProvid
                 )
               : null,
           onTap: () {
+            if (!canEdit && !widget.isAdmin) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('No tienes permisos para editar este usuario'),
+                ),
+              );
+              return;
+            }
             Navigator.push(
               context,
               MaterialPageRoute(
                 builder: (context) => UserDetailScreen(
                   userId: user.id!,
                   isAdmin: widget.isAdmin,
+                  loggedUserId: widget.loggedUserId,
                 ),
               ),
             );
@@ -127,7 +138,7 @@ class _UserListScreenState extends State<UserListScreen> with SingleTickerProvid
           ],
         ),
         actions: [
-          if (widget.isAdmin)
+          if (widget.isAdmin)  // Esto ahora dependerá del rol real 'admin'
             IconButton(
               icon: const Icon(Icons.person_add),
               onPressed: () {

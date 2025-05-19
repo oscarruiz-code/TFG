@@ -180,31 +180,16 @@ class AdminService {
         'SELECT * FROM admin_stats WHERE admin_id = ?',
         [adminId],
       );
+
       if (results.isEmpty) {
-        // Insertar con valores predeterminados explícitos
-        await conn.query(
-          '''INSERT INTO admin_stats 
-             (admin_id, tickets_game2, coins, rename_tickets, 
-              has_used_free_rename, current_avatar, unlocked_premium_avatars)
-             VALUES (?, 0, 0, 0, false, 'assets/avatar/defecto.png', '')''',
-          [adminId],
-        );
+        await createAdminStats(adminId);
         results = await conn.query(
           'SELECT * FROM admin_stats WHERE admin_id = ?',
           [adminId],
         );
       }
-      
-      // Asegurarse de que los valores numéricos no sean nulos
-      var data = results.first.fields;
-      data['tickets_game2'] = data['tickets_game2'] ?? 0;
-      data['coins'] = data['coins'] ?? 0;
-      data['rename_tickets'] = data['rename_tickets'] ?? 0;
-      data['has_used_free_rename'] = data['has_used_free_rename'] ?? false;
-      data['current_avatar'] = data['current_avatar'] ?? 'assets/avatar/defecto.png';
-      data['unlocked_premium_avatars'] = data['unlocked_premium_avatars'] ?? '';
-      
-      return PlayerStats.fromMap(data);
+
+      return PlayerStats.fromMap(results.first.fields);
     } finally {
       await conn.close();
     }

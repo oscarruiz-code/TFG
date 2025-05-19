@@ -44,33 +44,33 @@ class GestorColisiones {
     final playerCenterX = player.x;
     final playerWidth = player.size * 0.85;
     double alturaMinima = double.infinity;
+    double alturaActual = player.y + player.size * 0.5;
     
     for (var suelo in suelos) {
-      // Usamos la posición absoluta del suelo sin modificar
       if (playerCenterX + playerWidth * 0.5 > suelo.x &&
           playerCenterX - playerWidth * 0.5 < suelo.x + suelo.width) {
         
-        if (suelo is Rampa || suelo is RampaInvertida) {
-          double alturaRampa;
-          
-          if (suelo is RampaInvertida) {
-            alturaRampa = suelo.getAlturaEnPunto(playerCenterX);
-          } else if (suelo is Rampa) {
-            alturaRampa = suelo.getAlturaEnPunto(playerCenterX);
-          } else {
-            continue;
-          }
-          
-          if (alturaRampa < alturaMinima) {
-            alturaMinima = alturaRampa;
-          }
+        double alturaSuperficie;
+        if (suelo is Rampa) {
+          alturaSuperficie = suelo.getAlturaEnPunto(playerCenterX);
+        } else if (suelo is RampaInvertida) {
+          alturaSuperficie = suelo.getAlturaEnPunto(playerCenterX);
         } else {
-          if (suelo.hitbox.top < alturaMinima) {
-            alturaMinima = suelo.hitbox.top;
-          }
+          alturaSuperficie = suelo.hitbox.top;
+        }
+        
+        // Solo considerar superficies que estén debajo del jugador
+        if (alturaSuperficie > player.y && alturaSuperficie < alturaMinima) {
+          alturaMinima = alturaSuperficie;
+        }
+        
+        // Si encontramos una superficie válida justo debajo del jugador
+        if (alturaSuperficie >= alturaActual && alturaSuperficie < alturaMinima) {
+          alturaMinima = alturaSuperficie;
         }
       }
     }
+    
     return alturaMinima == double.infinity ? 1000 : alturaMinima;
   }
 
@@ -93,6 +93,27 @@ class GestorColisiones {
             : player.hitbox;
     
     return playerHitbox.overlaps(obstaculoHitbox);
+  }
+
+  bool verificarColisionCasa(Player player, Casa casa) {
+    // Ajuste del hitbox según el estado del jugador, similar a verificarColisionObstaculo
+    Rect playerHitbox = player.isSliding 
+        ? Rect.fromLTWH(
+            player.x - (player.size * 0.425),
+            player.y - (player.size * 0.2),
+            player.size * 0.85,
+            player.size * 0.4,
+          )
+        : player.isCrouching
+            ? Rect.fromLTWH(
+                player.x - (player.size * 0.425),
+                player.y - (player.size * 0.3),
+                player.size * 0.85,
+                player.size * 0.6,
+              )
+            : player.hitbox;
+    
+    return playerHitbox.overlaps(casa.hitbox);
   }
 
   bool verificarColisionItem(Player player, Rect itemHitbox) {

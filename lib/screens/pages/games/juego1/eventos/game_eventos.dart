@@ -14,4 +14,7 @@ class GameEvents {
   static const String distanceUpdated = 'distance_updated';
   static const String playerCrouch = 'player_crouch';
   static const String playerStandUp = 'player_stand_up';
+  static const String playerUpdateAnimation = 'player_update_animation';
+  static const String checkpointSet = 'checkpoint_set';
+  static const String playerRespawn = 'player_respawn';
 }

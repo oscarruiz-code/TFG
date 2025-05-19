@@ -4,11 +4,13 @@ import 'dart:developer' as developer;
 class UserDetailScreen extends StatefulWidget {
   final int userId;
   final bool isAdmin;
+  final int loggedUserId;  // Agregamos este parámetro
 
   const UserDetailScreen({
     super.key,
     required this.userId,
     required this.isAdmin,
+    required this.loggedUserId,  // Requerimos el parámetro
   });
 
   @override
@@ -139,9 +141,14 @@ class UserDetailScreenState extends State<UserDetailScreen> {
     }
 
     // Determinar si el usuario actual puede editar este usuario
-    bool canEdit = widget.isAdmin || (user!.role == 'user');
+    bool canEdit = widget.isAdmin || 
+    // Si es subadmin, solo puede editar usuarios normales y otros subadmins
+    (!widget.isAdmin && (user!.role == 'user' || user!.role == 'subadmin'));
+
     // Determinar si puede eliminar al usuario
-    bool canDelete = widget.isAdmin || (user!.role == 'user');
+    bool canDelete = widget.isAdmin || 
+    // Si es subadmin, solo puede eliminar usuarios normales
+    (!widget.isAdmin && user!.role == 'user');
 
     return Scaffold(
       appBar: AppBar(title: Text('Detalles de ${user!.username}')),

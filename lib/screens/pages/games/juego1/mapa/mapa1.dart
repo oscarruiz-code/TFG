@@ -104,17 +104,20 @@ class Mapa1 {
           Suelo(x: 5075, y: 300, width: 100, height: 50),
           Suelo(x: 5143, y: 300, width: 100, height: 50),
           
+          //MONEDAS
+          MonedaVelocidad(x: 810, y: 290),
+          MonedaNormal(x: 840, y: 290),
+          MonedaNormal(x: 870, y: 290),
+          MonedaNormal(x: 900, y: 290),
+          MonedaNormal(x: 930, y: 290),  
 
 
-
-
-
-
-
-          
-          
+          // Casa final
+          Casa(x: 5075, y: 200, width: 100, height: 100),
         ];
 
   List<dynamic> get suelos => objetos.where((obj) => obj is Suelo || obj is Suelo2).toList();
   List<dynamic> get rampas => objetos.where((obj) => obj is Rampa || obj is RampaInvertida).toList();
+  List<dynamic> get casas => objetos.where((obj) => obj is Casa).toList();
+  List<dynamic> get monedas => objetos.where((obj) => obj is MonedaNormal || obj is MonedaSalto || obj is MonedaVelocidad).toList();
 }

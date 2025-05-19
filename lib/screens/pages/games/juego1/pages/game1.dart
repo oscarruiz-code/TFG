@@ -2,7 +2,14 @@ import 'package:flutter/services.dart';
 import '../../../../../dependencias/imports.dart';
 
 class Game1 extends StatefulWidget {
-  const Game1({Key? key}) : super(key: key);
+  final int userId;  // Añadimos la propiedad userId
+  final Map<String, dynamic>? savedGameData;  // Añadimos este parámetro
+  
+  const Game1({
+    Key? key,
+    required this.userId,  // Requerimos el userId en el constructor
+    this.savedGameData,  // Parámetro opcional para datos guardados
+  }) : super(key: key);
 
   @override
   State<Game1> createState() => _Game1State();
@@ -22,6 +29,8 @@ class _Game1State extends State<Game1> with TickerProviderStateMixin {
   int monedas = 0;
   int vida = 100;
   int distancia = 0;
+  int _gameDuration = 0;
+  late Timer _gameTimer;
 
   @override
   void initState() {
@@ -40,6 +49,15 @@ class _Game1State extends State<Game1> with TickerProviderStateMixin {
     )..repeat();
     
     _gameLoopController.addListener(_gameLoop);
+    
+    // Iniciar el temporizador del juego
+    _gameTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (isGameActive) {
+        setState(() {
+          _gameDuration++;
+        });
+      }
+    });
   }
 
   void _gameLoop() {
@@ -53,6 +71,17 @@ class _Game1State extends State<Game1> with TickerProviderStateMixin {
       if (player.isJumping) {
         player.velocidadVertical += player.gravedad * dtSeconds;
         player.y += player.velocidadVertical * dtSeconds;
+        
+        // Obtener el nivel del suelo actual
+        final groundLevel = GestorColisiones().obtenerAlturaDelSuelo(player, mapa.objetos);
+        
+        // Verificar si el jugador ha tocado el suelo
+        if (player.y + player.size * 0.5 >= groundLevel) {
+          player.y = groundLevel - player.size * 0.5;
+          player.isJumping = false;
+          player.velocidadVertical = 0;
+          _eventBus.emit(GameEvents.playerLand);
+        }
       }
       
       player.animationTime += dtSeconds;
@@ -65,10 +94,54 @@ class _Game1State extends State<Game1> with TickerProviderStateMixin {
 
   void _checkCollisions() {
     final gestorColisiones = GestorColisiones();
-    // Ajustamos la posición del jugador con el worldOffset para las colisiones
     player.x = MediaQuery.of(context).size.width / 2 - worldOffset;
     final groundLevel = gestorColisiones.obtenerAlturaDelSuelo(player, mapa.objetos);
     
+    // Verificar si el jugador cayó al vacío
+    if (player.y > MediaQuery.of(context).size.height + 50) {
+      vida -= 20;
+      if (vida <= 0) {
+        _handleGameOver(false);
+      } else {
+        // Reproducir sonido de daño si lo tienes
+        setState(() {
+          if (player.checkpointX != 0) {
+            worldOffset = player.checkpointWorldOffset;
+            player.respawnAtCheckpoint();
+          } else {
+            worldOffset = 0;
+            player.x = MediaQuery.of(context).size.width / 2;
+            player.y = groundLevel - player.size * 0.5;
+            player.isJumping = false;
+            player.velocidadVertical = 0;
+          }
+          // Añadir efecto visual de daño
+          player.isInvulnerable = true;
+          Future.delayed(const Duration(seconds: 2), () {
+            if (mounted) {
+              setState(() {
+                player.isInvulnerable = false;
+              });
+            }
+          });
+        });
+      }
+      return;
+    }
+
+    // Establecer checkpoints automáticos cada cierta distancia
+    if (distancia > 0 && distancia % 500 == 0) { // Cada 500 unidades de distancia
+      player.setCheckpoint(player.x, player.y, worldOffset);
+    }
+    
+    // Verificar colisión con la casa
+    for (var casa in mapa.casas) {
+      if (gestorColisiones.verificarColisionCasa(player, casa)) {
+        _handleGameOver(true);
+        return;
+      }
+    }
+
     if (player.isJumping) {
       if (player.y + player.size * 0.5 >= groundLevel) {
         player.y = groundLevel - player.size * 0.5;
@@ -78,6 +151,15 @@ class _Game1State extends State<Game1> with TickerProviderStateMixin {
       }
     } else {
       player.y = groundLevel - player.size * 0.5;
+    }
+    // Verificar colisión con monedas
+    for (var moneda in mapa.monedas) {
+      if (!moneda.isCollected && gestorColisiones.verificarColisionItem(player, moneda.hitbox)) {
+        setState(() {
+          moneda.isCollected = true;
+          moneda.aplicarEfecto(player);
+        });
+      }
     }
   }
 
@@ -315,37 +397,115 @@ class _Game1State extends State<Game1> with TickerProviderStateMixin {
     minWorldOffset = -6000; // Ajustado al tamaño real del mapa
     mapa = Mapa1();
     
-    player = Player(
-      x: size.width / 2,
-      y: size.height - 50, // Reducido de 60 a 45 para mantener la proporción
-    );
+    if (widget.savedGameData != null) {
+      // Cargar datos guardados
+      worldOffset = widget.savedGameData!['worldOffset'] ?? 0.0;
+      monedas = widget.savedGameData!['coins'] ?? 0;
+      vida = widget.savedGameData!['health'] ?? 100;
+      distancia = widget.savedGameData!['score'] ?? 0;
+      
+      player = Player(
+        x: widget.savedGameData!['playerX'] ?? size.width / 2,
+        y: widget.savedGameData!['playerY'] ?? size.height - 50,
+      );
+    } else {
+      // Inicialización normal
+      player = Player(
+        x: size.width / 2,
+        y: size.height - 50,
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Container(
-        color: Colors.blueGrey[900],
-        child: Stack(
-          children: [
-            Positioned.fill(
-              child: Image.asset(
-                'assets/imagenes/fondo.png',
-                fit: BoxFit.cover,
+    return WillPopScope(
+      onWillPop: _onWillPop,
+      child: Scaffold(
+        body: Container(
+          color: Colors.blueGrey[900],
+          child: Stack(
+            children: [
+              Positioned.fill(
+                child: Image.asset(
+                  'assets/imagenes/fondo.png',
+                  fit: BoxFit.cover,
+                ),
               ),
-            ),
-            _buildMapObjects(),
-            _buildPlayer(),
-            _buildControls(),
-            _buildStats(),
-          ],
+              _buildMapObjects(),
+              _buildPlayer(),
+              _buildControls(),
+              _buildStats(),
+            ],
+          ),
         ),
       ),
     );
   }
 
+  Future<bool> _onWillPop() async {
+    isGameActive = false;
+    _gameLoopController.stop();
+
+    final result = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color.fromRGBO(0, 32, 96, 1),
+        title: const Text('¿Guardar partida?', style: TextStyle(color: Colors.white)),
+        content: const Text('¿Deseas guardar tu progreso? Cuidado sobrescribirá la partida guardada anterior.', 
+          style: TextStyle(color: Colors.white)),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop(false);
+            },
+            child: const Text('No guardar', style: TextStyle(color: Colors.red)),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop(true);
+            },
+            child: const Text('Guardar', style: TextStyle(color: Colors.blue)),
+          ),
+        ],
+      ),
+    );
+
+    if (result == true) {
+      final PlayerService playerService = PlayerService();
+      await playerService.saveGameProgress(
+        userId: widget.userId,
+        gameType: 1,
+        score: distancia,
+        coins: monedas,
+        victory: false,
+        duration: _gameDuration,
+        worldOffset: worldOffset,
+        playerX: player.x,
+        playerY: player.y,
+        health: vida
+      );
+      
+      if (!mounted) return true;
+      Navigator.of(context).pushReplacementNamed('/menuinicio');
+      return true;
+    } else if (result == false) {
+      if (!mounted) return true;
+      Navigator.of(context).pushReplacementNamed('/menuinicio');
+      return true;
+    }
+
+    setState(() {
+      isGameActive = true;
+      _gameLoopController.repeat();
+    });
+    return false;
+  }
+
   @override
   void dispose() {
+    _gameTimer.cancel();
     isGameActive = false;
     _gameLoopController.dispose();
     // Remover todos los event listeners
@@ -360,4 +520,133 @@ class _Game1State extends State<Game1> with TickerProviderStateMixin {
     ]);
     super.dispose();
   }
+
+  void _handleGameOver(bool victory) async {
+    final PlayerService playerService = PlayerService();
+    
+    // Detener el juego
+    isGameActive = false;
+    _gameLoopController.stop();
+
+    // Guardar el progreso
+    await playerService.saveGameProgress(
+      userId: widget.userId, 
+      gameType: 1,
+      score: distancia,
+      coins: monedas,
+      victory: victory,
+      duration: _gameDuration,
+      worldOffset: worldOffset,
+      playerX: player.x,
+      playerY: player.y,
+      health: vida
+    );
+
+    if (victory) {
+      // Actualizar monedas del jugador
+      await playerService.updatePlayerCoins(
+        userId: widget.userId,
+        coinsToAdd: monedas
+      );
+    }
+
+    // Mostrar diálogo de resultado
+    if (mounted) {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => AlertDialog(
+          backgroundColor: Colors.black.withOpacity(0.9),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+            side: BorderSide(
+              color: Colors.blue.withOpacity(0.7),
+              width: 2,
+            ),
+          ),
+          title: Text(
+            victory ? '¡Victoria!' : 'Game Over',
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          content: Container(
+            decoration: BoxDecoration(
+              color: Colors.black.withOpacity(0.5),
+              borderRadius: BorderRadius.circular(15),
+            ),
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Distancia recorrida: $distancia',
+                  style: const TextStyle(color: Colors.white, fontSize: 18)
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Image.asset(
+                      'assets/personajes/items/monedas/monedacoin.png',
+                      width: 30,
+                      height: 30,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Monedas: $monedas',
+                      style: const TextStyle(color: Colors.white, fontSize: 18)
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          actionsAlignment: MainAxisAlignment.spaceEvenly,
+          actions: [
+            _buildGameOverButton('Reintentar', () {
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute(builder: (context) => Game1(userId: widget.userId))
+              );
+            }),
+            _buildGameOverButton('Menú Principal', () {
+              Navigator.of(context).pop();
+              Navigator.of(context).pop();
+            }),
+          ],
+        ),
+      );
+    }
+  }
 }
+
+  Widget _buildGameOverButton(String text, VoidCallback onPressed) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 8),
+      child: ElevatedButton(
+        onPressed: onPressed,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.blue.withOpacity(0.6),
+          foregroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15),
+            side: BorderSide(
+              color: Colors.white.withOpacity(0.7),
+              width: 2,
+            ),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+        ),
+        child: Text(
+          text,
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+    );
+  }

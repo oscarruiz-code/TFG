@@ -10,7 +10,7 @@ enum PenguinPlayerState {
 }
 
 class Player {
-  static const double defaultHeight = 50.0; // Reducido de 60.0 a 45.0
+  static const double defaultHeight = 50.0;
   
   double x;
   double y;
@@ -21,6 +21,7 @@ class Player {
   bool isJumping = false;
   bool isSliding = false;
   bool isFacingRight = true;
+  bool isInvulnerable = false;  // Nueva propiedad añadida
   double speed = AnimacionAndar.velocidad;
   double lastMoveDirection = 0;
   bool canSlide = true;
@@ -29,6 +30,7 @@ class Player {
   bool isStandingUp = false;
   int crouchFrame = 0;
   int slideFrame = 0;
+  int frameIndex = 0; 
   double slideDistance = 0;
   
   PenguinPlayerState currentState = PenguinPlayerState.idle;
@@ -51,85 +53,45 @@ class Player {
     if (isSliding) return;
     
     if (dx != 0) {
-      x += dx * (isCrouching ? AnimacionAndarAgachado.velocidad : speed) * 1.5; // Multiplicador añadido para movimiento más fluido
-      isFacingRight = dx > 0;
-      lastMoveDirection = dx;
-      
-      _eventBus.emit(GameEvents.playerUpdatePosition, {
-        'x': x,
-        'y': y,
-        'isFacingRight': isFacingRight
-      });
-      
-      if (currentState != PenguinPlayerState.jumping) {
-        currentState = isCrouching ? PenguinPlayerState.walkingCrouched : PenguinPlayerState.walking;
-        _eventBus.emit(GameEvents.playerMove, {'direction': dx > 0 ? 'right' : 'left'});
-      }
-    } else {
-      lastMoveDirection = 0;
-      if (currentState != PenguinPlayerState.jumping && !isSliding) {
-        currentState = isCrouching ? PenguinPlayerState.crouching : PenguinPlayerState.idle;
-        _eventBus.emit(GameEvents.playerIdle);
-      }
-    }
-  }
-
-  void slide() {
-    if (canSlide && !isSliding && !isJumping) {
-      isSliding = true;
-      slideFrame = 0;
-      slideDistance = 0;
-      currentState = PenguinPlayerState.sliding;
-      _eventBus.emit(GameEvents.playerSlide);
-      
-      // Primera fase del deslizamiento (frames 1-3)
-      Future.delayed(Duration(milliseconds: 100), () {
-        slideFrame = 1;
-        x += isFacingRight ? 10 : -10;
-        Future.delayed(Duration(milliseconds: 100), () {
-          slideFrame = 2;
-          x += isFacingRight ? 15 : -15;
-          Future.delayed(Duration(milliseconds: 100), () {
-            slideFrame = 3;
-            x += isFacingRight ? 20 : -20;
-            
-            // Segunda fase del deslizamiento (frame 4)
-            Future.delayed(Duration(milliseconds: 300), () {
-              slideFrame = 4;
-              x += isFacingRight ? 40 : -40;
-              
-              // Finalizar deslizamiento
-              Future.delayed(Duration(milliseconds: 200), () {
-                isSliding = false;
-                slideFrame = 0;
-                currentState = PenguinPlayerState.idle;
-                _eventBus.emit(GameEvents.playerEndSlide);
-              });
-            });
-          });
+        x += dx * (isCrouching ? AnimacionAndarAgachado.velocidad : speed) * 3.0;
+        isFacingRight = dx > 0;
+        lastMoveDirection = dx;
+        
+        _eventBus.emit(GameEvents.playerUpdatePosition, {
+            'x': x,
+            'y': y,
+            'isFacingRight': isFacingRight
         });
-      });
+        
+        if (currentState != PenguinPlayerState.jumping) {
+            currentState = isCrouching ? PenguinPlayerState.walkingCrouched : PenguinPlayerState.walking;
+            animationTime += 0.016;
+            if (animationTime >= 1.0) animationTime = 0.0;
+            _eventBus.emit(GameEvents.playerMove, {'direction': dx > 0 ? 'right' : 'left'});
+        }
+    } else {
+        lastMoveDirection = 0;
+        if (currentState != PenguinPlayerState.jumping && !isSliding) {
+            currentState = isCrouching ? PenguinPlayerState.crouching : PenguinPlayerState.idle;
+            _eventBus.emit(GameEvents.playerIdle);
+        }
     }
-  }
+}
 
-  void jump() {
-    if (canJump && !isJumping && !isSliding) {
-      isJumping = true;
-      velocidadVertical = fuerzaSalto;
-      currentState = PenguinPlayerState.jumping;
-      _eventBus.emit(GameEvents.playerJump);
-    }
-  }
-
-  void updateAnimation(double dt) {
+String getCurrentSprite() {
     if (isJumping) {
-      velocidadVertical += gravedad * dt;
-      y += velocidadVertical * dt;
-    }
-    animationTime += dt;
-  }
-
-  String getCurrentSprite() {
+        final sprites = isCrouching ? 
+          AnimacionSaltoAgachado.sprites : 
+          AnimacionSalto.sprites;
+        
+        if (velocidadVertical > 0) { // Subiendo
+            return sprites[frameIndex];
+        } else { // Cayendo
+            return isCrouching ? 
+                AnimacionAgacharse.sprites[2] : // Vuelve a agacharse3.png
+                AnimacionAndar.sprites[0];      // Vuelve a andar1.png
+        }
+      }
     if (isSliding) {
       return AnimacionDeslizarse.sprites[slideFrame];
     }
@@ -157,6 +119,99 @@ class Player {
     }
     
     return AnimacionAndar.sprites[0];
+}
+
+void slide() {
+    if (canSlide && !isSliding && !isJumping) {
+        isSliding = true;
+        slideFrame = 0;
+        final distanciaTotal = 25.0; // Aumentamos ligeramente la distancia
+        final distanciaMitad = distanciaTotal / 2;
+        double distanciaRecorrida = 0;
+        
+        currentState = PenguinPlayerState.sliding;
+        _eventBus.emit(GameEvents.playerSlide);
+        
+        final velocidad = isCrouching ? 
+            AnimacionDeslizarseAgachado.velocidad * 1.2 : // Aumentamos velocidad agachado
+            AnimacionDeslizarse.velocidad * 1.1; // Aumentamos velocidad normal
+        
+        Timer.periodic(Duration(milliseconds: 50), (timer) {
+            if (!isSliding || distanciaRecorrida >= distanciaTotal) {
+                timer.cancel();
+                isSliding = false;
+                // Volver a la posición natural según el estado
+                currentState = isCrouching ? 
+                    PenguinPlayerState.crouching : 
+                    PenguinPlayerState.idle;
+                _eventBus.emit(GameEvents.playerEndSlide);
+                return;
+            }
+            
+            // Velocidad de movimiento ajustada según el estado
+            double movimiento = velocidad * 0.05;
+            x += isFacingRight ? movimiento : -movimiento;
+            distanciaRecorrida += movimiento;
+            
+            // Actualizar frame según la distancia recorrida y el estado
+            if (isCrouching) {
+                // Lógica para deslizamiento agachado (3 frames)
+                if (distanciaRecorrida <= distanciaMitad) {
+                    slideFrame = (distanciaRecorrida / distanciaMitad * 2).floor();
+                    slideFrame = slideFrame.clamp(0, 1); // Frames 1 y 2
+                } else {
+                    slideFrame = 2; // Mantener el frame 3 hasta el final
+                }
+            } else {
+                // Lógica para deslizamiento normal (4 frames)
+                if (distanciaRecorrida <= distanciaMitad) {
+                    slideFrame = (distanciaRecorrida / distanciaMitad * 3).floor();
+                    slideFrame = slideFrame.clamp(0, 2); // Frames 1, 2 y 3
+                } else {
+                    slideFrame = 3; // Mantener el frame 4 hasta el final
+                }
+            }
+        });
+    }
+}
+
+  void jump() {
+      if (canJump && !isJumping && !isSliding) {
+        isJumping = true;
+        // Ajustar la velocidad vertical según si está agachado o no
+        velocidadVertical = isCrouching ? 
+            -AnimacionSaltoAgachado.fuerzaSalto * 1.2 : 
+            -AnimacionSalto.fuerzaSalto * 1.2;
+        
+        // Ajustar la gravedad según el estado
+        gravedad = isCrouching ? 
+            AnimacionSaltoAgachado.gravedad : 
+            AnimacionSalto.gravedad;
+            
+        currentState = PenguinPlayerState.jumping;
+        _eventBus.emit(GameEvents.playerJump);
+        
+        frameIndex = 0;
+        Timer.periodic(Duration(milliseconds: 100), (timer) {
+          if (!isJumping) {
+            timer.cancel();
+            frameIndex = 0;
+            return;
+          }
+          
+          if (velocidadVertical < 0) {
+            final sprites = isCrouching ? 
+              AnimacionSaltoAgachado.sprites : 
+              AnimacionSalto.sprites;
+            
+            frameIndex = (frameIndex + 1) % sprites.length;
+            _eventBus.emit(GameEvents.playerUpdateAnimation, {
+              'frameIndex': frameIndex,
+              'state': 'jumping'
+            });
+          }
+        });
+      }
   }
 
   void crouch() {
@@ -199,4 +254,31 @@ class Player {
       });
     }
   }
+  
+  // Añadir variables para el checkpoint
+  double checkpointX = 0;
+  double checkpointY = 0;
+  double checkpointWorldOffset = 0;
+  
+  void setCheckpoint(double x, double y, double worldOffset) {
+    checkpointX = x;
+    checkpointY = y;
+    checkpointWorldOffset = worldOffset;
+    _eventBus.emit(GameEvents.checkpointSet);
+  }
+  
+  void respawnAtCheckpoint() {
+    x = checkpointX;
+    y = checkpointY;
+    isJumping = false;
+    isSliding = false;
+    velocidadVertical = 0;
+    currentState = PenguinPlayerState.idle;
+    _eventBus.emit(GameEvents.playerRespawn);
+  }
+  
+  // Variables para monedas y efectos
+  int monedas = 0;
+  double velocidadTemp = AnimacionAndar.velocidad;
+  double fuerzaSaltoTemp = -AnimacionSalto.fuerzaSalto;
 }

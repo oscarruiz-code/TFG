@@ -58,9 +58,10 @@ flutter:
    - assets/personajes/principal/deslizarse_agachado/deslizarse_agachado3.png
    - assets/personajes/principal/saltar_agachado/saltar_agachado1.png
    - assets/personajes/principal/saltar_agachado/saltar_agachado2.png
-   - assets/personajes/items/monedacoin.png
-   - assets/personajes/items/monedasalto.png
-   - assets/personajes/items/monedavelocidad.png
+   - assets/personajes/items/monedas/monedacoin.png
+   - assets/personajes/items/monedas/monedasalto.png
+   - assets/personajes/items/monedas/monedavelocidad.png
+   - assets/personajes/items/casa/casita.png
    - assets/perfil/gratis/
    - assets/perfil/premium/
    - assets/etiquetas/

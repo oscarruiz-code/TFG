@@ -3,7 +3,12 @@ import 'package:flutter/services.dart';
 import '../../screens/pages/games/juego1/pages/game1.dart';
 
 class TransicionGame1 extends StatefulWidget {
-  const TransicionGame1({super.key});
+  final int userId;  // Añadimos la propiedad userId
+  
+  const TransicionGame1({
+    super.key,
+    required this.userId,  // Requerimos el userId en el constructor
+  });
 
   @override
   State<TransicionGame1> createState() => _TransicionGame1State();
@@ -46,8 +51,10 @@ class _TransicionGame1State extends State<TransicionGame1> with SingleTickerProv
       // Cargar componentes del juego
       setState(() => _loadingMessage = 'Cargando componentes del juego...');
       await Future.wait([
-        // Fondo y plataforma
+        // Fondo y recursos básicos
         precacheImage(const AssetImage('assets/imagenes/fondo.png'), context),
+        precacheImage(const AssetImage('assets/imagenes/logo.png'), context),
+        precacheImage(const AssetImage('assets/imagenes/juego.png'), context),
         
         // Sprites del personaje - Andar
         precacheImage(const AssetImage('assets/personajes/principal/andar/andar1.png'), context),
@@ -68,6 +75,42 @@ class _TransicionGame1State extends State<TransicionGame1> with SingleTickerProv
         precacheImage(const AssetImage('assets/personajes/principal/saltar/saltar1.png'), context),
         precacheImage(const AssetImage('assets/personajes/principal/saltar/saltar2.png'), context),
         precacheImage(const AssetImage('assets/personajes/principal/saltar/saltar3.png'), context),
+        
+        // Sprites del personaje - Agacharse
+        precacheImage(const AssetImage('assets/personajes/principal/agacharse/agacharse1.png'), context),
+        precacheImage(const AssetImage('assets/personajes/principal/agacharse/agacharse2.png'), context),
+        precacheImage(const AssetImage('assets/personajes/principal/agacharse/agacharse3.png'), context),
+        
+        // Sprites del personaje - Andar Agachado
+        precacheImage(const AssetImage('assets/personajes/principal/andar_agachado/andar_agachado1.png'), context),
+        precacheImage(const AssetImage('assets/personajes/principal/andar_agachado/andar_agachado2.png'), context),
+        precacheImage(const AssetImage('assets/personajes/principal/andar_agachado/andar_agachado3.png'), context),
+        precacheImage(const AssetImage('assets/personajes/principal/andar_agachado/andar_agachado4.png'), context),
+        precacheImage(const AssetImage('assets/personajes/principal/andar_agachado/andar_agachado5.png'), context),
+        precacheImage(const AssetImage('assets/personajes/principal/andar_agachado/andar_agachado6.png'), context),
+        
+        // Sprites del personaje - Deslizarse Agachado
+        precacheImage(const AssetImage('assets/personajes/principal/deslizarse_agachado/deslizarse_agachado1.png'), context),
+        precacheImage(const AssetImage('assets/personajes/principal/deslizarse_agachado/deslizarse_agachado2.png'), context),
+        precacheImage(const AssetImage('assets/personajes/principal/deslizarse_agachado/deslizarse_agachado3.png'), context),
+        
+        // Sprites del personaje - Saltar Agachado
+        precacheImage(const AssetImage('assets/personajes/principal/saltar_agachado/saltar_agachado1.png'), context),
+        precacheImage(const AssetImage('assets/personajes/principal/saltar_agachado/saltar_agachado2.png'), context),
+        
+        // Items y objetos del juego
+        precacheImage(const AssetImage('assets/personajes/items/monedas/monedacoin.png'), context),
+        precacheImage(const AssetImage('assets/personajes/items/monedas/monedasalto.png'), context),
+        precacheImage(const AssetImage('assets/personajes/items/monedas/monedavelocidad.png'), context),
+        precacheImage(const AssetImage('assets/personajes/items/monedas/monedavelocidad_hitbox.png'), context), // Agregar el hitbox de la moneda
+        precacheImage(const AssetImage('assets/personajes/items/casa/casita.png'), context),
+        precacheImage(const AssetImage('assets/avatar/defecto.png'), context),
+        
+        // Objetos del escenario
+        precacheImage(const AssetImage('assets/objetos/suelo/suelo.png'), context),
+        precacheImage(const AssetImage('assets/objetos/suelo/suelo2.png'), context),
+        precacheImage(const AssetImage('assets/objetos/rampa/rampa.png'), context),
+        precacheImage(const AssetImage('assets/objetos/rampa/rampa_invertida.png'), context),
       ]);
 
       // Inicializar componentes del juego
@@ -85,7 +128,9 @@ class _TransicionGame1State extends State<TransicionGame1> with SingleTickerProv
         Navigator.pushReplacement(
           context,
           PageRouteBuilder(
-            pageBuilder: (context, animation, secondaryAnimation) => const Game1(),
+            pageBuilder: (context, animation, secondaryAnimation) => Game1(
+              userId: widget.userId,  // Pasamos el userId al Game1
+            ),
             transitionDuration: const Duration(milliseconds: 500),
             transitionsBuilder: (context, animation, secondaryAnimation, child) {
               return FadeTransition(

@@ -24,6 +24,8 @@ class _MenuHistorialState extends State<MenuHistorial> {
   int _selectedGameType = 1;
   late Future<List<Map<String, dynamic>>> _gameHistoryFuture;
   late Future<List<Map<String, dynamic>>> _topScoresFuture;
+  int _currentPage = 0;
+  static const int _itemsPerPage = 5;
 
   @override
   void initState() {
@@ -125,12 +127,45 @@ class _MenuHistorialState extends State<MenuHistorial> {
         .where((game) => game['game_type'] == _selectedGameType)
         .toList();
 
+    final int totalPages = (filteredHistory.length / _itemsPerPage).ceil();
+    final startIndex = _currentPage * _itemsPerPage;
+    final endIndex = min(startIndex + _itemsPerPage, filteredHistory.length);
+    final currentPageItems = filteredHistory.sublist(startIndex, endIndex);
+
     return Expanded(
-      child: ListView.builder(
-        itemCount: filteredHistory.length,
-        itemBuilder: (context, index) {
-          return _buildHistoryItem(filteredHistory[index]);
-        },
+      child: Column(
+        children: [
+          Expanded(
+            child: ListView.builder(
+              itemCount: currentPageItems.length,
+              itemBuilder: (context, index) {
+                return _buildHistoryItem(currentPageItems[index]);
+              },
+            ),
+          ),
+          if (totalPages > 1)
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+                  onPressed: _currentPage > 0
+                      ? () => setState(() => _currentPage--)
+                      : null,
+                ),
+                Text(
+                  '${_currentPage + 1} / $totalPages',
+                  style: const TextStyle(color: Colors.white),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.arrow_forward_ios, color: Colors.white),
+                  onPressed: _currentPage < totalPages - 1
+                      ? () => setState(() => _currentPage++)
+                      : null,
+                ),
+              ],
+            ),
+        ],
       ),
     );
   }
@@ -186,13 +221,31 @@ class _MenuHistorialState extends State<MenuHistorial> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            '${score['score']} puntos',
-            style: const TextStyle(color: Colors.white),
+          Row(
+            children: [
+              Text(
+                score['username'] ?? 'Usuario',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold
+                ),
+              ),
+              const SizedBox(width: 10),
+              Text(
+                '${score['score']} puntos',
+                style: const TextStyle(color: Colors.white),
+              ),
+            ],
           ),
-          Text(
-            _formatDuration(score['duration']),
-            style: const TextStyle(color: Colors.white70),
+          Row(
+            children: [
+              const Icon(Icons.timer, color: Colors.white70, size: 16),
+              const SizedBox(width: 4),
+              Text(
+                _formatDuration(score['duration']),
+                style: const TextStyle(color: Colors.white70),
+              ),
+            ],
           ),
         ],
       ),
@@ -200,39 +253,151 @@ class _MenuHistorialState extends State<MenuHistorial> {
   }
 
   Widget _buildHistoryItem(Map<String, dynamic> game) {
-    return Material(  // Wrap with Material for elevation
-      elevation: 4,
-      color: const Color.fromRGBO(0, 32, 96, 1),
-      borderRadius: BorderRadius.circular(15),
-      child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Puntuación: ${game['score']}',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                Text(
-                  'Duración: ${_formatDuration(game['duration'])}',
-                  style: const TextStyle(color: Colors.white70),
-                ),
-              ],
-            ),
-            Text(
-              _formatDate(game['played_at']),
-              style: const TextStyle(color: Colors.white70),
-            ),
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color.fromRGBO(0, 32, 96, 1),
+            Color.fromRGBO(0, 48, 135, 1),
           ],
         ),
-      ));
+        borderRadius: BorderRadius.circular(15),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.2),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(15),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.blue.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(
+                      Icons.stars,
+                      color: Colors.amber,
+                      size: 24,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Puntuación: ${game['score']}',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.timer,
+                              color: Colors.white70,
+                              size: 16,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              _formatDuration(game['duration']),
+                              style: const TextStyle(
+                                color: Colors.white70,
+                                fontSize: 14,
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            const Icon(
+                              Icons.calendar_today,
+                              color: Colors.white70,
+                              size: 16,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              _formatDate(game['played_at']),
+                              style: const TextStyle(
+                                color: Colors.white70,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              if (game['is_saved'] == true)
+                Container(
+                  margin: const EdgeInsets.only(top: 12),
+                  padding: const EdgeInsets.only(top: 12),
+                  decoration: const BoxDecoration(
+                    border: Border(
+                      top: BorderSide(
+                        color: Colors.white24,
+                        width: 1,
+                      ),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton.icon(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => Game1(
+                                userId: widget.userId,
+                                savedGameData: game,
+                              ),
+                            ),
+                          );
+                        },
+                        icon: const Icon(Icons.play_arrow),
+                        label: const Text('Continuar'),
+                        style: TextButton.styleFrom(
+                          foregroundColor: Colors.blue,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      TextButton.icon(
+                        onPressed: () async {
+                          await _playerStatsService.deleteSavedGame(widget.userId);
+                          setState(() {
+                            _gameHistoryFuture = _playerStatsService.getGameHistory(widget.userId);
+                          });
+                        },
+                        icon: const Icon(Icons.delete),
+                        label: const Text('Eliminar'),
+                        style: TextButton.styleFrom(
+                          foregroundColor: Colors.red,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   String _formatDuration(int seconds) {
@@ -241,8 +406,13 @@ class _MenuHistorialState extends State<MenuHistorial> {
     return '$minutes:${remainingSeconds.toString().padLeft(2, '0')}';
   }
 
-  String _formatDate(String dateStr) {
-    final date = DateTime.parse(dateStr);
-    return '${date.day}/${date.month}/${date.year}';
+  String _formatDate(dynamic dateValue) {
+    if (dateValue is DateTime) {
+      return '${dateValue.day}/${dateValue.month}/${dateValue.year}';
+    } else if (dateValue is String) {
+      final date = DateTime.parse(dateValue);
+      return '${date.day}/${date.month}/${date.year}';
+    }
+    return 'Fecha no válida';
   }
 }

@@ -36,7 +36,7 @@ class PlayerStats {
   factory PlayerStats.fromMap(Map<String, dynamic> map) {
     return PlayerStats(
       id: map['id'] != null ? _parseInt(map['id']) : null,
-      userId: _parseInt(map['user_id']),
+      userId: _parseInt(map['user_id'] ?? map['admin_id']), // Manejar ambos casos
       ticketsGame2: _parseInt(map['tickets_game2']),
       coins: _parseInt(map['coins']),
       renameTickets: _parseInt(map['rename_tickets']),

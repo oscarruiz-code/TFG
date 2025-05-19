@@ -48,10 +48,13 @@ class ActionButtons extends StatelessWidget {
     required Color color,
   }) {
     return GestureDetector(
-      onTapDown: (_) => onTap(),
+      onTapDown: (_) {
+        // Solo ejecutar la acción si no hay otra animación en curso
+        onTap();
+      },
       child: Container(
-        width: 50, // Reducido de 60 a 50
-        height: 50, // Reducido de 60 a 50
+        width: 50,
+        height: 50,
         decoration: BoxDecoration(
           color: color.withOpacity(0.6),
           shape: BoxShape.circle,
@@ -70,7 +73,7 @@ class ActionButtons extends StatelessWidget {
         child: Icon(
           icon,
           color: Colors.white.withOpacity(0.9),
-          size: 30, // Reducido de 40 a 30
+          size: 30,
         ),
       ),
     );

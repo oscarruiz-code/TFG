@@ -121,11 +121,58 @@ class _MenuInicioState extends State<MenuInicio> {
         _buildGameButtonWithLabel(
           icon: Icons.videogame_asset,
           label: 'Game 1',
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const TransicionGame1()),
-            );
+          onPressed: () async {
+            // Verificar si hay una partida guardada
+            final savedGame = await _playerService.getSavedGame(widget.userId);
+            if (savedGame != null) {
+              if (!mounted) return;
+              showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                  backgroundColor: const Color.fromRGBO(0, 32, 96, 1),
+                  title: const Text('Partida Guardada', style: TextStyle(color: Colors.white)),
+                  content: const Text('¿Deseas continuar la partida anterior o iniciar una nueva?', 
+                    style: TextStyle(color: Colors.white)),
+                  actions: [
+                    TextButton(
+                      onPressed: () async {
+                        Navigator.pop(context);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => Game1(
+                              userId: widget.userId,
+                              savedGameData: savedGame,
+                            ),
+                          ),
+                        );
+                      },
+                      child: const Text('Continuar', style: TextStyle(color: Colors.blue)),
+                    ),
+                    TextButton(
+                      onPressed: () async {
+                        // Eliminar la partida guardada
+                        await _playerService.deleteSavedGame(widget.userId);
+                        if (!mounted) return;
+                        Navigator.pop(context);
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => TransicionGame1(userId: widget.userId),
+                          ),
+                        );
+                      },
+                      child: const Text('Nueva Partida', style: TextStyle(color: Colors.red)),
+                    ),
+                  ],
+                ),
+              );
+            } else {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => TransicionGame1(userId: widget.userId)),
+              );
+            }
           },
         ),
         _buildGameButtonWithLabel(

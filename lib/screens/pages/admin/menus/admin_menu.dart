@@ -21,6 +21,9 @@ class AdminMenuScreen extends StatefulWidget {
 class _AdminMenuScreenState extends State<AdminMenuScreen> {
   @override
   Widget build(BuildContext context) {
+    // Verificar si el usuario es un admin real, no un subadmin
+    final bool isRealAdmin = widget.role == 'admin';
+    
     return Scaffold(
       body: Stack(
         children: [
@@ -47,18 +50,28 @@ class _AdminMenuScreenState extends State<AdminMenuScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(
-                    '¡Bienvenido, ${widget.username}!',
-                    style: const TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                      shadows: [
-                        Shadow(
-                          color: Colors.blue,
-                          blurRadius: 10,
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        '¡Bienvenido, ${widget.username}!',
+                        style: const TextStyle(
+                          fontSize: 32,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          shadows: [
+                            Shadow(
+                              color: Colors.blue,
+                              blurRadius: 10,
+                            ),
+                          ],
                         ),
-                      ],
+                        textAlign: TextAlign.center,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 30),
@@ -116,7 +129,7 @@ class _AdminMenuScreenState extends State<AdminMenuScreen> {
                           context,
                           MaterialPageRoute(
                             builder: (context) => UserListScreen(
-                              isAdmin: widget.isAdmin,
+                              isAdmin: isRealAdmin,  // Usar isRealAdmin en lugar de widget.isAdmin
                               loggedUserId: widget.userId,
                               initialUsers: users,
                             ),
