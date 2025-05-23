@@ -4,8 +4,8 @@ class AnimacionSaltoAgachado {
     'assets/personajes/principal/saltar_agachado/saltar_agachado2.png',
   ];
   
-  static const double fuerzaSalto = 350.0; // Aumentado ligeramente para mejor respuesta
-  static const double gravedad = 900.0; // Aumentada para caída más rápida
-  static const double frameTime = 0.04; // Reducido para animación más fluida
-  static const double frameTimeCaida = 0.12; // Ajustado para mejor transición
+  static const double fuerzaSalto = 58.0; // Un poco menos que el normal
+  static const double gravedad = 40.0;    // Mucho más que antes, para que no flote
+  static const double frameTime = 0.04;
+  static const double frameTimeCaida = 0.12;
 }

@@ -17,4 +17,5 @@ class GameEvents {
   static const String playerUpdateAnimation = 'player_update_animation';
   static const String checkpointSet = 'checkpoint_set';
   static const String playerRespawn = 'player_respawn';
+  static const String coinCollected = 'coin_collected';
 }

@@ -3,11 +3,13 @@ import 'package:flutter/services.dart';
 import '../../screens/pages/games/juego1/pages/game1.dart';
 
 class TransicionGame1 extends StatefulWidget {
-  final int userId;  // Añadimos la propiedad userId
+  final int userId;
+  final String username;  // Añadimos la propiedad userId
   
   const TransicionGame1({
     super.key,
-    required this.userId,  // Requerimos el userId en el constructor
+    required this.userId, 
+    required this.username // Requerimos el userId en el constructor
   });
 
   @override
@@ -129,7 +131,8 @@ class _TransicionGame1State extends State<TransicionGame1> with SingleTickerProv
           context,
           PageRouteBuilder(
             pageBuilder: (context, animation, secondaryAnimation) => Game1(
-              userId: widget.userId,  // Pasamos el userId al Game1
+              userId: widget.userId, 
+              username: widget.username, // Pasamos el userId al Game1
             ),
             transitionDuration: const Duration(milliseconds: 500),
             transitionsBuilder: (context, animation, secondaryAnimation, child) {

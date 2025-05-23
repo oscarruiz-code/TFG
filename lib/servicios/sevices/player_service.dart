@@ -333,25 +333,46 @@ class PlayerService {
     required double playerX,
     required double playerY,
     required int health,
+    required int currentLevel,
+    String? lastCheckpoint,
   }) async {
     final conn = await DatabaseConnection.getConnection();
     try {
-      // Desactivar guardados anteriores
-      await conn.query(
-        'UPDATE game_saves SET is_active = FALSE WHERE user_id = ? AND game_type = ?',
-        [userId, gameType],
-      );
-      
-      // Guardar el nuevo estado del juego
-      await conn.query(
-        '''INSERT INTO game_saves 
-           (user_id, game_type, position_x, position_y, coins_collected, 
-            health, is_active)
-           VALUES (?, ?, ?, ?, ?, ?, TRUE)''',
-        [userId, gameType, playerX, playerY, coins, health],
+      // Verificar si es admin
+      var adminResults = await conn.query(
+        'SELECT id FROM admins WHERE id = ?',
+        [userId],
       );
 
-      // Guardar en el historial
+      if (adminResults.isNotEmpty) {
+        await conn.query(
+          'UPDATE admin_game_saves SET is_active = FALSE WHERE admin_id = ? AND game_type = ?',
+          [userId, gameType],
+        );
+        
+        await conn.query(
+          '''INSERT INTO admin_game_saves 
+             (admin_id, game_type, position_x, position_y, world_offset,
+              coins_collected, health, current_level, last_checkpoint)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+          [userId, gameType, playerX, playerY, worldOffset, coins, health, currentLevel, lastCheckpoint],
+        );
+      } else {
+        await conn.query(
+          'UPDATE game_saves SET is_active = FALSE WHERE user_id = ? AND game_type = ?',
+          [userId, gameType],
+        );
+        
+        await conn.query(
+          '''INSERT INTO game_saves 
+             (user_id, game_type, position_x, position_y, world_offset,
+              coins_collected, health, current_level, last_checkpoint)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+          [userId, gameType, playerX, playerY, worldOffset, coins, health, currentLevel, lastCheckpoint],
+        );
+      }
+
+      // Registrar en el historial
       await conn.query(
         'INSERT INTO game_history (user_id, game_type, score, coins, victory, duration) VALUES (?, ?, ?, ?, ?, ?)',
         [userId, gameType, score, coins, victory ? 1 : 0, duration],
@@ -386,6 +407,7 @@ class PlayerService {
     required int currentLevel,
     required int coinsCollected,
     required int health,
+    required int duration,  // Añadir este parámetro
     String? lastCheckpoint,
   }) async {
     final conn = await DatabaseConnection.getConnection();
@@ -397,36 +419,32 @@ class PlayerService {
       );
 
       if (adminResults.isNotEmpty) {
-        // Desactivar guardados anteriores
         await conn.query(
           'UPDATE admin_game_saves SET is_active = FALSE WHERE admin_id = ? AND game_type = ?',
           [userId, gameType],
         );
         
-        // Crear nuevo guardado
         await conn.query(
           '''INSERT INTO admin_game_saves 
              (admin_id, game_type, position_x, position_y, current_level, 
-              coins_collected, health, last_checkpoint)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?)''',
+              coins_collected, health, last_checkpoint, duration)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)''',
           [userId, gameType, positionX, positionY, currentLevel, 
-           coinsCollected, health, lastCheckpoint],
+           coinsCollected, health, lastCheckpoint, duration],
         );
       } else {
-        // Desactivar guardados anteriores
         await conn.query(
           'UPDATE game_saves SET is_active = FALSE WHERE user_id = ? AND game_type = ?',
           [userId, gameType],
         );
         
-        // Crear nuevo guardado
         await conn.query(
           '''INSERT INTO game_saves 
              (user_id, game_type, position_x, position_y, current_level, 
-              coins_collected, health, last_checkpoint)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?)''',
+              coins_collected, health, last_checkpoint, duration)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)''',
           [userId, gameType, positionX, positionY, currentLevel, 
-           coinsCollected, health, lastCheckpoint],
+           coinsCollected, health, lastCheckpoint, duration],
         );
       }
     } finally {
@@ -487,16 +505,24 @@ class PlayerService {
       );
 
       if (adminResults.isNotEmpty) {
-        await conn.query(
-          'UPDATE admin_game_saves SET is_active = FALSE WHERE admin_id = ? AND game_type = ?',
+        var result = await conn.query(
+          'UPDATE admin_game_saves SET is_active = FALSE WHERE admin_id = ? AND game_type = ? AND is_active = TRUE',
           [userId, gameType],
         );
+        if (result.affectedRows == 0) {
+          throw Exception('No se encontró la partida guardada para eliminar');
+        }
       } else {
-        await conn.query(
-          'UPDATE game_saves SET is_active = FALSE WHERE user_id = ? AND game_type = ?',
+        var result = await conn.query(
+          'UPDATE game_saves SET is_active = FALSE WHERE user_id = ? AND game_type = ? AND is_active = TRUE',
           [userId, gameType],
         );
+        if (result.affectedRows == 0) {
+          throw Exception('No se encontró la partida guardada para eliminar');
+        }
       }
+    } catch (e) {
+      throw Exception('Error al eliminar la partida guardada: ${e.toString()}');
     } finally {
       await conn.close();
     }

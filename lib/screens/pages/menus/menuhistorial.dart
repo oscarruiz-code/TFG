@@ -3,16 +3,16 @@ import 'package:flutter/services.dart';
 
 class MenuHistorial extends StatefulWidget {
   final int userId;
-  final String username;  // Agregar username
-  final PlayerStats playerStats;  // Agregar playerStats
-  final PageController pageController;  // Agregar pageController
+  final String username; // Agregar username
+  final PlayerStats playerStats; // Agregar playerStats
+  final PageController pageController; // Agregar pageController
 
   const MenuHistorial({
-    super.key, 
+    super.key,
     required this.userId,
-    required this.username,  // Agregar este parámetro
-    required this.playerStats,  // Agregar este parámetro
-    required this.pageController,  // Agregar este parámetro
+    required this.username, // Agregar este parámetro
+    required this.playerStats, // Agregar este parámetro
+    required this.pageController, // Agregar este parámetro
   });
 
   @override
@@ -24,6 +24,7 @@ class _MenuHistorialState extends State<MenuHistorial> {
   int _selectedGameType = 1;
   late Future<List<Map<String, dynamic>>> _gameHistoryFuture;
   late Future<List<Map<String, dynamic>>> _topScoresFuture;
+  late Future<Map<String, dynamic>?> _savedGameFuture;
   int _currentPage = 0;
   static const int _itemsPerPage = 5;
 
@@ -32,12 +33,20 @@ class _MenuHistorialState extends State<MenuHistorial> {
     super.initState();
     // Preload data when the widget initializes
     _gameHistoryFuture = _playerStatsService.getGameHistory(widget.userId);
-    _topScoresFuture = _playerStatsService.getTopScores(widget.userId, _selectedGameType);
+    _topScoresFuture = _playerStatsService.getTopScores(
+      widget.userId,
+      _selectedGameType,
+    );
+    _savedGameFuture = _playerStatsService.getSavedGame(widget.userId);
   }
 
   void _refreshData() {
     setState(() {
-      _topScoresFuture = _playerStatsService.getTopScores(widget.userId, _selectedGameType);
+      _topScoresFuture = _playerStatsService.getTopScores(
+        widget.userId,
+        _selectedGameType,
+      );
+      _savedGameFuture = _playerStatsService.getSavedGame(widget.userId);
     });
   }
 
@@ -71,8 +80,10 @@ class _MenuHistorialState extends State<MenuHistorial> {
                       return const Center(child: CircularProgressIndicator());
                     }
 
-                    final gameHistory = snapshot.data![0] as List<Map<String, dynamic>>;
-                    final topScores = snapshot.data![1] as List<Map<String, dynamic>>;
+                    final gameHistory =
+                        snapshot.data![0] as List<Map<String, dynamic>>;
+                    final topScores =
+                        snapshot.data![1] as List<Map<String, dynamic>>;
 
                     return Column(
                       children: [
@@ -94,8 +105,10 @@ class _MenuHistorialState extends State<MenuHistorial> {
   }
 
   Widget _buildTopScoresWidget(List<Map<String, dynamic>> scores) {
-    final filteredScores = scores.where((score) => 
-      score['game_type'] == _selectedGameType).toList();
+    final filteredScores =
+        scores
+            .where((score) => score['game_type'] == _selectedGameType)
+            .toList();
 
     return Container(
       margin: const EdgeInsets.all(16),
@@ -123,50 +136,80 @@ class _MenuHistorialState extends State<MenuHistorial> {
   }
 
   Widget _buildGameHistoryWidget(List<Map<String, dynamic>> history) {
-    final filteredHistory = history
-        .where((game) => game['game_type'] == _selectedGameType)
-        .toList();
+    return FutureBuilder<Map<String, dynamic>?>(
+      future: _savedGameFuture,
+      builder: (context, savedGameSnapshot) {
+        if (savedGameSnapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
 
-    final int totalPages = (filteredHistory.length / _itemsPerPage).ceil();
-    final startIndex = _currentPage * _itemsPerPage;
-    final endIndex = min(startIndex + _itemsPerPage, filteredHistory.length);
-    final currentPageItems = filteredHistory.sublist(startIndex, endIndex);
+        final filteredHistory =
+            history
+                .where((game) => game['game_type'] == _selectedGameType)
+                .toList();
 
-    return Expanded(
-      child: Column(
-        children: [
-          Expanded(
-            child: ListView.builder(
-              itemCount: currentPageItems.length,
-              itemBuilder: (context, index) {
-                return _buildHistoryItem(currentPageItems[index]);
-              },
-            ),
+        // Agregar la partida guardada si existe
+        if (savedGameSnapshot.hasData && savedGameSnapshot.data != null) {
+          final savedGame = savedGameSnapshot.data!;
+          if (savedGame['game_type'] == _selectedGameType) {
+            filteredHistory.insert(0, {...savedGame, 'is_saved_game': true});
+          }
+        }
+
+        final int totalPages = (filteredHistory.length / _itemsPerPage).ceil();
+
+        final startIndex = _currentPage * _itemsPerPage;
+        final endIndex = min(
+          startIndex + _itemsPerPage,
+          filteredHistory.length,
+        );
+        final currentPageItems = filteredHistory.sublist(startIndex, endIndex);
+
+        return Expanded(
+          child: Column(
+            children: [
+              Expanded(
+                child: ListView.builder(
+                  itemCount: currentPageItems.length,
+                  itemBuilder: (context, index) {
+                    return _buildHistoryItem(currentPageItems[index]);
+                  },
+                ),
+              ),
+              if (totalPages > 1)
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    IconButton(
+                      icon: const Icon(
+                        Icons.arrow_back_ios,
+                        color: Colors.white,
+                      ),
+                      onPressed:
+                          _currentPage > 0
+                              ? () => setState(() => _currentPage--)
+                              : null,
+                    ),
+                    Text(
+                      '${_currentPage + 1} / $totalPages',
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                    IconButton(
+                      icon: const Icon(
+                        Icons.arrow_forward_ios,
+                        color: Colors.white,
+                      ),
+                      onPressed:
+                          _currentPage < totalPages - 1
+                              ? () => setState(() => _currentPage++)
+                              : null,
+                    ),
+                  ],
+                ),
+            ],
           ),
-          if (totalPages > 1)
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
-                  onPressed: _currentPage > 0
-                      ? () => setState(() => _currentPage--)
-                      : null,
-                ),
-                Text(
-                  '${_currentPage + 1} / $totalPages',
-                  style: const TextStyle(color: Colors.white),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.arrow_forward_ios, color: Colors.white),
-                  onPressed: _currentPage < totalPages - 1
-                      ? () => setState(() => _currentPage++)
-                      : null,
-                ),
-              ],
-            ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -179,12 +222,8 @@ class _MenuHistorialState extends State<MenuHistorial> {
       ),
       child: Row(
         children: [
-          Expanded(
-            child: _buildSelectorButton('Game 1', 1),
-          ),
-          Expanded(
-            child: _buildSelectorButton('Game 2', 2),
-          ),
+          Expanded(child: _buildSelectorButton('Game 1', 1)),
+          Expanded(child: _buildSelectorButton('Game 2', 2)),
         ],
       ),
     );
@@ -200,7 +239,10 @@ class _MenuHistorialState extends State<MenuHistorial> {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
-          color: isSelected ? const Color.fromRGBO(0, 0, 255, 0.3) : Colors.transparent,
+          color:
+              isSelected
+                  ? const Color.fromRGBO(0, 0, 255, 0.3)
+                  : Colors.transparent,
           borderRadius: BorderRadius.circular(15),
         ),
         child: Text(
@@ -227,7 +269,7 @@ class _MenuHistorialState extends State<MenuHistorial> {
                 score['username'] ?? 'Usuario',
                 style: const TextStyle(
                   color: Colors.white,
-                  fontWeight: FontWeight.bold
+                  fontWeight: FontWeight.bold,
                 ),
               ),
               const SizedBox(width: 10),
@@ -253,16 +295,17 @@ class _MenuHistorialState extends State<MenuHistorial> {
   }
 
   Widget _buildHistoryItem(Map<String, dynamic> game) {
+    final bool isSavedGame = game['is_saved_game'] == true;
+    
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
+        gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            Color.fromRGBO(0, 32, 96, 1),
-            Color.fromRGBO(0, 48, 135, 1),
-          ],
+          colors: isSavedGame 
+            ? [const Color.fromRGBO(0, 96, 32, 1), const Color.fromRGBO(0, 135, 48, 1)]
+            : [const Color.fromRGBO(0, 32, 96, 1), const Color.fromRGBO(0, 48, 135, 1)],
         ),
         borderRadius: BorderRadius.circular(15),
         boxShadow: [
@@ -284,12 +327,14 @@ class _MenuHistorialState extends State<MenuHistorial> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.blue.withOpacity(0.2),
+                      color: isSavedGame 
+                        ? Colors.green.withOpacity(0.2)
+                        : Colors.blue.withOpacity(0.2),
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: const Icon(
-                      Icons.stars,
-                      color: Colors.amber,
+                    child: Icon(
+                      isSavedGame ? Icons.save : Icons.stars,
+                      color: isSavedGame ? Colors.greenAccent : Colors.amber,
                       size: 24,
                     ),
                   ),
@@ -299,7 +344,7 @@ class _MenuHistorialState extends State<MenuHistorial> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Puntuación: ${game['score']}',
+                          isSavedGame ? 'Partida Guardada' : 'Puntuación: ${game['score']}',
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 18,
@@ -309,32 +354,20 @@ class _MenuHistorialState extends State<MenuHistorial> {
                         const SizedBox(height: 4),
                         Row(
                           children: [
-                            const Icon(
-                              Icons.timer,
-                              color: Colors.white70,
-                              size: 16,
-                            ),
+                            const Icon(Icons.timer, color: Colors.white70, size: 16),
                             const SizedBox(width: 4),
                             Text(
-                              _formatDuration(game['duration']),
-                              style: const TextStyle(
-                                color: Colors.white70,
-                                fontSize: 14,
-                              ),
+                              isSavedGame 
+                                ? _formatDuration(game['game_time'] ?? game['play_time'] ?? game['duration'])
+                                : _formatDuration(game['duration']),
+                              style: const TextStyle(color: Colors.white70),
                             ),
                             const SizedBox(width: 16),
-                            const Icon(
-                              Icons.calendar_today,
-                              color: Colors.white70,
-                              size: 16,
-                            ),
+                            const Icon(Icons.calendar_today, color: Colors.white70, size: 16),
                             const SizedBox(width: 4),
                             Text(
-                              _formatDate(game['played_at']),
-                              style: const TextStyle(
-                                color: Colors.white70,
-                                fontSize: 14,
-                              ),
+                              _formatDate(game['created_at'] ?? game['played_at']),
+                              style: const TextStyle(color: Colors.white70),
                             ),
                           ],
                         ),
@@ -343,51 +376,76 @@ class _MenuHistorialState extends State<MenuHistorial> {
                   ),
                 ],
               ),
-              if (game['is_saved'] == true)
-                Container(
-                  margin: const EdgeInsets.only(top: 12),
-                  padding: const EdgeInsets.only(top: 12),
-                  decoration: const BoxDecoration(
-                    border: Border(
-                      top: BorderSide(
-                        color: Colors.white24,
-                        width: 1,
-                      ),
-                    ),
-                  ),
+              if (isSavedGame)
+                Padding(
+                  padding: const EdgeInsets.only(top: 16),
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      TextButton.icon(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => Game1(
-                                userId: widget.userId,
-                                savedGameData: game,
+                      ElevatedButton.icon(
+                        onPressed: () async {
+                          try {
+                            final savedGame = await _playerStatsService.getSavedGame(widget.userId);
+                            if (savedGame != null) {
+                              if (!mounted) return;
+                              Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => Game1(
+                                    userId: widget.userId,
+                                    username: widget.username,
+                                    savedGameData: savedGame,
+                                  ),
+                                ),
+                              );
+                            } else {
+                              if (!mounted) return;
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('La partida guardada ya no está disponible'),
+                                ),
+                              );
+                              _refreshData();
+                            }
+                          } catch (e) {
+                            if (!mounted) return;
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Error al cargar la partida guardada'),
                               ),
-                            ),
-                          );
+                            );
+                          }
                         },
                         icon: const Icon(Icons.play_arrow),
                         label: const Text('Continuar'),
-                        style: TextButton.styleFrom(
-                          foregroundColor: Colors.blue,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green,
                         ),
                       ),
-                      const SizedBox(width: 8),
-                      TextButton.icon(
+                      ElevatedButton.icon(
                         onPressed: () async {
-                          await _playerStatsService.deleteSavedGame(widget.userId);
-                          setState(() {
-                            _gameHistoryFuture = _playerStatsService.getGameHistory(widget.userId);
-                          });
+                          try {
+                            await _playerStatsService.deleteSavedGame(widget.userId);
+                            if (!mounted) return;
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Partida guardada eliminada'),
+                              ),
+                            );
+                            _refreshData();
+                          } catch (e) {
+                            if (!mounted) return;
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Error al eliminar la partida guardada'),
+                              ),
+                            );
+                          }
                         },
                         icon: const Icon(Icons.delete),
                         label: const Text('Eliminar'),
-                        style: TextButton.styleFrom(
-                          foregroundColor: Colors.red,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red,
                         ),
                       ),
                     ],
@@ -400,7 +458,10 @@ class _MenuHistorialState extends State<MenuHistorial> {
     );
   }
 
-  String _formatDuration(int seconds) {
+  String _formatDuration(dynamic duration) {
+    if (duration == null) return '0:00';
+    
+    final seconds = duration is int ? duration : 0;
     final minutes = seconds ~/ 60;
     final remainingSeconds = seconds % 60;
     return '$minutes:${remainingSeconds.toString().padLeft(2, '0')}';

@@ -9,6 +9,6 @@ class AnimacionAndar {
     'assets/personajes/principal/andar/andar7.png',
   ];
   
-  static const double velocidad = 4.0; // Aumentada para movimiento más dinámico
-  static const double frameTime = 0.08; // Reducido para animación más rápida
+  static const double velocidad = 150; // Aumentada para un movimiento más fluido
+  static const double frameTime = 0.1; // Reducido para una animación más rápida
 }

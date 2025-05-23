@@ -1,4 +1,4 @@
-import 'moneda_base.dart';
+import '../../../../../../dependencias/imports.dart';
 
 class MonedaNormal extends MonedaBase {
   MonedaNormal({
@@ -8,11 +8,11 @@ class MonedaNormal extends MonedaBase {
     x: x,
     y: y,
     spritePath: 'assets/personajes/items/monedas/monedacoin.png',
+    valor: 1, // <-- Agrega esto
   );
 
   @override
   void aplicarEfecto(dynamic player) {
-    // Aumentar monedas del jugador en 20
-    player.monedas += 20;
+    // No need to do anything here since coins are handled in Game1
   }
 }

@@ -183,64 +183,37 @@ class SharedBottomNav extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              Column(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.settings, color: Colors.white),
-                    onPressed: () => pageController.animateToPage(0,
-                        duration: const Duration(milliseconds: 300),
-                        curve: Curves.easeInOut),
-                  ),
-                  const Text(
-                    'Ajustes',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-              Column(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.home, color: Colors.white),
-                    onPressed: () => pageController.animateToPage(1,
-                        duration: const Duration(milliseconds: 300),
-                        curve: Curves.easeInOut),
-                  ),
-                  const Text(
-                    'Inicio',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-              Column(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.store, color: Colors.white),
-                    onPressed: () => pageController.animateToPage(2,
-                        duration: const Duration(milliseconds: 300),
-                        curve: Curves.easeInOut),
-                  ),
-                  const Text(
-                    'Tienda',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
+              _buildNavItem(Icons.settings, 'Ajustes', 0),
+              _buildNavItem(Icons.home, 'Inicio', 1),
+              _buildNavItem(Icons.store, 'Tienda', 2),
+              _buildNavItem(Icons.history, 'Historial', 3),
             ],
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildNavItem(IconData icon, String label, int page) {
+    return Column(
+      children: [
+        IconButton(
+          icon: Icon(icon, color: Colors.white),
+          onPressed: () => pageController.animateToPage(
+            page,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+          ),
+        ),
+        Text(
+          label,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ],
     );
   }
 }

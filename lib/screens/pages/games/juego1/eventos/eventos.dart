@@ -3,7 +3,7 @@ class GameEventBus {
   factory GameEventBus() => _instance;
   GameEventBus._internal();
 
-  final _listeners = <String, List<Function>>{}; 
+  final _listeners = <String, List<Function>>{};
 
   void emit(String event, [dynamic data]) {
     if (_listeners.containsKey(event)) {
@@ -20,5 +20,10 @@ class GameEventBus {
 
   void off(String event, Function callback) {
     _listeners[event]?.remove(callback);
+  }
+
+  // --- Agrega este método ---
+  void dispose() {
+    _listeners.clear();
   }
 }

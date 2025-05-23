@@ -72,32 +72,34 @@ CREATE TABLE game_saves (
     id INTEGER PRIMARY KEY AUTO_INCREMENT,
     user_id INTEGER NOT NULL,
     game_type INTEGER NOT NULL,
-    position_x FLOAT NOT NULL,
-    position_y FLOAT NOT NULL,
+    position_x DOUBLE NOT NULL,
+    position_y DOUBLE NOT NULL,
+    world_offset DOUBLE NOT NULL,
     current_level INTEGER NOT NULL,
     coins_collected INTEGER DEFAULT 0,
     health INTEGER DEFAULT 100,
-    world_offset FLOAT DEFAULT 0,
     last_checkpoint VARCHAR(255),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     is_active BOOLEAN DEFAULT TRUE,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    UNIQUE KEY unique_active_save (user_id, game_type, is_active)
 );
 
 CREATE TABLE admin_game_saves (
     id INTEGER PRIMARY KEY AUTO_INCREMENT,
     admin_id INTEGER NOT NULL,
     game_type INTEGER NOT NULL,
-    position_x FLOAT NOT NULL,
-    position_y FLOAT NOT NULL,
+    position_x DOUBLE NOT NULL,
+    position_y DOUBLE NOT NULL,
+    world_offset DOUBLE NOT NULL,
     current_level INTEGER NOT NULL,
     coins_collected INTEGER DEFAULT 0,
     health INTEGER DEFAULT 100,
-    world_offset FLOAT DEFAULT 0,
     last_checkpoint VARCHAR(255),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     is_active BOOLEAN DEFAULT TRUE,
-    FOREIGN KEY (admin_id) REFERENCES admins(id) ON DELETE CASCADE
+    FOREIGN KEY (admin_id) REFERENCES admins(id) ON DELETE CASCADE,
+    UNIQUE KEY unique_active_save (admin_id, game_type, is_active)
 );

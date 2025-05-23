@@ -1,4 +1,5 @@
-import 'moneda_base.dart';
+import '../../../../../../dependencias/imports.dart';
+
 
 class MonedaSalto extends MonedaBase {
   MonedaSalto({

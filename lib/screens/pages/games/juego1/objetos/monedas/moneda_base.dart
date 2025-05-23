@@ -1,3 +1,4 @@
+import '../../../../../../dependencias/imports.dart';
 import 'package:flutter/material.dart';
 
 abstract class MonedaBase {
@@ -8,15 +9,17 @@ abstract class MonedaBase {
   final double width;
   final double height;
   final String spritePath;
+  final int valor; // <-- Agrega esto
 
   MonedaBase({
     required this.x,
     required this.y,
     this.isCollected = false,
-    this.size = 30,
-    this.width = 30,
-    this.height = 30,
+    this.size = 50.0,    // Tamaño estándar
+    this.width = 50.0,   // Ancho estándar
+    this.height = 50.0,  // Alto estándar
     required this.spritePath,
+    this.valor = 1,
   });
 
   void aplicarEfecto(dynamic player);

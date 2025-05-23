@@ -105,12 +105,11 @@ class Mapa1 {
           Suelo(x: 5143, y: 300, width: 100, height: 50),
           
           //MONEDAS
-          MonedaVelocidad(x: 810, y: 290),
-          MonedaNormal(x: 840, y: 290),
-          MonedaNormal(x: 870, y: 290),
-          MonedaNormal(x: 900, y: 290),
-          MonedaNormal(x: 930, y: 290),  
-
+          MonedaVelocidad(x: 810, y: 280),
+          MonedaNormal(x: 870, y: 280),
+          MonedaNormal(x: 930, y: 280),
+          MonedaNormal(x: 990, y: 280),
+          MonedaNormal(x: 1050, y: 280),  
 
           // Casa final
           Casa(x: 5075, y: 200, width: 100, height: 100),

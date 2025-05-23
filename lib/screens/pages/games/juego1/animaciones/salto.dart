@@ -5,8 +5,8 @@ class AnimacionSalto {
     'assets/personajes/principal/saltar/saltar3.png',
   ];
   
-  static const double fuerzaSalto = 500.0; // Aumentado para un salto más alto
-  static const double gravedad = 1200.0; // Aumentado para una caída más natural
+  static const double fuerzaSalto = 68.0; // Más fuerza para subir más rápido
+  static const double gravedad = 50.0;    // Más gravedad para caer más rápido
   static const double frameTime = 0.05;
-  static const double frameTimeCaida = 0.08;
+  static const double frameTimeCaida = 0.1;
 }

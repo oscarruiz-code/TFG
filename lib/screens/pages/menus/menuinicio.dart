@@ -78,6 +78,12 @@ class _MenuInicioState extends State<MenuInicio> {
                   pageController: _pageController,
                   playerStats: playerStats,
                 ),
+                MenuHistorial( // Add MenuHistorial here
+                  userId: widget.userId,
+                  username: widget.username,
+                  pageController: _pageController,
+                  playerStats: playerStats,
+                ),
               ],
             );
           },
@@ -122,55 +128,108 @@ class _MenuInicioState extends State<MenuInicio> {
           icon: Icons.videogame_asset,
           label: 'Game 1',
           onPressed: () async {
-            // Verificar si hay una partida guardada
-            final savedGame = await _playerService.getSavedGame(widget.userId);
-            if (savedGame != null) {
-              if (!mounted) return;
-              showDialog(
-                context: context,
-                builder: (context) => AlertDialog(
-                  backgroundColor: const Color.fromRGBO(0, 32, 96, 1),
-                  title: const Text('Partida Guardada', style: TextStyle(color: Colors.white)),
-                  content: const Text('¿Deseas continuar la partida anterior o iniciar una nueva?', 
-                    style: TextStyle(color: Colors.white)),
-                  actions: [
-                    TextButton(
-                      onPressed: () async {
-                        Navigator.pop(context);
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => Game1(
-                              userId: widget.userId,
-                              savedGameData: savedGame,
+            try {
+              final savedGame = await _playerService.getSavedGame(widget.userId);
+              if (savedGame != null) {
+                if (!mounted) return;
+                showDialog(
+                  context: context,
+                  barrierDismissible: false, // Evita cerrar al tocar fuera
+                  builder: (context) => AlertDialog(
+                    backgroundColor: const Color.fromRGBO(0, 32, 96, 1),
+                    title: const Text('Partida Guardada', 
+                      style: TextStyle(color: Colors.white)),
+                    content: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          '¿Deseas continuar la partida anterior o iniciar una nueva?',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                        const SizedBox(height: 10),
+                        Text(
+                          'Progreso guardado:',
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.8),
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          'Monedas: ${savedGame['coins']}',
+                          style: TextStyle(color: Colors.white.withOpacity(0.8)),
+                        ),
+                        Text(
+                          'Distancia: ${savedGame['score']}',
+                          style: TextStyle(color: Colors.white.withOpacity(0.8)),
+                        ),
+                      ],
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => Game1(
+                                userId: widget.userId,
+                                username: widget.username,
+                                savedGameData: savedGame,
+                              ),
                             ),
-                          ),
-                        );
-                      },
-                      child: const Text('Continuar', style: TextStyle(color: Colors.blue)),
+                          );
+                        },
+                        child: const Text('Continuar', 
+                          style: TextStyle(color: Colors.blue)),
+                      ),
+                      TextButton(
+                        onPressed: () async {
+                          try {
+                            await _playerService.deleteSavedGame(widget.userId);
+                            if (!mounted) return;
+                            Navigator.pop(context);
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => TransicionGame1(
+                                  userId: widget.userId,
+                                  username: widget.username,
+                                ),
+                              ),
+                            );
+                          } catch (e) {
+                            if (!mounted) return;
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Error al eliminar la partida guardada'),
+                              ),
+                            );
+                          }
+                        },
+                        child: const Text('Nueva Partida', 
+                          style: TextStyle(color: Colors.red)),
+                      ),
+                    ],
+                  ),
+                );
+              } else {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => TransicionGame1(
+                      userId: widget.userId,
+                      username: widget.username,
                     ),
-                    TextButton(
-                      onPressed: () async {
-                        // Eliminar la partida guardada
-                        await _playerService.deleteSavedGame(widget.userId);
-                        if (!mounted) return;
-                        Navigator.pop(context);
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => TransicionGame1(userId: widget.userId),
-                          ),
-                        );
-                      },
-                      child: const Text('Nueva Partida', style: TextStyle(color: Colors.red)),
-                    ),
-                  ],
+                  ),
+                );
+              }
+            } catch (e) {
+              if (!mounted) return;
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Error al cargar la partida guardada'),
                 ),
-              );
-            } else {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => TransicionGame1(userId: widget.userId)),
               );
             }
           },
@@ -193,7 +252,6 @@ class _MenuInicioState extends State<MenuInicio> {
             }
           },
         ),
-        _buildHistoryButtonWithLabel(playerStats),
       ],
     );
   }
@@ -221,50 +279,6 @@ class _MenuInicioState extends State<MenuInicio> {
         Text(
           label,
           style: const TextStyle(
-            color: Colors.white,
-            fontSize: 12,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildHistoryButtonWithLabel(PlayerStats playerStats) {
-    return Column(
-      children: [
-        SizedBox(
-          width: 80,
-          height: 80,
-          child: GlassContainer(
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => MenuHistorial(
-                        userId: widget.userId,
-                        username: widget.username,
-                        playerStats: playerStats,
-                        pageController: _pageController,
-                      ),
-                    ),
-                  );
-                },
-                borderRadius: BorderRadius.circular(15),
-                child: Center(
-                  child: Icon(Icons.history, color: Colors.white, size: 40),
-                ),
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(height: 5),
-        const Text(
-          'Historial',
-          style: TextStyle(
             color: Colors.white,
             fontSize: 12,
             fontWeight: FontWeight.bold,
