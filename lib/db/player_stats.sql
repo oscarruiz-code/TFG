@@ -68,6 +68,8 @@ CREATE TABLE admin_game_history (
     FOREIGN KEY (admin_id) REFERENCES admins(id) ON DELETE CASCADE
 );
 
+
+
 CREATE TABLE game_saves (
     id INTEGER PRIMARY KEY AUTO_INCREMENT,
     user_id INTEGER NOT NULL,
@@ -76,6 +78,7 @@ CREATE TABLE game_saves (
     position_y DOUBLE NOT NULL,
     world_offset DOUBLE NOT NULL,
     current_level INTEGER NOT NULL,
+    collected_coins_positions TEXT,
     coins_collected INTEGER DEFAULT 0,
     health INTEGER DEFAULT 100,
     last_checkpoint VARCHAR(255),
@@ -94,6 +97,7 @@ CREATE TABLE admin_game_saves (
     position_y DOUBLE NOT NULL,
     world_offset DOUBLE NOT NULL,
     current_level INTEGER NOT NULL,
+    collected_coins_positions TEXT,
     coins_collected INTEGER DEFAULT 0,
     health INTEGER DEFAULT 100,
     last_checkpoint VARCHAR(255),

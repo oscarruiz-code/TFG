@@ -6,11 +6,11 @@ class ActionButtons extends StatelessWidget {
   final VoidCallback onCrouch;
 
   const ActionButtons({
-    Key? key,
+    super.key,
     required this.onJump,
     required this.onSlide,
     required this.onCrouch,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

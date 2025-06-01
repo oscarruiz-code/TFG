@@ -16,9 +16,9 @@ class Suelo {
   });
 
   Rect get hitbox => Rect.fromLTWH(
-    x + (width * 0.05),
-    y + (height * 0.40),
-    width * 0.88,
-    height * 0.7,
+    x + (width * 0.1),    // Ajuste del ancho desde la izquierda
+    y + (height * 0.4),   // Offset vertical para mejor alineación
+    width * 0.83,          // Ancho ajustado para mejor colisión
+    height * 0.7,         // Altura ajustada para mejor colisión
   );
 }

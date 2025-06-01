@@ -9,15 +9,15 @@ abstract class MonedaBase {
   final double width;
   final double height;
   final String spritePath;
-  final int valor; // <-- Agrega esto
+  final int valor;
 
   MonedaBase({
     required this.x,
     required this.y,
-    this.isCollected = false,
-    this.size = 50.0,    // Tamaño estándar
-    this.width = 50.0,   // Ancho estándar
-    this.height = 50.0,  // Alto estándar
+    this.isCollected = false,  // Parameter is defined here with default value
+    this.size = 50.0,
+    this.width = 50.0,
+    this.height = 50.0,
     required this.spritePath,
     this.valor = 1,
   });
@@ -25,16 +25,19 @@ abstract class MonedaBase {
   void aplicarEfecto(dynamic player);
   
   Rect get hitbox => Rect.fromLTWH(
-    x,
-    y,
-    width,
-    height,
+    x + (width * 0.1),
+    y + (height * 0.2),
+    width * 0.8,
+    height * 0.6,
   );
   
   String get sprite => spritePath;
   
   Widget build() {
-    return isCollected ? const SizedBox() : Image.asset(
+    if (isCollected) {
+      return const SizedBox.shrink();
+    }
+    return Image.asset(
       spritePath,
       width: width,
       height: height,

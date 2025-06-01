@@ -1,4 +1,5 @@
 import 'package:flutter/services.dart';
+import 'dart:convert';
 import '../../../../../dependencias/imports.dart';
 
 class Game1 extends StatefulWidget {
@@ -7,11 +8,11 @@ class Game1 extends StatefulWidget {
   final Map<String, dynamic>? savedGameData;
 
   const Game1({
-    Key? key,
+    super.key,
     required this.userId,
     required this.username,
     this.savedGameData,
-  }) : super(key: key);
+  });
 
   @override
   State<Game1> createState() => _Game1State();
@@ -19,93 +20,234 @@ class Game1 extends StatefulWidget {
 
 class _Game1State extends State<Game1> with TickerProviderStateMixin {
   bool isGameActive = true;
-  bool _isFirstBuild = true;
+  bool _isInitialized = false;
   double worldOffset = 0.0;
   double _currentMovementDirection = 0.0;
-  late double maxWorldOffset;
-  late double minWorldOffset;
-
-  final GameEventBus _eventBus = GameEventBus();
-  late Mapa1 mapa;
-  late Player player;
-  late AnimationController _gameLoopController;
-
   int monedas = 0;
   int vida = 100;
   int distancia = 0;
   int _gameDuration = 0;
+
+  List<Map<String, double>> collectedCoinsPositions = [];
+
+  late double maxWorldOffset;
+  late double minWorldOffset;
+  late Player player;
+  late AnimationController _gameLoopController;
+  late Mapa1 mapa;
   late Timer _gameTimer;
+  late ColisionManager _colisionManager;
+
+  final GameEventBus _eventBus = GameEventBus();
 
   @override
   void initState() {
     super.initState();
+    _initializeGame();
+  }
+
+  void _initializeGame() {
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.landscapeLeft,
       DeviceOrientation.landscapeRight,
     ]);
-    final MusicService _musicService = MusicService();
-    _musicService.stopBackgroundMusic();
+
+    // Inicializar los límites del mundo
+    minWorldOffset = 0.0;
+    maxWorldOffset = 6000.0;
+
+    // Si hay datos guardados, cargar las posiciones de las monedas
+    List<Map<String, double>>? savedCoinsPositions;
+    if (widget.savedGameData != null) {
+      String? savedPositions;
+      if (widget.savedGameData!['collected_coins_positions'] != null) {
+        var blob = widget.savedGameData!['collected_coins_positions'];
+        if (blob is Uint8List) {
+          savedPositions = String.fromCharCodes(blob);
+        } else if (blob is String) {
+          savedPositions = blob;
+        }
+        debugPrint('Loaded saved coin positions: $savedPositions');
+      }
+
+      if (savedPositions != null) {
+        List<dynamic> positions = jsonDecode(savedPositions);
+        savedCoinsPositions =
+            positions.map((pos) => Map<String, double>.from(pos)).toList();
+        debugPrint('Parsed coin positions: $savedCoinsPositions');
+      }
+    }
+
+    // Crear el mapa con las monedas ya recogidas
+    mapa = Mapa1(collectedCoinsPositions: savedCoinsPositions);
+    MusicService().stopBackgroundMusic();
     _setupEventListeners();
 
-    _gameLoopController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 1),
-    )..repeat();
+    // Cargar datos guardados si existen
+    if (widget.savedGameData != null) {
+      worldOffset =
+          (widget.savedGameData!['world_offset'] as num?)?.toDouble() ?? 0.0;
+      monedas = widget.savedGameData!['coins_collected'] as int? ?? 0;
+      vida = widget.savedGameData!['health'] as int? ?? 100;
+      _gameDuration = widget.savedGameData!['duration'] as int? ?? 0;
 
-    _gameLoopController.addListener(_gameLoop);
+      // Inicializar el jugador con la posición guardada
+      player = Player(
+        x: (widget.savedGameData!['position_x'] as num?)?.toDouble() ?? 0.0,
+        y: (widget.savedGameData!['position_y'] as num?)?.toDouble() ?? 200.0,
+        size: 50,
+        isFacingRight: true,
+      );
+    } else {
+      // Inicialización normal para nueva partida
+      player = Player(x: 0, y: 200, size: 50, isFacingRight: true);
+      _gameDuration = 0;
+    }
 
-    _gameTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (isGameActive) setState(() => _gameDuration++);
+    // Inicializar el collision manager con valores iniciales
+    _colisionManager = ColisionManager(player, mapa, worldOffset);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final size = MediaQuery.of(context).size;
+
+      setState(() {
+        // Solo actualizar la posición si es una nueva partida
+        if (widget.savedGameData == null) {
+          player.x = size.width * 0.4;
+        }
+
+        _gameLoopController =
+            AnimationController(
+                vsync: this,
+                duration: const Duration(
+                  milliseconds: 16,
+                ), // Cambiar a 16ms (aprox. 60 FPS)
+              )
+              ..repeat()
+              ..addListener(_gameLoop);
+
+        _isInitialized = true;
+      });
+    });
+
+    // Inicializar el timer con el tiempo guardado
+    if (widget.savedGameData != null) {
+      _gameDuration = widget.savedGameData!['duration'] as int? ?? 0;
+    }
+    _gameTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (isGameActive && _isInitialized) {
+        setState(() {
+          _gameDuration++;
+        });
+      }
     });
   }
 
   void _gameLoop() {
-    if (!isGameActive) return;
+    if (!isGameActive || !_isInitialized) return;
 
     final dt = _gameLoopController.lastElapsedDuration?.inMicroseconds ?? 0;
-    final dtSeconds = (dt / 1000000.0).clamp(0.016, 0.05);
+    final dtSeconds = (dt / 1000000.0).clamp(
+      0.008,
+      0.032,
+    ); // Ajustar rango para mayor suavidad
 
     setState(() {
-      // Actualizar la física del jugador
-      _updatePlayerPhysics(dtSeconds);
+      // Actualizar el collision manager primero
+      _colisionManager.updateWorldOffset(worldOffset);
+      final collisionResult = _colisionManager.checkCollisions();
 
-      // Actualizar la posición del mundo y el jugador
+      // Aplicar física antes de mover
+      _applyPhysics(collisionResult, dtSeconds);
+
+      // Mover el jugador después de la física
+      player.move(
+        _currentMovementDirection,
+        0,
+        groundLevel: collisionResult.groundLevel,
+      );
+
+      // Manejar colisiones después del movimiento
+      _handleCollisions(collisionResult);
       _updateWorldPosition(dtSeconds);
-
-      // Actualizar animaciones del jugador
       player.updateWalkingAnimation(dtSeconds);
-
-      // Verificar colisiones
-      _checkCollisions();
     });
   }
 
-  void _updatePlayerPhysics(double dtSeconds) {
-    final groundLevel = ColisionSuelo().obtenerAltura(player, mapa.objetos);
-
-    if (player.isJumping) {
+  void _applyPhysics(CollisionResult result, double dtSeconds) {
+    // Aplicar gravedad si está en el aire
+    if (!player.isOnGround) {
       player.velocidadVertical += player.gravedad * dtSeconds;
       player.y += player.velocidadVertical * dtSeconds;
+    }
 
-      // Verificar si el jugador ha aterrizado
-      if (player.y >= groundLevel - player.size * 0.5) {
-        player.y = groundLevel - player.size * 0.5;
+    // Verificar colisión con el suelo
+    if (result.groundLevel != double.infinity) {
+      if (player.y + player.size * 0.5 >= result.groundLevel) {
+        player.y = result.groundLevel - player.size * 0.5;
+        player.isOnGround = true;
         player.isJumping = false;
+        player.canJump = true;
         player.velocidadVertical = 0;
         _eventBus.emit(GameEvents.playerLand);
+      } else {
+        player.isOnGround = false; // Add this line to ensure proper ground detection
       }
     } else {
-      player.y = groundLevel - player.size * 0.5;
+      player.isOnGround = false;
+    }
+
+    // Verificar si el personaje ha caído fuera de la pantalla
+    if (player.y > MediaQuery.of(context).size.height) {
+      _handleGameOver(false);
+    }
+  }
+
+  void _handleCollisions(CollisionResult result) {
+    // Maneja colisión con la casa (fin del juego)
+    if (result.isCollidingWithHouse) {
+      _handleGameOver(true);
+    }
+
+    // Maneja colisiones con monedas
+    for (var moneda in result.collidingCoins) {
+      if (!moneda.isCollected) {
+        moneda.isCollected = true;
+        moneda.aplicarEfecto(player);
+        setState(() {
+          monedas += moneda.valor;
+          collectedCoinsPositions.add({'x': moneda.x, 'y': moneda.y});
+        });
+      }
+    }
+
+    // Maneja la caída al vacío
+    if (result.isInVoid) {
+      _handleVoidCollision();
     }
   }
 
   void _updateWorldPosition(double dtSeconds) {
-    if (_currentMovementDirection != 0) {
-      // Primero, hacer que el jugador se mueva
+    double personajeCentro = MediaQuery.of(context).size.width * 0.4;
+
+    if (player.isSliding) {
+      double desplazamiento =
+          (player.isFacingRight ? 1 : -1) *
+          player.velocidadBase *
+          2.5 *
+          dtSeconds;
+      worldOffset += desplazamiento;
+      worldOffset = worldOffset.clamp(minWorldOffset, maxWorldOffset);
+      player.x = personajeCentro;
+      distancia += desplazamiento.abs().round();
+    } else if (_currentMovementDirection != 0) {
+      _colisionManager.updateWorldOffset(worldOffset);
+      final collisionResult = _colisionManager.checkCollisions();
+
       player.move(
         _currentMovementDirection,
         0,
-        groundLevel: ColisionSuelo().obtenerAltura(player, mapa.objetos),
+        groundLevel: collisionResult.groundLevel,
       );
 
       double velocidadJugador =
@@ -117,14 +259,13 @@ class _Game1State extends State<Game1> with TickerProviderStateMixin {
 
       double desplazamiento =
           _currentMovementDirection * velocidadJugador * dtSeconds;
-      double personajeCentro = MediaQuery.of(context).size.width * 0.4;
       double limiteIzquierdo = MediaQuery.of(context).size.width * 0.4;
 
       if ((worldOffset <= minWorldOffset && _currentMovementDirection < 0) ||
           (worldOffset >= maxWorldOffset && _currentMovementDirection > 0)) {
         player.x += desplazamiento;
         player.x = player.x.clamp(
-          limiteIzquierdo, // Usamos el límite izquierdo aquí también
+          limiteIzquierdo,
           MediaQuery.of(context).size.width - player.size * 0.5,
         );
       } else {
@@ -135,96 +276,9 @@ class _Game1State extends State<Game1> with TickerProviderStateMixin {
 
       distancia += desplazamiento.abs().round();
     } else {
-      // Si no hay movimiento, asegurarse de que el jugador esté en estado idle
-      player.move(
-        0,
-        0,
-        groundLevel: ColisionSuelo().obtenerAltura(player, mapa.objetos),
-      );
-    }
-  }
-
-  void _checkCollisions() {
-    final groundLevel = ColisionSuelo().obtenerAltura(player, mapa.objetos);
-
-    _checkVoidCollision(groundLevel);
-    _checkCheckpoints();
-    _checkHouseCollision(ColisionCasa());
-    _checkCoinCollision(ColisionItem());
-
-    // Optimizar la verificación de objetos en pantalla
-    final screenWidth = MediaQuery.of(context).size.width;
-    final buffer = screenWidth * 0.5;
-
-    for (var obstaculo in mapa.objetos.where((o) {
-      final enPantalla =
-          (o.x - worldOffset) > -buffer &&
-          (o.x - worldOffset) < screenWidth + buffer;
-      return enPantalla && o is! MonedaBase;
-    })) {
-      if (ColisionObstaculo().verificar(player, obstaculo.hitbox)) {
-        if (!player.isInvulnerable) {
-          setState(() {
-            vida -= 10;
-            player.isInvulnerable = true;
-          });
-
-          Future.delayed(const Duration(seconds: 2), () {
-            if (mounted) setState(() => player.isInvulnerable = false);
-          });
-
-          if (vida <= 0) {
-            _handleGameOver(false);
-            break;
-          }
-        }
-      }
-    }
-  }
-
-  void _checkVoidCollision(double groundLevel) {
-    if (player.y > MediaQuery.of(context).size.height + 100 &&
-        !player.isInvulnerable) {
-      setState(() {
-        vida -= 20;
-        if (vida <= 0) {
-          _handleGameOver(false);
-        } else {
-          _respawnPlayer(groundLevel);
-        }
-      });
-    }
-  }
-
-  void _checkCheckpoints() {
-    if (distancia > 0 && distancia % 500 == 0) {
-      player.setCheckpoint(player.x, player.y, worldOffset);
-      _eventBus.emit(GameEvents.checkpointSet);
-    }
-  }
-
-  void _checkHouseCollision(ColisionCasa colisionCasa) {
-    for (var casa in mapa.casas) {
-      if (colisionCasa.verificar(player, casa)) {
-        _handleGameOver(true);
-        break;
-      }
-    }
-  }
-
-  void _checkCoinCollision(ColisionItem colisionItem) {
-    for (var i = mapa.monedas.length - 1; i >= 0; i--) {
-      final moneda = mapa.monedas[i];
-      if (!moneda.isCollected &&
-          colisionItem.verificar(player, moneda.hitbox)) {
-        setState(() {
-          moneda.isCollected = true;
-          monedas += 10; // Corregido: antes era monedas += monedas + 10
-          moneda.aplicarEfecto(player);
-          mapa.monedas.removeAt(i);
-          _eventBus.emit(GameEvents.coinCollected, {'value': moneda.valor});
-        });
-      }
+      _colisionManager.updateWorldOffset(worldOffset);
+      final collisionResult = _colisionManager.checkCollisions();
+      player.move(0, 0, groundLevel: collisionResult.groundLevel);
     }
   }
 
@@ -258,7 +312,7 @@ class _Game1State extends State<Game1> with TickerProviderStateMixin {
       setState(() {
         switch (type) {
           case 'jump':
-            if (!player.isJumping) {
+            if (player.canJump && !player.isJumping) {
               player.jump();
               if (player.isCrouching) player.crouch();
             }
@@ -287,57 +341,6 @@ class _Game1State extends State<Game1> with TickerProviderStateMixin {
   }
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (_isFirstBuild) {
-      _isFirstBuild = false;
-      _initializeGame();
-    }
-  }
-
-  void _initializeGame() {
-    final size = MediaQuery.of(context).size;
-    minWorldOffset = 0;
-    maxWorldOffset = 6000 - size.width;
-    mapa = Mapa1();
-
-    // Calculamos el nivel del suelo inicial (y=300 es el borde superior de la plataforma)
-    double initialGroundLevel = 250;
-    double limiteIzquierdo =
-        size.width * 0.2; // Límite izquierdo en 20% del ancho de la pantalla
-
-    // Inicializamos el jugador directamente en la posición correcta
-    player = Player(x: size.width * 0.4, y: initialGroundLevel);
-
-    // Verificamos la posición con el sistema de colisiones
-    final groundLevel = ColisionSuelo().obtenerAltura(player, mapa.objetos);
-
-    if (widget.savedGameData != null) {
-      worldOffset = widget.savedGameData!['worldOffset'] ?? 0.0;
-      player.x = (widget.savedGameData!['playerX'] ?? size.width * 0.4).clamp(
-        limiteIzquierdo,
-        size.width - player.size * 0.5,
-      );
-      player.y =
-          widget.savedGameData!['playerY'] ?? (groundLevel - player.size * 0.5);
-      monedas = widget.savedGameData!['coins'] ?? 0;
-      vida = widget.savedGameData!['health'] ?? 100;
-      distancia = widget.savedGameData!['score'] ?? 0;
-    } else {
-      player.y = groundLevel - player.size * 0.5;
-      player.x = player.x.clamp(
-        limiteIzquierdo,
-        size.width - player.size * 0.5,
-      );
-    }
-
-    // Asegurarnos de que el jugador nunca esté por debajo del nivel del suelo
-    if (player.y > groundLevel - player.size * 0.5) {
-      player.y = groundLevel - player.size * 0.5;
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: _onWillPop,
@@ -346,11 +349,11 @@ class _Game1State extends State<Game1> with TickerProviderStateMixin {
           color: Colors.blueGrey[900],
           child: Stack(
             children: [
-              _buildParallaxBackground(),
-              _buildWorldObjects(),
-              _buildPlayer(),
-              _buildControls(),
-              _buildStats(),
+              _buildParallaxBackground(), // Fondo (capa más baja)
+              _buildWorldObjects(), // Objetos del mundo (capa media)
+              _buildPlayer(), // Jugador (capa superior)
+              _buildControls(), // Controles UI (capa más alta)
+              _buildStats(), // Stats UI (capa más alta)
             ],
           ),
         ),
@@ -379,27 +382,61 @@ class _Game1State extends State<Game1> with TickerProviderStateMixin {
                   objeto is! MonedaVelocidad,
             )
             .map(
-              (objeto) => Positioned(
-                left: objeto.x - worldOffset,
-                top: objeto.y,
-                child: Container(
-                  width: objeto.width,
-                  height: objeto.height,
-                  child: Image.asset(objeto.sprite, fit: BoxFit.cover),
-                ),
+              (objeto) => Stack(
+                children: [
+                  // Sprite original
+                  Positioned(
+                    left: objeto.x - worldOffset,
+                    top: objeto.y,
+                    child: SizedBox(
+                      width: objeto.width,
+                      height: objeto.height,
+                      child: Image.asset(objeto.sprite, fit: BoxFit.cover),
+                    ),
+                  ),
+                  // Hitbox visual
+                  Positioned(
+                    left: objeto.hitbox.left - worldOffset,
+                    top: objeto.hitbox.top,
+                    child: Container(
+                      width: objeto.hitbox.width,
+                      height: objeto.hitbox.height,
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.red, width: 2),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
         ...mapa.monedas
             .where((m) => !m.isCollected)
             .map(
-              (moneda) => Positioned(
-                left: moneda.x - worldOffset,
-                top: moneda.y,
-                child: SizedBox(
-                  width: moneda.width,
-                  height: moneda.height,
-                  child: Image.asset(moneda.sprite, fit: BoxFit.contain),
-                ),
+              (moneda) => Stack(
+                children: [
+                  // Sprite original de la moneda
+                  Positioned(
+                    left: moneda.x - worldOffset,
+                    top: moneda.y,
+                    child: SizedBox(
+                      width: moneda.width,
+                      height: moneda.height,
+                      child: Image.asset(moneda.sprite, fit: BoxFit.contain),
+                    ),
+                  ),
+                  // Hitbox visual de la moneda
+                  Positioned(
+                    left: moneda.hitbox.left - worldOffset,
+                    top: moneda.hitbox.top,
+                    child: Container(
+                      width: moneda.hitbox.width,
+                      height: moneda.hitbox.height,
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.purple, width: 2),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
       ],
@@ -407,19 +444,39 @@ class _Game1State extends State<Game1> with TickerProviderStateMixin {
   }
 
   Widget _buildPlayer() {
-    return Positioned(
-      left:
-          player.x -
-          player.size * 0.5, // Ajustar la posición para centrar el sprite
-      top: player.y - player.size * 0.5,
-      child: Transform.scale(
-        scaleX: player.isFacingRight ? 1 : -1,
-        child: Image.asset(
-          player.getCurrentSprite(),
-          width: player.size,
-          height: player.size,
+    return Stack(
+      children: [
+        // Sprite del jugador
+        Positioned(
+          left: player.x - player.size * 0.5,
+          top: player.y - player.size * 0.5,
+          child: Transform.scale(
+            scaleX: player.isFacingRight ? 1 : -1,
+            child: Image.asset(
+              player.getCurrentSprite(),
+              width: player.size,
+              height: player.size,
+            ),
+          ),
         ),
-      ),
+        // Hitbox visual del jugador
+        Positioned(
+          left: player.hitbox.left,
+          top: player.hitbox.top,
+          child: Container(
+            width: player.hitbox.width,
+            height: player.hitbox.height,
+            decoration: BoxDecoration(
+              border: Border.all(
+                color:
+                    Colors
+                        .yellow, // Color distintivo para el hitbox del jugador
+                width: 2,
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -514,34 +571,36 @@ class _Game1State extends State<Game1> with TickerProviderStateMixin {
 
     final shouldSave = await showDialog<bool>(
       context: context,
-      barrierDismissible: true, // Cambiado a true para permitir cerrar al hacer clic fuera
-      builder: (context) => AlertDialog(
-        title: const Text(
-          '¿Guardar partida?',
-          style: TextStyle(color: Colors.white),
-        ),
-        backgroundColor: Colors.blueGrey[800],
-        content: const Text(
-          '¿Deseas guardar tu progreso actual?',
-          style: TextStyle(color: Colors.white70),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text(
-              'Salir sin guardar',
-              style: TextStyle(color: Colors.red),
+      barrierDismissible:
+          true, // Cambiado a true para permitir cerrar al hacer clic fuera
+      builder:
+          (context) => AlertDialog(
+            title: const Text(
+              '¿Guardar partida?',
+              style: TextStyle(color: Colors.white),
             ),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text(
-              'Guardar y salir',
-              style: TextStyle(color: Colors.green),
+            backgroundColor: Colors.blueGrey[800],
+            content: const Text(
+              '¿Deseas guardar tu progreso actual?',
+              style: TextStyle(color: Colors.white70),
             ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text(
+                  'Salir sin guardar',
+                  style: TextStyle(color: Colors.red),
+                ),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text(
+                  'Guardar y salir',
+                  style: TextStyle(color: Colors.green),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
     );
 
     // Si el usuario hizo clic fuera del diálogo, shouldSave será null
@@ -577,6 +636,22 @@ class _Game1State extends State<Game1> with TickerProviderStateMixin {
     return true;
   }
 
+  void _handleVoidCollision() {
+    setState(() {
+      vida -= 20;
+      if (vida <= 0) {
+        _handleGameOver(false);
+      } else {
+        final groundLevel = ColisionSuelo().obtenerAltura(
+          player,
+          mapa.objetos,
+          worldOffset,
+        );
+        _respawnPlayer(groundLevel);
+      }
+    });
+  }
+
   void _handleGameOver(bool victory) async {
     isGameActive = false;
     _gameLoopController.stop();
@@ -586,27 +661,28 @@ class _Game1State extends State<Game1> with TickerProviderStateMixin {
     if (victory) {
       // Base: 1000 puntos por victoria
       puntuacionFinal = 1000;
-      
-      // Bonus por monedas: 100 puntos por moneda
       puntuacionFinal += monedas * 100;
-      
-      // Bonus por tiempo: más puntos por completar más rápido
-      // Si completa en menos de 60 segundos, obtiene bonus máximo
-      int bonusTiempo = _gameDuration <= 60 ? 2000 : 
-                        _gameDuration <= 120 ? 1500 :
-                        _gameDuration <= 180 ? 1000 : 500;
+      int bonusTiempo =
+          _gameDuration <= 60
+              ? 2000
+              : _gameDuration <= 120
+              ? 1500
+              : _gameDuration <= 180
+              ? 1000
+              : 500;
       puntuacionFinal += bonusTiempo;
-    }
 
-    // Guardar progreso independientemente de la victoria o derrota
-    await _saveGameProgress(victory: victory, score: puntuacionFinal);
-    
-    // Actualizar monedas solo si hay victoria
-    if (victory) {
+      // En caso de victoria, eliminar la partida guardada ya que se completó el nivel
+      await PlayerService().deleteSavedGame(widget.userId);
+
+      // Actualizar monedas y guardar progreso
       await PlayerService().updatePlayerCoins(
         userId: widget.userId,
         coinsToAdd: monedas,
       );
+
+      // Guardar el historial de victoria
+      await _saveGameProgress(victory: true, score: puntuacionFinal);
     }
 
     if (!mounted) return;
@@ -614,54 +690,96 @@ class _Game1State extends State<Game1> with TickerProviderStateMixin {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => GameOverDialog(
-        victory: victory,
-        coins: monedas,
-        score: puntuacionFinal,
-        onRetry: () => Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (_) => Game1(
-              userId: widget.userId,
-              username: widget.username,
-            ),
+      builder:
+          (context) => GameOverDialog(
+            victory: victory,
+            coins: monedas,
+            score: puntuacionFinal,
+            onRetry: () {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder:
+                      (_) => Game1(
+                        userId: widget.userId,
+                        username: widget.username,
+                      ),
+                ),
+              );
+            },
+            onMenu: () {
+              // Solo eliminar la partida guardada si es victoria
+              if (victory) {
+                PlayerService().deleteSavedGame(widget.userId);
+              }
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder:
+                      (_) => MenuInicio(
+                        userId: widget.userId,
+                        username: widget.username,
+                        initialStats: PlayerStats(
+                          userId: widget.userId,
+                          coins: monedas,
+                          bestScore: puntuacionFinal,
+                          playTime: _gameDuration,
+                        ),
+                      ),
+                ),
+              );
+            },
+            onSaveAndExit: () async {
+              // Guardar el progreso actual
+              await _saveGameProgress(victory: false, score: puntuacionFinal);
+              if (!mounted) return;
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder:
+                      (_) => MenuInicio(
+                        userId: widget.userId,
+                        username: widget.username,
+                        initialStats: PlayerStats(
+                          userId: widget.userId,
+                          coins: monedas,
+                          bestScore: puntuacionFinal,
+                          playTime: _gameDuration,
+                        ),
+                      ),
+                ),
+              );
+            },
           ),
-        ),
-        onMenu: () => Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (_) => MenuInicio(
-              userId: widget.userId,
-              username: widget.username,
-              initialStats: PlayerStats(
-                userId: widget.userId,
-                coins: monedas,
-                bestScore: puntuacionFinal,
-                playTime: _gameDuration,
-              ),
-            ),
-          ),
-        ),
-      ),
     );
   }
 
   @override
   void dispose() {
-    _gameTimer.cancel();
     _gameLoopController.dispose();
-    _eventBus.dispose();
-    SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+    _gameTimer.cancel();
     super.dispose();
   }
 
   // Método auxiliar para guardar progreso
+  // En el método _saveGameProgress
   Future<void> _saveGameProgress({bool victory = false, int score = 0}) async {
     try {
+      // Crear una lista de posiciones de monedas recolectadas
+      final collectedCoinsPositions =
+          mapa.monedas
+              .where((m) => m.isCollected)
+              .map((m) => {'x': m.x, 'y': m.y})
+              .toList();
+
+      debugPrint('Saving collected coins positions: $collectedCoinsPositions');
+
+      final collectedCoinsJson = jsonEncode(collectedCoinsPositions);
+
       await PlayerService().saveGameProgress(
         userId: widget.userId,
         gameType: 1,
-        score: victory ? score : 0, // Solo guardar puntuación si hay victoria
+        score: victory ? score : 0,
         coins: monedas,
         victory: victory,
         duration: _gameDuration,
@@ -670,6 +788,7 @@ class _Game1State extends State<Game1> with TickerProviderStateMixin {
         playerY: player.y,
         health: vida,
         currentLevel: 1,
+        collectedCoinsPositions: collectedCoinsJson,
       );
     } catch (e) {
       debugPrint('Error saving game: $e');

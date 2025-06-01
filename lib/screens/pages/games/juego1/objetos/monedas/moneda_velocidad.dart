@@ -3,25 +3,34 @@ import '../../../../../../dependencias/imports.dart';
 class MonedaVelocidad extends MonedaBase {
   // Constructor
   MonedaVelocidad({
-    required double x,
-    required double y,
+    required super.x,
+    required super.y,
+    super.isCollected,
   }) : super(
-    x: x,
-    y: y,
     spritePath: 'assets/personajes/items/monedas/monedavelocidad.png',
   );
 
   @override
   Rect get hitbox => Rect.fromLTWH(
     x + (width * 0.1),  // Ajuste del hitbox para mejor precisión
-    y + (height * 0.1),
+    y + (height * 0.2),
     width * 0.8,  // Reducción del área de colisión para mayor precisión
-    height * 0.8,
+    height * 0.6,
   );
 
   @override
   void aplicarEfecto(dynamic player) {
-    // Solo activa el power-up, no toques la velocidad base
-    player.activarPowerUpVelocidad(AnimacionAndar.velocidad * 1.5, const Duration(seconds: 2));
+    if (player == null) return;
+    
+    print('Aplicando efecto de velocidad');
+    print('Velocidad anterior: ${player.velocidadTemp}');
+    
+    // Usar el método específico para power-ups de velocidad
+    player.activarPowerUpVelocidad(
+      AnimacionAndar.velocidad * 1.5,
+      const Duration(milliseconds: 3000) // Medio segundo de duración
+    );
+    
+    print('Nueva velocidad: ${player.velocidadTemp}');
   }
 }

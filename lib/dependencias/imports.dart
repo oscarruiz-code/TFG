@@ -31,7 +31,6 @@ export 'package:oscarruizcode_pingu/screens/pages/menus/menu_editar_perfil.dart'
 export 'package:oscarruizcode_pingu/screens/pages/games/juego1/eventos/eventos.dart';
 export 'package:oscarruizcode_pingu/screens/pages/games/juego1/eventos/game_eventos.dart';
 export 'package:oscarruizcode_pingu/screens/pages/games/juego1/personajes/player_principal.dart';
-export 'package:oscarruizcode_pingu/widgets/animacion/transicion.dart';
 export 'package:oscarruizcode_pingu/screens/pages/games/juego1/animaciones/deslizarse.dart';
 export 'package:oscarruizcode_pingu/screens/pages/games/juego1/animaciones/andar.dart';
 export 'package:oscarruizcode_pingu/screens/pages/games/juego1/animaciones/salto.dart';
@@ -39,15 +38,12 @@ export 'package:oscarruizcode_pingu/screens/pages/games/juego1/animaciones/agach
 export 'package:oscarruizcode_pingu/screens/pages/games/juego1/animaciones/andar_agachado.dart';
 export 'package:oscarruizcode_pingu/screens/pages/games/juego1/animaciones/salto_agachado.dart';
 export 'package:oscarruizcode_pingu/screens/pages/games/juego1/animaciones/deslizarse_agachado.dart';
-export 'package:oscarruizcode_pingu/screens/pages/games/juego1/colisiones/colision_suelo.dart';
-export 'package:oscarruizcode_pingu/screens/pages/games/juego1/colisiones/colision_casa.dart';
-export 'package:oscarruizcode_pingu/screens/pages/games/juego1/colisiones/colision_obstaculo.dart';
-export 'package:oscarruizcode_pingu/screens/pages/games/juego1/colisiones/colision_item.dart';
-export 'package:oscarruizcode_pingu/screens/pages/games/juego1/components/joystick.dart';
+export 'package:oscarruizcode_pingu/screens/pages/games/juego1/colisiones/tipos/colision_suelo.dart';
+export 'package:oscarruizcode_pingu/screens/pages/games/juego1/colisiones/tipos/colision_casa.dart';
+export 'package:oscarruizcode_pingu/screens/pages/games/juego1/colisiones/tipos/colision_item.dart';
+export 'package:oscarruizcode_pingu/screens/pages/games/juego1/colisiones/manejador/colision_manager.dart';
 export 'package:oscarruizcode_pingu/screens/pages/games/juego1/mapa/mapa1.dart';
 export 'package:oscarruizcode_pingu/screens/pages/games/juego1/funcionalidades/action_buttons.dart';
-export 'package:oscarruizcode_pingu/screens/pages/games/juego1/objetos/estructuras/rampa.dart';
-export 'package:oscarruizcode_pingu/screens/pages/games/juego1/objetos/estructuras/rampa_invertida.dart';
 export 'package:oscarruizcode_pingu/screens/pages/games/juego1/objetos/estructuras/suelo.dart';
 export 'package:oscarruizcode_pingu/screens/pages/games/juego1/objetos/estructuras/suelo2.dart';
 export 'package:oscarruizcode_pingu/screens/pages/games/juego1/objetos/meta/casa.dart';
@@ -56,6 +52,7 @@ export 'package:oscarruizcode_pingu/screens/pages/games/juego1/objetos/monedas/m
 export 'package:oscarruizcode_pingu/screens/pages/games/juego1/objetos/monedas/moneda_salto.dart';
 export 'package:oscarruizcode_pingu/screens/pages/games/juego1/objetos/monedas/moneda_velocidad.dart';
 export 'package:oscarruizcode_pingu/screens/pages/games/juego1/pages/game1.dart';
+export 'package:oscarruizcode_pingu/screens/pages/games/juego1/widgets/joystick.dart';
 
 
 export 'package:oscarruizcode_pingu/screens/pages/games/juego2/game2.dart';
@@ -74,6 +71,7 @@ export 'package:oscarruizcode_pingu/servicios/sevices/player_service.dart';
 export 'package:oscarruizcode_pingu/widgets/animacion/animacion_texto.dart';
 export 'package:oscarruizcode_pingu/widgets/animacion/glass_container.dart';
 export 'package:oscarruizcode_pingu/widgets/animacion/animacion_revelado.dart';
+export 'package:oscarruizcode_pingu/widgets/animacion/transicion.dart';
 
 export 'package:oscarruizcode_pingu/widgets/recursos/music_service.dart';
 export 'package:oscarruizcode_pingu/widgets/recursos/video_background.dart';

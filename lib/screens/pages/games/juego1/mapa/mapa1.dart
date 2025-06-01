@@ -3,44 +3,42 @@ import '../../../../../dependencias/imports.dart';
 class Mapa1 {
   final List<dynamic> objetos;
 
-  Mapa1()
+  Mapa1({List<Map<String, double>>? collectedCoinsPositions})
       : objetos = [
 
           //PLATAFORMA INICIAL
-          Suelo(x: 0, y: 300, width: 100, height: 50),
-          Suelo(x: 81, y: 300, width: 100, height: 50),
-          Suelo(x: 162, y: 300, width: 100, height: 50),
-          Suelo(x: 243, y: 300, width: 100, height: 50),
-          Suelo(x: 324, y: 300, width: 100, height: 50),
-          Suelo(x: 405, y: 300, width: 100, height: 50),
-          Suelo(x: 486, y: 300, width: 100, height: 50),
-          Suelo(x: 567, y: 300, width: 100, height: 50),
-          Suelo(x: 648, y: 300, width: 100, height: 50),
-          Suelo(x: 729, y: 300, width: 100, height: 50),
-          Suelo(x: 810, y: 300, width: 100, height: 50),
-          Suelo(x: 891, y: 300, width: 100, height: 50),
-          Suelo(x: 972, y: 300, width: 100, height: 50),
-          Suelo(x: 1053, y: 300, width: 100, height: 50),
-          Suelo(x: 1134, y: 300, width: 100, height: 50),
-          Suelo(x: 1215, y: 300, width: 100, height: 50),
-          Suelo(x: 1296, y: 300, width: 100, height: 50),
-          Suelo(x: 1377, y: 300, width: 100, height: 50),
-          Suelo(x: 1458, y: 300, width: 100, height: 50),
-          Suelo(x: 1539, y: 300, width: 100, height: 50),
-          Suelo(x: 1620, y: 300, width: 100, height: 50),
+          Suelo(x: 0, y: 230, width: 100, height: 50),
+          Suelo(x: 81, y: 230, width: 100, height: 50),
+          Suelo(x: 162, y: 230, width: 100, height: 50),
+          Suelo(x: 243, y: 230, width: 100, height: 50),
+          Suelo(x: 324, y: 230, width: 100, height: 50),
+          Suelo(x: 405, y: 230, width: 100, height: 50),
+          Suelo(x: 486, y: 230, width: 100, height: 50),
+          Suelo(x: 567, y: 230, width: 100, height: 50),
+          Suelo(x: 648, y: 230, width: 100, height: 50),
+          Suelo(x: 729, y: 230, width: 100, height: 50),
+          Suelo(x: 810, y: 230, width: 100, height: 50),
+          Suelo(x: 901, y: 300, width: 100, height: 50),
+          Suelo(x: 982, y: 300, width: 100, height: 50),
+          Suelo(x: 1063, y: 300, width: 100, height: 50),
+          Suelo(x: 1144, y: 300, width: 100, height: 50),
+          Suelo(x: 1225, y: 300, width: 100, height: 50),
+          Suelo(x: 1306, y: 300, width: 100, height: 50),
+          Suelo(x: 1387, y: 300, width: 100, height: 50),
+          Suelo(x: 1468, y: 300, width: 100, height: 50),
+          Suelo(x: 1549, y: 300, width: 100, height: 50),
+          Suelo(x: 1630, y: 300, width: 100, height: 50),
 
           //PLATAFORMA 2
-          Rampa(x: 1703, y: 277, width: 100, height: 60),
-          Rampa(x: 1771, y: 243, width: 100, height: 60),
-          Rampa(x: 1840, y: 209, width: 100, height: 60),
-          Rampa(x: 1908, y: 175, width: 100, height: 60),
+          Suelo(x: 1730, y: 240, width: 100, height: 50),
+          Suelo(x: 1830, y: 200, width: 100, height: 50),
+          Suelo2(x: 1940, y: 149, width: 50, height: 100),
           Suelo2(x: 2040, y: 149, width: 50, height: 100),
           Suelo2(x: 2140, y: 149, width: 50, height: 100),
           Suelo2(x: 2240, y: 149, width: 50, height: 100),
           Suelo(x: 2340, y: 165, width: 100, height: 50),
-          RampaInvertida(x: 2415, y: 177, width: 100, height: 60),
-          RampaInvertida(x:2486 , y: 213, width: 100, height: 60),
-          RampaInvertida(x: 2557, y: 249, width: 100, height: 60),
+          Suelo(x: 2450, y: 200, width: 100, height: 50),
+          Suelo(x: 2550, y: 230, width: 100, height: 50),
           Suelo2(x: 2647, y: 257, width: 50, height: 100),
           Suelo(x:2685, y: 271, width: 100, height: 50),
 
@@ -76,18 +74,18 @@ class Mapa1 {
 
 
           //PLATAFORMA 6
-          Rampa(x: 3500, y: 215, width: 100, height: 60),
-          Rampa(x: 3570, y: 181, width: 100, height: 60),
-          Suelo(x: 3647, y: 169, width: 100, height: 50),
-          Suelo(x: 3717, y: 169, width: 100, height: 50),
-          Suelo(x: 3787, y: 169, width: 100, height: 50),
-          Suelo(x: 3857, y: 169, width: 100, height: 50),
-          RampaInvertida(x: 3932, y: 181, width: 100, height: 60),
-          RampaInvertida(x: 4002, y: 215, width: 100, height: 60),
-          Suelo(x: 4150, y: 113, width: 100, height: 50),
-          Suelo(x: 4300, y: 113, width: 100, height: 50),
-          Suelo(x: 4450, y: 113, width: 100, height: 50),
-          Suelo(x: 4600, y: 113, width: 100, height: 50),
+          Suelo(x: 3430, y: 230, width: 100, height: 50),
+          Suelo(x: 3530, y: 200, width: 100, height: 50),
+          Suelo(x: 3647, y: 184, width: 100, height: 50),
+          Suelo(x: 3717, y: 184, width: 100, height: 50),
+          Suelo(x: 3787, y: 184, width: 100, height: 50),
+          Suelo(x: 3857, y: 184, width: 100, height: 50),
+          Suelo(x: 3970, y: 200, width: 100, height: 50),
+          Suelo(x: 4090, y: 230, width: 100, height: 50),
+          Suelo(x: 4150, y: 133, width: 100, height: 50),
+          Suelo(x: 4300, y: 133, width: 100, height: 50),
+          Suelo(x: 4450, y: 133, width: 100, height: 50),
+          Suelo(x: 4600, y: 133, width: 100, height: 50),
 
           //PLATAFORMA 7
           Suelo(x: 4221, y: 300, width: 100, height: 50),
@@ -105,18 +103,83 @@ class Mapa1 {
           Suelo(x: 5143, y: 300, width: 100, height: 50),
           
           //MONEDAS
-          MonedaVelocidad(x: 810, y: 280),
-          MonedaNormal(x: 870, y: 280),
-          MonedaNormal(x: 930, y: 280),
-          MonedaNormal(x: 990, y: 280),
-          MonedaNormal(x: 1050, y: 280),  
+          MonedaVelocidad(x: 990, y: 280, isCollected: _isCollected(990.0, 280.0, collectedCoinsPositions)),
+          MonedaNormal(x: 1050, y: 280, isCollected: _isCollected(1050.0, 280.0, collectedCoinsPositions)),
+          MonedaNormal(x: 1110, y: 280, isCollected: _isCollected(1110.0, 280.0, collectedCoinsPositions)),
+          MonedaNormal(x: 1170, y: 280, isCollected: _isCollected(1170.0, 280.0, collectedCoinsPositions)),
+          MonedaNormal(x: 1230, y: 280, isCollected: _isCollected(1230.0, 280.0, collectedCoinsPositions)),
+          MonedaNormal(x: 1290, y: 280, isCollected: _isCollected(1290.0, 280.0, collectedCoinsPositions)),    
+        
+          //MONEDAS 2
+          MonedaNormal(x: 1916, y: 280, isCollected: _isCollected(1916.0, 280.0, collectedCoinsPositions)),
+          MonedaNormal(x: 1976, y: 280, isCollected: _isCollected(1976.0, 280.0, collectedCoinsPositions)), 
+          MonedaNormal(x: 2036, y: 280, isCollected: _isCollected(2036.0, 280.0, collectedCoinsPositions)), 
+          MonedaSalto(x: 2096, y: 280, isCollected: _isCollected(2096.0, 280.0, collectedCoinsPositions)),
+          MonedaNormal(x: 2156, y: 280, isCollected: _isCollected(2156.0, 280.0, collectedCoinsPositions)), 
+          MonedaNormal(x: 2216, y: 280, isCollected: _isCollected(2216.0, 280.0, collectedCoinsPositions)),
+          MonedaNormal(x: 2276, y: 280, isCollected: _isCollected(2216.0, 280.0, collectedCoinsPositions)),  
+          
+          //MONEDAS 3
+          MonedaNormal(x: 2850, y: 207, isCollected: _isCollected(2850.0, 207.0, collectedCoinsPositions)), 
+          MonedaNormal(x: 2950, y: 187, isCollected: _isCollected(2950.0, 187.0, collectedCoinsPositions)), 
+          MonedaNormal(x: 3050, y: 167, isCollected: _isCollected(3050.0, 167.0, collectedCoinsPositions)), 
+          MonedaNormal(x: 3150, y: 147, isCollected: _isCollected(3150.0, 147.0, collectedCoinsPositions)), 
+          MonedaNormal(x: 3250, y: 127, isCollected: _isCollected(3250.0, 127.0, collectedCoinsPositions)),  
+
+          //MONEDAS 4
+          MonedaNormal(x: 3642, y: 280, isCollected: _isCollected(3642.0, 280.0, collectedCoinsPositions)),
+          MonedaNormal(x: 3702, y: 280, isCollected: _isCollected(3702.0, 280.0, collectedCoinsPositions)), 
+          MonedaNormal(x: 3762, y: 280, isCollected: _isCollected(3762.0, 280.0, collectedCoinsPositions)), 
+          MonedaNormal(x: 3822, y: 280, isCollected: _isCollected(3822.0, 280.0, collectedCoinsPositions)),
+          MonedaNormal(x: 3642, y: 240, isCollected: _isCollected(3642.0, 240.0, collectedCoinsPositions)),
+          MonedaNormal(x: 3702, y: 240, isCollected: _isCollected(3702.0, 240.0, collectedCoinsPositions)), 
+          MonedaNormal(x: 3762, y: 240, isCollected: _isCollected(3762.0, 240.0, collectedCoinsPositions)), 
+          MonedaNormal(x: 3822, y: 240, isCollected: _isCollected(3822.0, 240.0, collectedCoinsPositions)),
+
+          //MONEDAS 5
+          MonedaNormal(x: 3687, y: 164, isCollected: _isCollected(3687.0, 164.0, collectedCoinsPositions)),
+          MonedaNormal(x: 3747, y: 164, isCollected: _isCollected(3747.0, 164.0, collectedCoinsPositions)),
+          MonedaVelocidad(x: 3807, y: 164, isCollected: _isCollected(3807.0, 164.0, collectedCoinsPositions)),
+          MonedaNormal(x: 3867, y: 164, isCollected: _isCollected(3867.0, 164.0, collectedCoinsPositions)),
+          MonedaNormal(x: 3927, y: 164, isCollected: _isCollected(3927.0, 164.0, collectedCoinsPositions)),
+
+          //MONEDAS 6
+          MonedaSalto(x: 4353, y: 280, isCollected: _isCollected(4353.0, 280.0, collectedCoinsPositions)),
+          MonedaSalto(x: 4557, y: 280, isCollected: _isCollected(4557.0, 280.0, collectedCoinsPositions)),
+
+          //MONEDAS 7
+          MonedaNormal(x: 4150, y: 113, isCollected: _isCollected(4150.0, 113.0, collectedCoinsPositions)),
+          MonedaNormal(x: 4200, y: 113, isCollected: _isCollected(4200.0, 113.0, collectedCoinsPositions)),
+          MonedaNormal(x: 4300, y: 113, isCollected: _isCollected(4300.0, 113.0, collectedCoinsPositions)),
+          MonedaNormal(x: 4350, y: 113, isCollected: _isCollected(4350.0, 113.0, collectedCoinsPositions)),
+          MonedaNormal(x: 4450, y: 113, isCollected: _isCollected(4450.0, 113.0, collectedCoinsPositions)),
+          MonedaNormal(x: 4500, y: 113, isCollected: _isCollected(4500.0, 113.0, collectedCoinsPositions)),
+          MonedaNormal(x: 4600, y: 113, isCollected: _isCollected(4600.0, 113.0, collectedCoinsPositions)),
+          MonedaNormal(x: 4650, y: 113, isCollected: _isCollected(4650.0, 113.0, collectedCoinsPositions)),
+
 
           // Casa final
           Casa(x: 5075, y: 200, width: 100, height: 100),
         ];
 
+  static bool _isCollected(double x, double y, List<Map<String, double>>? positions) {
+    if (positions == null) {
+        debugPrint('No saved positions available for coin at x:$x, y:$y');
+        return false;
+    }
+    bool isCollected = positions.any((pos) => pos['x'] == x && pos['y'] == y);
+    debugPrint('Checking coin at x:$x, y:$y - isCollected: $isCollected');
+    return isCollected;
+}
+
   List<dynamic> get suelos => objetos.where((obj) => obj is Suelo || obj is Suelo2).toList();
-  List<dynamic> get rampas => objetos.where((obj) => obj is Rampa || obj is RampaInvertida).toList();
-  List<dynamic> get casas => objetos.where((obj) => obj is Casa).toList();
-  List<dynamic> get monedas => objetos.where((obj) => obj is MonedaNormal || obj is MonedaSalto || obj is MonedaVelocidad).toList();
+  List<dynamic> get casas => objetos.whereType<Casa>().toList();
+  List<MonedaBase> get monedas => objetos.whereType<MonedaBase>().toList();
+
+
+  double get anchoMundo {
+    if (objetos.isEmpty) return 0;
+    final last = objetos.last;
+    return last.x + (last.width ?? 0);
+  }
 }

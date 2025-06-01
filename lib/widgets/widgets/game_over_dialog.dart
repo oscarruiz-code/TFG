@@ -3,18 +3,20 @@ import 'package:flutter/material.dart';
 class GameOverDialog extends StatelessWidget {
   final bool victory;
   final int coins;
-  final int score;  // Nuevo parámetro
+  final int score;
   final VoidCallback onRetry;
   final VoidCallback onMenu;
+  final VoidCallback onSaveAndExit;
 
   const GameOverDialog({
-    Key? key,
+    super.key,
     required this.victory,
     required this.coins,
-    required this.score,  // Agregamos el parámetro requerido
+    required this.score,
     required this.onRetry,
     required this.onMenu,
-  }) : super(key: key);
+    required this.onSaveAndExit,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -24,14 +26,20 @@ class GameOverDialog extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Text('Monedas: $coins'),
-          if (victory) Text('Puntuación: $score'),  // Mostramos el score solo en victoria
+          if (victory) Text('Puntuación: $score'),
         ],
       ),
       actions: [
-        TextButton(
-          onPressed: onRetry,
-          child: const Text('Reintentar'),
-        ),
+        if (!victory) ...[  // Solo mostrar estos botones si no es victoria
+          TextButton(
+            onPressed: onRetry,
+            child: const Text('Reintentar'),
+          ),
+          TextButton(
+            onPressed: onSaveAndExit,
+            child: const Text('Guardar y Salir'),
+          ),
+        ],
         TextButton(
           onPressed: onMenu,
           child: const Text('Menú'),

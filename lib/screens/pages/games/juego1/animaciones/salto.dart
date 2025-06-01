@@ -5,8 +5,14 @@ class AnimacionSalto {
     'assets/personajes/principal/saltar/saltar3.png',
   ];
   
-  static const double fuerzaSalto = 68.0; // Más fuerza para subir más rápido
-  static const double gravedad = 50.0;    // Más gravedad para caer más rápido
+  static const double fuerzaSalto = 320.0; // Aumentada de 150.0 para saltos aún más altos
+  static const double gravedad = 600.0;    // Aumentada de 300.0 para caídas aún más rápidas
   static const double frameTime = 0.05;
   static const double frameTimeCaida = 0.1;
+  
+  // Hitbox dimensions for jumping
+  static const double hitboxWidth = 0.9;  // Igual que salto agachado
+  static const double hitboxHeight = 0.55;  // Igual que salto agachado
+  static const double hitboxOffsetY = 0.4;  // Igual que salto agachado
+  static const double hitboxOffsetX = 0.5;  // Igual que salto agachado
 }

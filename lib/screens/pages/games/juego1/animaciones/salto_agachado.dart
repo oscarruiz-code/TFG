@@ -4,8 +4,14 @@ class AnimacionSaltoAgachado {
     'assets/personajes/principal/saltar_agachado/saltar_agachado2.png',
   ];
   
-  static const double fuerzaSalto = 58.0; // Un poco menos que el normal
-  static const double gravedad = 40.0;    // Mucho más que antes, para que no flote
+  static const double fuerzaSalto = 270.0; // Aumentada de 130.0 manteniendo proporción
+  static const double gravedad = 600.0;    // Igualada a la gravedad del salto normal
   static const double frameTime = 0.04;
   static const double frameTimeCaida = 0.12;
+  
+  // Hitbox dimensions for crouched jumping
+  static const double hitboxWidth = 0.9;
+  static const double hitboxHeight = 0.4;  // Match with normal jump
+  static const double hitboxOffsetY = 0.4;  // Half of hitboxHeight
+  static const double hitboxOffsetX = 0.5;  // Ajustado para alinear con el suelo
 }

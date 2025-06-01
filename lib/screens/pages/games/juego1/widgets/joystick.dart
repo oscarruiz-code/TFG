@@ -3,8 +3,7 @@ import 'package:flutter/material.dart';
 class Joystick extends StatefulWidget {
   final Function(double dx, double dy) onDirectionChanged;
 
-  const Joystick({Key? key, required this.onDirectionChanged})
-    : super(key: key);
+  const Joystick({super.key, required this.onDirectionChanged});
 
   @override
   State<Joystick> createState() => _JoystickState();

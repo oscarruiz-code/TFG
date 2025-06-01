@@ -1,4 +1,5 @@
 import '../../../../../dependencias/imports.dart';
+import 'dart:developer' as developer;
 
 enum PenguinPlayerState {
   idle,
@@ -14,21 +15,29 @@ class Player {
   static const double defaultHeight = 50.0;
   static const double frameTime = 0.1;
 
+  // Estado de disposición
+  bool isDisposed = false;
+
   // Propiedades de posición y dimensiones
   double x;
   double y;
   double size = defaultHeight;
 
+  // Agregar getters para width y height
+  double get width => size;
+  double get height => size;
+
   // Propiedades de movimiento
   double velocidadVertical = 0;
   double gravedad = AnimacionSalto.gravedad;
   double fuerzaSalto = -AnimacionSalto.fuerzaSalto;
+  double fuerzaSaltoTemp = 0; // Fuerza de salto temporal para power-ups
   final double velocidadBase = AnimacionAndar.velocidad * 0.6;
   final double velocidadBaseAgachado = AnimacionAndarAgachado.velocidad * 0.6;
   double velocidadTemp = 0;
   double lastMoveDirection = 0;
-  bool isFacingRight = true;
-  double speed = 0; // <-- Añade esta línea
+  bool isFacingRight;
+  double speed = 0;
 
   // Estados del jugador
   bool isJumping = false;
@@ -38,6 +47,7 @@ class Player {
   bool isInvulnerable = false;
   bool canSlide = true;
   bool canJump = true;
+  bool isOnGround = false;
 
   // Animación
   int crouchFrame = 0;
@@ -54,20 +64,87 @@ class Player {
 
   // Coleccionables y power-ups
   int monedas = 0;
-  double fuerzaSaltoTemp = -AnimacionSalto.fuerzaSalto;
 
   // Bus de eventos
   final GameEventBus _eventBus = GameEventBus();
 
-  Player({required this.x, required this.y});
+  Player({
+    required this.x,
+    required this.y,
+    required this.size,
+    required this.isFacingRight,
+  });
 
   // Hitbox del jugador
-  Rect get hitbox => Rect.fromLTWH(
-    x - (size * 0.46),
-    y - (size * (isCrouching ? 0.25 : 0.45)),
-    size * 0.85,
-    size * (isSliding ? 0.4 : (isCrouching ? 0.5 : 0.94)),
-  );
+  Rect get hitbox {
+    if (isSliding) {
+      return _getHitboxFromAnimation(
+        isCrouching
+            ? AnimacionDeslizarseAgachado.hitboxWidth
+            : AnimacionDeslizarse.hitboxWidth,
+        isCrouching
+            ? AnimacionDeslizarseAgachado.hitboxHeight
+            : AnimacionDeslizarse.hitboxHeight,
+        isCrouching
+            ? AnimacionDeslizarseAgachado.hitboxOffsetX
+            : AnimacionDeslizarse.hitboxOffsetX,
+        isCrouching
+            ? AnimacionDeslizarseAgachado.hitboxOffsetY
+            : AnimacionDeslizarse.hitboxOffsetY,
+      );
+    } else if (isJumping) {
+      return _getHitboxFromAnimation(
+        isCrouching
+            ? AnimacionSaltoAgachado.hitboxWidth
+            : AnimacionSalto.hitboxWidth,
+        isCrouching
+            ? AnimacionSaltoAgachado.hitboxHeight
+            : AnimacionSalto.hitboxHeight,
+        isCrouching
+            ? AnimacionSaltoAgachado.hitboxOffsetX
+            : AnimacionSalto.hitboxOffsetX,
+        isCrouching
+            ? AnimacionSaltoAgachado.hitboxOffsetY
+            : AnimacionSalto.hitboxOffsetY,
+      );
+    } else if (isCrouching) {
+      return _getHitboxFromAnimation(
+        lastMoveDirection != 0
+            ? AnimacionAndarAgachado.hitboxWidth
+            : AnimacionAgacharse.hitboxWidth,
+        lastMoveDirection != 0
+            ? AnimacionAndarAgachado.hitboxHeight
+            : AnimacionAgacharse.hitboxHeight,
+        lastMoveDirection != 0
+            ? AnimacionAndarAgachado.hitboxOffsetX
+            : AnimacionAgacharse.hitboxOffsetX,
+        lastMoveDirection != 0
+            ? AnimacionAndarAgachado.hitboxOffsetY
+            : AnimacionAgacharse.hitboxOffsetY,
+      );
+    } else {
+      return _getHitboxFromAnimation(
+        AnimacionAndar.hitboxWidth,
+        AnimacionAndar.hitboxHeight,
+        AnimacionAndar.hitboxOffsetX,
+        AnimacionAndar.hitboxOffsetY,
+      );
+    }
+  }
+
+  Rect _getHitboxFromAnimation(
+    double width,
+    double height,
+    double offsetX,
+    double offsetY,
+  ) {
+    return Rect.fromLTWH(
+      x - (size * offsetX),
+      y - (size * offsetY),
+      size * width,
+      size * height,
+    );
+  }
 
   // Movimiento básico
   void move(double dx, double dy, {required double groundLevel}) {
@@ -78,6 +155,7 @@ class Player {
     } else {
       _handleIdle();
     }
+    developer.log('Player moved to: x=\$x, y=\$y, dx=\$dx, dy=\$dy');
   }
 
   void _handleMovement(double dx, double groundLevel) {
@@ -92,20 +170,23 @@ class Player {
     isFacingRight = dx > 0;
     lastMoveDirection = dx;
 
-    // Actualizar el estado y la posición
-    if (!isJumping && !isSliding) {
-      currentState =
-          isCrouching
-              ? PenguinPlayerState.walkingCrouched
-              : PenguinPlayerState.walking;
-      // Usar la posición actual (que incluye cualquier desplazamiento previo)
-      x += dx * currentSpeed;
+    // Aplicar el movimiento solo si no hay colisión
+    if (!isSliding) {
+        currentState = isCrouching
+            ? PenguinPlayerState.walkingCrouched
+            : (isJumping ? PenguinPlayerState.jumping : PenguinPlayerState.walking);
+        
+        // Calcular la nueva posición
+        double newX = x + dx * currentSpeed;
+        
+        // Verificar si la nueva posición es válida antes de aplicarla
+        x = newX;
     }
 
     _adjustGroundPosition(groundLevel);
     _updateMovementState();
     _emitMovementEvents(dx);
-  }
+}
 
   void updateWalkingAnimation(double dtSeconds) {
     if (!isJumping && !isSliding && lastMoveDirection != 0) {
@@ -145,13 +226,36 @@ class Player {
   void activarPowerUpVelocidad(double nuevaVelocidad, Duration duracion) {
     velocidadTemp = nuevaVelocidad;
     Future.delayed(duracion, () {
-      velocidadTemp = 0; // Vuelve a la velocidad base automáticamente
+      if (!isDisposed) {
+        velocidadTemp =
+            velocidadBase; // Restaurar a la velocidad base en lugar de 0
+        print('Velocidad restaurada a velocidad base: $velocidadBase');
+      }
+    });
+  }
+
+  void activarPowerUpSalto(double nuevaFuerza, Duration duracion) {
+    fuerzaSaltoTemp = nuevaFuerza;
+    Future.delayed(duracion, () {
+      if (!isDisposed) {
+        fuerzaSaltoTemp = fuerzaSalto; // Restaurar a la fuerza de salto base
+        print('Fuerza de salto restaurada a fuerza base: $fuerzaSalto');
+      }
     });
   }
 
   void _adjustGroundPosition(double groundLevel) {
-    if (y >= groundLevel - size * 0.5) {
+    if (groundLevel == double.infinity) {
+      // Si no hay suelo, no hacer ajuste
+      return;
+    }
+
+    // Ajustar posición solo si estamos cerca del suelo
+    if (y + size * 0.5 >= groundLevel - 10 &&
+        y + size * 0.5 <= groundLevel + 15) {
       y = groundLevel - size * 0.5;
+      isJumping = false;
+      velocidadVertical = 0;
     }
   }
 
@@ -187,8 +291,9 @@ class Player {
         isCrouching ? AnimacionSaltoAgachado.sprites : AnimacionSalto.sprites;
     // La dirección (isFacingRight) ya se maneja en el widget que renderiza el sprite
     if (velocidadVertical < 0) return sprites[0]; // Subiendo
-    if (velocidadVertical > 0)
+    if (velocidadVertical > 0) {
       return isCrouching ? sprites[1] : sprites[2]; // Cayendo
+    }
     return isCrouching ? sprites[0] : sprites[1]; // Punto más alto
   }
 
@@ -227,24 +332,17 @@ class Player {
     final distanciaTotal = 75.0;
     final distanciaMitad = distanciaTotal / 2;
     double distanciaRecorrida = 0;
-    double posicionInicial = x;
-    double posicionFinal =
-        posicionInicial + (isFacingRight ? distanciaTotal : -distanciaTotal);
+
     currentState = PenguinPlayerState.sliding;
     _eventBus.emit(GameEvents.playerSlide);
 
     Timer.periodic(Duration(milliseconds: 50), (timer) {
       if (!isSliding || distanciaRecorrida >= distanciaTotal) {
-        x = posicionFinal; // Aseguramos que termine exactamente en la posición final
-        lastMoveDirection = 0; // Reseteamos la dirección del movimiento
         _endSlide(timer);
         return;
       }
 
       distanciaRecorrida += distanciaTotal * 0.1;
-      double progreso = distanciaRecorrida / distanciaTotal;
-      x = posicionInicial + (posicionFinal - posicionInicial) * progreso;
-
       _updateSlideFrame(distanciaRecorrida, distanciaMitad);
     });
   }
@@ -293,19 +391,14 @@ class Player {
     }
   }
 
+  // Método para iniciar el salto
   void jump() {
-    if (!canJump || isJumping || isSliding) return;
+    if (!canJump || isSliding) return;
 
     isJumping = true;
-    frameIndex = 0;
-    velocidadVertical = 0;
-    gravedad =
-        isCrouching ? AnimacionSaltoAgachado.gravedad : AnimacionSalto.gravedad;
-    velocidadVertical =
-        isCrouching
-            ? -AnimacionSaltoAgachado.fuerzaSalto
-            : -AnimacionSalto.fuerzaSalto;
-    currentState = PenguinPlayerState.jumping;
+    isOnGround = false;
+    canJump = false;
+    velocidadVertical = fuerzaSaltoTemp > 0 ? fuerzaSaltoTemp : fuerzaSalto;
     _eventBus.emit(GameEvents.playerJump);
   }
 
@@ -319,7 +412,10 @@ class Player {
 
   void _initializeCrouch() {
     crouchFrame = 0;
+    double previousHeight = size;
     size = defaultHeight * 0.7;
+    // Ajustar la posición Y para mantener los pies en el mismo lugar
+    y += (previousHeight - size) * 0.5;
     currentState = PenguinPlayerState.crouching;
     _eventBus.emit(GameEvents.playerCrouch);
 
@@ -358,9 +454,12 @@ class Player {
 
   void _completeStandUp() {
     crouchFrame = 0;
+    double previousHeight = size;
+    size = defaultHeight;
+    // Ajustar la posición Y al pararse
+    y -= (size - previousHeight) * 0.5;
     isCrouching = false;
     isStandingUp = false;
-    size = defaultHeight;
     currentState = PenguinPlayerState.idle;
     _eventBus.emit(GameEvents.playerStandUp);
   }
@@ -394,6 +493,37 @@ class Player {
       _eventBus.emit(GameEvents.playerMove, {
         'direction': dx > 0 ? 'right' : 'left',
       });
+    }
+  }
+
+  // Ajuste de posición vertical considerando múltiples suelos
+  void updateGravityAndPosition({
+    required List<dynamic> objetos,
+    required double deltaTime,
+    required double worldOffset,
+    required ColisionSuelo detectorSuelo,
+  }) {
+    // Aplica gravedad
+    velocidadVertical += gravedad * deltaTime;
+    y += velocidadVertical;
+
+    // Altura del suelo más cercano
+    final alturaSuelo = detectorSuelo.obtenerAltura(this, objetos, worldOffset);
+
+    if (alturaSuelo != double.infinity) {
+      // Usar el hitbox.bottom para obtener la posición correcta de los pies
+      final double playerFeet = hitbox.bottom;
+
+      if (velocidadVertical >= 0 && playerFeet >= alturaSuelo - 10) {
+        // Aterriza sobre el suelo
+        y = alturaSuelo - size * 0.5;
+        velocidadVertical = 0;
+        isJumping = false;
+        canJump = true;
+        isOnGround = true;
+      }
+    } else {
+      isOnGround = false;
     }
   }
 }

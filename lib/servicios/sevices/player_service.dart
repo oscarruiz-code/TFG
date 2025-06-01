@@ -335,48 +335,60 @@ class PlayerService {
     required int health,
     required int currentLevel,
     String? lastCheckpoint,
+    String? collectedCoinsPositions,
   }) async {
     final conn = await DatabaseConnection.getConnection();
     try {
-      // Verificar si es admin
+      // Check if user is admin
       var adminResults = await conn.query(
         'SELECT id FROM admins WHERE id = ?',
         [userId],
       );
 
       if (adminResults.isNotEmpty) {
+        // Handle admin game save
         await conn.query(
-          'UPDATE admin_game_saves SET is_active = FALSE WHERE admin_id = ? AND game_type = ?',
+          'UPDATE admin_game_saves SET is_active = FALSE WHERE admin_id = ? AND game_type = ? AND is_active = TRUE',
           [userId, gameType],
         );
         
         await conn.query(
           '''INSERT INTO admin_game_saves 
              (admin_id, game_type, position_x, position_y, world_offset,
-              coins_collected, health, current_level, last_checkpoint)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)''',
-          [userId, gameType, playerX, playerY, worldOffset, coins, health, currentLevel, lastCheckpoint],
+              coins_collected, health, current_level, last_checkpoint, is_active, collected_coins_positions)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, TRUE, ?)''',
+          [userId, gameType, playerX, playerY, worldOffset, coins, health, currentLevel, lastCheckpoint, collectedCoinsPositions],
         );
       } else {
+        // Handle regular user game save
         await conn.query(
-          'UPDATE game_saves SET is_active = FALSE WHERE user_id = ? AND game_type = ?',
+          'UPDATE game_saves SET is_active = FALSE WHERE user_id = ? AND game_type = ? AND is_active = TRUE',
           [userId, gameType],
         );
         
         await conn.query(
           '''INSERT INTO game_saves 
              (user_id, game_type, position_x, position_y, world_offset,
-              coins_collected, health, current_level, last_checkpoint)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)''',
-          [userId, gameType, playerX, playerY, worldOffset, coins, health, currentLevel, lastCheckpoint],
+              coins_collected, health, current_level, last_checkpoint, is_active, collected_coins_positions)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, TRUE, ?)''',
+          [userId, gameType, playerX, playerY, worldOffset, coins, health, currentLevel, lastCheckpoint, collectedCoinsPositions],
         );
       }
 
-      // Registrar en el historial
-      await conn.query(
-        'INSERT INTO game_history (user_id, game_type, score, coins, victory, duration) VALUES (?, ?, ?, ?, ?, ?)',
-        [userId, gameType, score, coins, victory ? 1 : 0, duration],
-      );
+      // Register in game history if victory
+      if (victory) {
+        if (adminResults.isNotEmpty) {
+          await conn.query(
+            'INSERT INTO admin_game_history (admin_id, game_type, score, coins, victory, duration) VALUES (?, ?, ?, ?, ?, ?)',
+            [userId, gameType, score, coins, 1, duration],
+          );
+        } else {
+          await conn.query(
+            'INSERT INTO game_history (user_id, game_type, score, coins, victory, duration) VALUES (?, ?, ?, ?, ?, ?)',
+            [userId, gameType, score, coins, 1, duration],
+          );
+        }
+      }
     } finally {
       await conn.close();
     }
@@ -488,12 +500,53 @@ class PlayerService {
   }
 
   Future<Map<String, dynamic>?> getSavedGame(int userId) async {
-    return loadGameState(userId, 1); // Asumimos que Game1 tiene gameType = 1
+    final conn = await DatabaseConnection.getConnection();
+    try {
+      // Check if user is admin
+      var adminResults = await conn.query(
+        'SELECT id FROM admins WHERE id = ?',
+        [userId],
+      );
+
+      var results;
+      if (adminResults.isNotEmpty) {
+        results = await conn.query(
+          'SELECT * FROM admin_game_saves WHERE admin_id = ? AND is_active = TRUE',
+          [userId],
+        );
+      } else {
+        results = await conn.query(
+          'SELECT * FROM game_saves WHERE user_id = ? AND is_active = TRUE',
+          [userId],
+        );
+      }
+
+      if (results.isEmpty) return null;
+      return results.first.fields;
+    } finally {
+      await conn.close();
+    }
   }
 
   Future<void> deleteSavedGame(int userId) async {
-    await deleteGameSave(userId, 1); // Asumimos que Game1 tiene gameType = 1
-  }
+    final conn = await DatabaseConnection.getConnection();
+    try {
+        var result = await conn.query(
+            'DELETE FROM game_saves WHERE user_id = ? AND is_active = TRUE',
+            [userId]
+        );
+        
+        // No lanzar excepción si no hay partida guardada
+        if (result.affectedRows == 0) {
+            debugPrint('No se encontró partida guardada para eliminar');
+            return;
+        }
+    } catch (e) {
+        throw Exception('Error al eliminar la partida guardada: ${e.toString()}');
+    } finally {
+        await conn.close();
+    }
+}
 
   Future<void> deleteGameSave(int userId, int gameType) async {
     final conn = await DatabaseConnection.getConnection();
