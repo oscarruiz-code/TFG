@@ -129,7 +129,7 @@ class _MenuInicioState extends State<MenuInicio> {
           label: 'Game 1',
           onPressed: () async {
             try {
-              final savedGame = await _playerService.getSavedGame(widget.userId);
+              final savedGame = await _playerService.loadGameState(widget.userId, 1);
               if (savedGame != null) {
                 if (!mounted) return;
                 showDialog(
@@ -156,11 +156,11 @@ class _MenuInicioState extends State<MenuInicio> {
                           ),
                         ),
                         Text(
-                          'Monedas: ${savedGame['coins']}',
+                          'Monedas: ${savedGame['coins_collected']}',
                           style: TextStyle(color: Colors.white.withOpacity(0.8)),
                         ),
                         Text(
-                          'Distancia: ${savedGame['score']}',
+                          'Duración: ${_formatDuration(savedGame['duration'])}',
                           style: TextStyle(color: Colors.white.withOpacity(0.8)),
                         ),
                       ],
@@ -186,7 +186,7 @@ class _MenuInicioState extends State<MenuInicio> {
                       TextButton(
                         onPressed: () async {
                           try {
-                            await _playerService.deleteSavedGame(widget.userId);
+                            await _playerService.deleteGameSave(widget.userId, 1);
                             if (!mounted) return;
                             Navigator.pop(context);
                             Navigator.push(
@@ -288,3 +288,10 @@ class _MenuInicioState extends State<MenuInicio> {
     );
   }
 }
+
+  // Función para formatear la duración en formato mm:ss
+  String _formatDuration(int seconds) {
+    final int minutes = seconds ~/ 60;
+    final int remainingSeconds = seconds % 60;
+    return '$minutes:${remainingSeconds.toString().padLeft(2, '0')}';
+  }

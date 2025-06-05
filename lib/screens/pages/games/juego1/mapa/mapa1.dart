@@ -117,7 +117,7 @@ class Mapa1 {
           MonedaSalto(x: 2096, y: 280, isCollected: _isCollected(2096.0, 280.0, collectedCoinsPositions)),
           MonedaNormal(x: 2156, y: 280, isCollected: _isCollected(2156.0, 280.0, collectedCoinsPositions)), 
           MonedaNormal(x: 2216, y: 280, isCollected: _isCollected(2216.0, 280.0, collectedCoinsPositions)),
-          MonedaNormal(x: 2276, y: 280, isCollected: _isCollected(2216.0, 280.0, collectedCoinsPositions)),  
+          MonedaNormal(x: 2276, y: 280, isCollected: _isCollected(2276.0, 280.0, collectedCoinsPositions)),  
           
           //MONEDAS 3
           MonedaNormal(x: 2850, y: 207, isCollected: _isCollected(2850.0, 207.0, collectedCoinsPositions)), 
@@ -167,8 +167,14 @@ class Mapa1 {
         debugPrint('No saved positions available for coin at x:$x, y:$y');
         return false;
     }
-    bool isCollected = positions.any((pos) => pos['x'] == x && pos['y'] == y);
-    debugPrint('Checking coin at x:$x, y:$y - isCollected: $isCollected');
+    
+    // Usar una pequeña tolerancia para la comparación
+    const double epsilon = 0.1;  // Puedes ajustar este valor según sea necesario
+    bool isCollected = positions.any((pos) => 
+        (pos['x']! - x).abs() < epsilon && 
+        (pos['y']! - y).abs() < epsilon
+    );
+
     return isCollected;
 }
 

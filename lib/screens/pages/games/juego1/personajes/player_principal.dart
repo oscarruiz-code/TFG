@@ -29,6 +29,8 @@ class Player {
 
   // Propiedades de movimiento
   double velocidadVertical = 0;
+  double velocidadHorizontal =
+      0; // Eliminar 'final' para permitir la reasignación
   double gravedad = AnimacionSalto.gravedad;
   double fuerzaSalto = -AnimacionSalto.fuerzaSalto;
   double fuerzaSaltoTemp = 0; // Fuerza de salto temporal para power-ups
@@ -63,7 +65,7 @@ class Player {
   double checkpointWorldOffset = 0;
 
   // Coleccionables y power-ups
-  int monedas = 0;
+  num monedas = 0;
 
   // Bus de eventos
   final GameEventBus _eventBus = GameEventBus();
@@ -73,7 +75,75 @@ class Player {
     required this.y,
     required this.size,
     required this.isFacingRight,
-  });
+  }) {
+    // Inicializar los listeners para eventos de colisión
+    initializeCollisionListeners();
+  }
+
+  void initializeCollisionListeners() {
+    // Ya existentes
+    _eventBus.on(GameEvents.playerCollisionTop, (_) {
+      isJumping = false;
+      velocidadVertical = 0;
+      isOnGround = true;
+      canJump = true;
+
+      if (currentState == PenguinPlayerState.jumping) {
+        currentState =
+            isCrouching
+                ? PenguinPlayerState.crouching
+                : PenguinPlayerState.idle;
+      }
+    });
+
+    _eventBus.on(GameEvents.playerCollisionBottom, (_) {
+      if (velocidadVertical < 0) {
+        velocidadVertical = 0;
+      }
+    });
+
+    _eventBus.on(GameEvents.playerInVoid, (_) {
+      morir();
+    });
+
+    _eventBus.on(GameEvents.playerCollisionWithHouse, (_) {
+      // Emitir evento de victoria
+      _eventBus.emit(GameEvents.gameOver, {'victory': true});
+
+      // Detener al jugador
+      lastMoveDirection = 0;
+      isJumping = false;
+      isSliding = false;
+      velocidadVertical = 0;
+
+      // Cambiar estado a idle para mostrar animación de victoria
+      currentState = PenguinPlayerState.idle;
+    });
+
+    _eventBus.on(GameEvents.coinCollected, (coin) {
+      coin.markAsCollected();
+      // Aplicar el efecto específico de la moneda
+      coin.aplicarEfecto(this);
+      // Solo incrementar el contador si la moneda tiene valor
+      if (coin.valor > 0) {
+        monedas += coin.valor;
+      }
+    });
+  }
+
+  void disposeCollisionListeners() {
+    _eventBus.offAll(GameEvents.playerCollisionTop);
+    _eventBus.offAll(GameEvents.playerCollisionBottom);
+    _eventBus.offAll(GameEvents.playerInVoid);
+    _eventBus.offAll(GameEvents.playerCollisionWithHouse);
+    _eventBus.offAll(GameEvents.coinCollected);
+  }
+
+  // Método para liberar recursos
+  void dispose() {
+    isDisposed = true;
+    disposeCollisionListeners();
+  }
 
   // Hitbox del jugador
   Rect get hitbox {
@@ -155,41 +225,61 @@ class Player {
     } else {
       _handleIdle();
     }
-    developer.log('Player moved to: x=\$x, y=\$y, dx=\$dx, dy=\$dy');
+    developer.log('Player moved to: x=$x, y=$y, dx=$dx, dy=$dy');
   }
 
   void _handleMovement(double dx, double groundLevel) {
-    // Usar la velocidad base según el estado
     double baseSpeed = isCrouching ? velocidadBaseAgachado : velocidadBase;
-    // Si hay power-up activo, usarlo, si no, usar base
     double currentSpeed = velocidadTemp > 0 ? velocidadTemp : baseSpeed;
 
     speed = currentSpeed;
-
-    // Actualizar la dirección y el estado de movimiento
     isFacingRight = dx > 0;
     lastMoveDirection = dx;
 
-    // Aplicar el movimiento solo si no hay colisión
     if (!isSliding) {
-        currentState = isCrouching
-            ? PenguinPlayerState.walkingCrouched
-            : (isJumping ? PenguinPlayerState.jumping : PenguinPlayerState.walking);
-        
-        // Calcular la nueva posición
-        double newX = x + dx * currentSpeed;
-        
-        // Verificar si la nueva posición es válida antes de aplicarla
-        x = newX;
+      // No cambiar el estado si estamos saltando
+      if (!isJumping) {
+        currentState =
+            isCrouching
+                ? PenguinPlayerState.walkingCrouched
+                : PenguinPlayerState.walking;
+      }
+
+      double newX = x + dx * currentSpeed;
+      x = newX;
     }
 
     _adjustGroundPosition(groundLevel);
     _updateMovementState();
     _emitMovementEvents(dx);
-}
+  }
+
+  void _handleIdle() {
+    lastMoveDirection = 0;
+    animationTime = 0.0;
+    // No cambiar el estado si estamos saltando
+    if (!isJumping && !isSliding) {
+      currentState =
+          isCrouching ? PenguinPlayerState.crouching : PenguinPlayerState.idle;
+      _eventBus.emit(GameEvents.playerIdle);
+    }
+  }
+
+  void _updateMovementState() {
+    // No actualizar el estado si estamos saltando
+    if (!isJumping) {
+      currentState =
+          isCrouching
+              ? PenguinPlayerState.walkingCrouched
+              : PenguinPlayerState.walking;
+    }
+  }
 
   void updateWalkingAnimation(double dtSeconds) {
-    if (!isJumping && !isSliding && lastMoveDirection != 0) {
+    // No actualizar la animación si estamos saltando
+    if (isJumping) return;
+
+    if (!isSliding && lastMoveDirection != 0) {
       animationTime += dtSeconds;
       double frameTime =
           isCrouching
@@ -205,7 +295,6 @@ class Player {
                 : AnimacionAndar.sprites.length);
       }
     } else if (lastMoveDirection == 0) {
-      // Resetear la animación cuando no hay movimiento
       frameIndex = 0;
       animationTime = 0.0;
     }
@@ -256,25 +345,6 @@ class Player {
       y = groundLevel - size * 0.5;
       isJumping = false;
       velocidadVertical = 0;
-    }
-  }
-
-  void _updateMovementState() {
-    if (!isJumping) {
-      currentState =
-          isCrouching
-              ? PenguinPlayerState.walkingCrouched
-              : PenguinPlayerState.walking;
-    }
-  }
-
-  void _handleIdle() {
-    lastMoveDirection = 0;
-    animationTime = 0.0;
-    if (!isJumping && !isSliding) {
-      currentState =
-          isCrouching ? PenguinPlayerState.crouching : PenguinPlayerState.idle;
-      _eventBus.emit(GameEvents.playerIdle);
     }
   }
 
@@ -397,8 +467,19 @@ class Player {
 
     isJumping = true;
     isOnGround = false;
-    canJump = false;
-    velocidadVertical = fuerzaSaltoTemp > 0 ? fuerzaSaltoTemp : fuerzaSalto;
+
+    // Calcular la fuerza de salto basada en el estado actual
+    double fuerzaActual;
+    if (isCrouching) {
+      fuerzaActual = fuerzaSaltoTemp < 0 ? fuerzaSaltoTemp : -AnimacionSaltoAgachado.fuerzaSalto;
+    } else {
+      fuerzaActual = fuerzaSaltoTemp < 0 ? fuerzaSaltoTemp : -AnimacionSalto.fuerzaSalto;
+    }
+    
+    // Aplicar la fuerza de salto con un pequeño impulso adicional para garantizar que el salto ocurra
+    velocidadVertical = fuerzaActual * 1.05;
+    
+    currentState = PenguinPlayerState.jumping;
     _eventBus.emit(GameEvents.playerJump);
   }
 
@@ -473,13 +554,39 @@ class Player {
   }
 
   void respawnAtCheckpoint() {
-    x = checkpointX;
-    y = checkpointY;
+    // Restaurar la posición al último checkpoint guardado
+    if (checkpointX != 0) {
+      x = checkpointX;
+      y = checkpointY;
+  
+      // Restaurar estado del jugador
+      isJumping = false;
+      isSliding = false;
+      isCrouching = false;
+      velocidadVertical = 0;
+      currentState = PenguinPlayerState.idle;
+  
+      // Emitir evento de respawn para notificar a otros componentes
+      _eventBus.emit(GameEvents.playerRespawn);
+    }
+  }
+
+  void morir() {
+    // Reiniciar al jugador en su último checkpoint
     isJumping = false;
     isSliding = false;
     velocidadVertical = 0;
-    currentState = PenguinPlayerState.idle;
+
+    // Emitir evento para que el juego maneje la pérdida de vida y el respawn
     _eventBus.emit(GameEvents.playerRespawn);
+
+    // Restaurar estado del jugador
+    currentState = PenguinPlayerState.idle;
+
+    // Si hay un checkpoint guardado, respawnear allí
+    if (checkpointX != 0) {
+      respawnAtCheckpoint();
+    }
   }
 
   void _emitMovementEvents(double dx) {

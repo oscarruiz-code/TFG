@@ -14,7 +14,7 @@ abstract class MonedaBase {
   MonedaBase({
     required this.x,
     required this.y,
-    this.isCollected = false,  // Parameter is defined here with default value
+    this.isCollected = false,
     this.size = 50.0,
     this.width = 50.0,
     this.height = 50.0,
@@ -23,6 +23,11 @@ abstract class MonedaBase {
   });
 
   void aplicarEfecto(dynamic player);
+  
+  // Añadir método markAsCollected
+  void markAsCollected() {
+    isCollected = true;
+  }
   
   Rect get hitbox => Rect.fromLTWH(
     x + (width * 0.1),

@@ -37,16 +37,18 @@ class _MenuHistorialState extends State<MenuHistorial> {
       widget.userId,
       _selectedGameType,
     );
-    _savedGameFuture = _playerStatsService.getSavedGame(widget.userId);
+    _savedGameFuture = _playerStatsService.getSavedGame(widget.userId, gameType: _selectedGameType);
   }
 
   void _refreshData() {
     setState(() {
+      _currentPage = 0; // Resetear a la primera página
+      _gameHistoryFuture = _playerStatsService.getGameHistory(widget.userId);
       _topScoresFuture = _playerStatsService.getTopScores(
         widget.userId,
         _selectedGameType,
       );
-      _savedGameFuture = _playerStatsService.getSavedGame(widget.userId);
+      _savedGameFuture = _playerStatsService.getSavedGame(widget.userId, gameType: _selectedGameType);
     });
   }
 
@@ -385,7 +387,7 @@ class _MenuHistorialState extends State<MenuHistorial> {
                       ElevatedButton.icon(
                         onPressed: () async {
                           try {
-                            final savedGame = await _playerStatsService.getSavedGame(widget.userId);
+                            final savedGame = await _playerStatsService.loadGameState(widget.userId, _selectedGameType);
                             if (savedGame != null) {
                               if (!mounted) return;
                               Navigator.pushReplacement(
@@ -425,14 +427,29 @@ class _MenuHistorialState extends State<MenuHistorial> {
                       ElevatedButton.icon(
                         onPressed: () async {
                           try {
-                            await _playerStatsService.deleteSavedGame(widget.userId);
+                            // Especificar el tipo de juego (game_type) al eliminar
+                            bool success = await _playerStatsService.deleteGameSave(widget.userId, _selectedGameType);
                             if (!mounted) return;
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Partida guardada eliminada'),
-                              ),
-                            );
-                            _refreshData();
+                            
+                            if (success) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Partida guardada eliminada'),
+                                ),
+                              );
+                              
+                              // Forzar actualización inmediata
+                              setState(() {
+                                _savedGameFuture = _playerStatsService.getSavedGame(widget.userId, gameType: _selectedGameType);
+                                _refreshData(); // Actualizar todos los datos
+                              });
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('No se encontró partida guardada para eliminar'),
+                                ),
+                              );
+                            }
                           } catch (e) {
                             if (!mounted) return;
                             ScaffoldMessenger.of(context).showSnackBar(

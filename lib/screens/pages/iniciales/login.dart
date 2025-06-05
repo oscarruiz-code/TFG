@@ -77,7 +77,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       const Text(
-                        'LOGGEAR',
+                        'LOGIN',
                         style: TextStyle(
                           fontSize: 32,
                           fontWeight: FontWeight.bold,
@@ -129,7 +129,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                           ),
                         ),
                         child: const Text(
-                          'Login',
+                          'Entrar',
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: 18,
@@ -277,6 +277,4 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
       );
     }
   }
-
-  
 }

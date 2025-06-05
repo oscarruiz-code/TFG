@@ -18,4 +18,12 @@ class GameEvents {
   static const String checkpointSet = 'checkpoint_set';
   static const String playerRespawn = 'player_respawn';
   static const String coinCollected = 'coin_collected';
+  static const String playerCollisionTop =
+      'player_collision_top'; // Nuevo evento para colisión desde arriba
+  static const String playerCollisionBottom = 'player_collision_bottom';
+  static const String playerCollisionWithHouse =
+      'player_collision_with_house'; // Sugerido si quieres notificar colisión con casas
+  static const String playerInVoid =
+      'player_in_void'; // Para cuando el jugador está en el vacío // Ya tienes declarado para monedas
+  // Nuevo evento para colisión desde abajo
 }

@@ -22,6 +22,10 @@ class GameEventBus {
     _listeners[event]?.remove(callback);
   }
 
+  void offAll(String event) {
+    _listeners.remove(event);
+  }
+
   // --- Agrega este método ---
   void dispose() {
     _listeners.clear();

@@ -32,7 +32,7 @@ class _TransicionGame1State extends State<TransicionGame1> with SingleTickerProv
     ]);
     
     _controller = AnimationController(
-      duration: const Duration(milliseconds: 1500),
+      duration: const Duration(milliseconds: 1000),
       vsync: this,
     );
 
