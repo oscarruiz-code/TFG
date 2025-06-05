@@ -399,7 +399,9 @@ class Player {
   }
 
   void _performSlide() {
-    final distanciaTotal = 75.0;
+    final distanciaTotal = isCrouching ? 
+        AnimacionDeslizarseAgachado.distancia : 
+        AnimacionDeslizarse.distancia;
     final distanciaMitad = distanciaTotal / 2;
     double distanciaRecorrida = 0;
 
@@ -412,7 +414,16 @@ class Player {
         return;
       }
 
-      distanciaRecorrida += distanciaTotal * 0.1;
+      // Calcular el incremento de distancia basado en la velocidad de la animación
+      double incremento = distanciaTotal * 0.1;
+      distanciaRecorrida += incremento;
+      
+      // Emitir evento con la información de progreso
+      _eventBus.emit(GameEvents.playerSlideProgress, {
+        'direccion': isFacingRight ? 1.0 : -1.0,
+        'incremento': incremento
+      });
+      
       _updateSlideFrame(distanciaRecorrida, distanciaMitad);
     });
   }

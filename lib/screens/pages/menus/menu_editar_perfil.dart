@@ -1,20 +1,33 @@
 import 'package:oscarruizcode_pingu/dependencias/imports.dart';
 import 'package:flutter/services.dart';
 
-class MenuEditarPerfil extends StatelessWidget {
+class MenuEditarPerfil extends StatefulWidget {
   final int userId;
   final String username;
   final PlayerStats playerStats;
-  final PageController pageController;  // Agregar pageController
-  final PlayerService _playerService = PlayerService();
+  final PageController pageController;
 
-  MenuEditarPerfil({
+  const MenuEditarPerfil({
     super.key,
     required this.userId,
     required this.username,
     required this.playerStats,
-    required this.pageController,  // Agregar este parámetro
+    required this.pageController,
   });
+
+  @override
+  State<MenuEditarPerfil> createState() => _MenuEditarPerfilState();
+}
+
+class _MenuEditarPerfilState extends State<MenuEditarPerfil> {
+  final PlayerService _playerService = PlayerService();
+  String? _selectedAvatar;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedAvatar = widget.playerStats.currentAvatar;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -35,8 +48,8 @@ class MenuEditarPerfil extends StatelessWidget {
           child: Column(
             children: [
               SharedTopBar(
-                username: username,
-                playerStats: playerStats,
+                username: widget.username,
+                playerStats: widget.playerStats,
               ),
               Expanded(
                 child: SingleChildScrollView(
@@ -50,7 +63,7 @@ class MenuEditarPerfil extends StatelessWidget {
                   ),
                 ),
               ),
-              SharedBottomNav(pageController: pageController),
+              SharedBottomNav(pageController: widget.pageController),
             ],
           ),
         ),
@@ -116,24 +129,21 @@ class MenuEditarPerfil extends StatelessWidget {
         String avatarPath = isFree
             ? 'assets/perfil/gratis/perfil${index + 1}.png'
             : 'assets/perfil/premium/perfil${index + 6}.png';
-        bool hasAccess = isFree || playerStats.hasPremiumAvatar(avatarPath);
+        bool hasAccess = isFree || widget.playerStats.hasPremiumAvatar(avatarPath);
 
         return GestureDetector(
           onTap: hasAccess
-              ? () async {
-                  await _playerService.updateProfilePicture(userId, avatarPath);
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Foto de perfil actualizada')),
-                    );
-                  }
+              ? () {
+                  setState(() {
+                    _selectedAvatar = avatarPath;
+                  });
                 }
               : null,
           child: Container(
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(
-                color: playerStats.currentAvatar == avatarPath
+                color: _selectedAvatar == avatarPath
                     ? Colors.blue
                     : Colors.transparent,
                 width: 2,
@@ -197,37 +207,59 @@ class MenuEditarPerfil extends StatelessWidget {
                   final adminService = AdminService();
                   final userService = UserService();
                   
+                  // Actualizar la foto de perfil si se seleccionó una nueva
+                  if (_selectedAvatar != null && _selectedAvatar != widget.playerStats.currentAvatar) {
+                    await _playerService.updateProfilePicture(widget.userId, _selectedAvatar!);
+                  }
+                  
                   // Actualizamos el email y la contraseña si se proporcionaron
                   if (emailController.text.isNotEmpty || passwordController.text.isNotEmpty) {
                       await adminService.updateUserInfo(
-                          userId,
-                          username,
+                          widget.userId,
+                          widget.username,
                           emailController.text,  // Solo usamos el nuevo email si se proporciona
                       );
                       
                       // Si se proporcionó una nueva contraseña, la actualizamos
                       if (passwordController.text.isNotEmpty) {
-                          await userService.updatePassword(userId, passwordController.text);
-                      }
-                      
-                      if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Perfil actualizado correctamente')),
-                          );
-                          Navigator.pop(context);
+                          await userService.updatePassword(widget.userId, passwordController.text);
                       }
                   }
-              } catch (e) {
+                  
+                  if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Perfil actualizado correctamente')),
+                      );
+                      
+                      // Obtener los stats actualizados
+                      final updatedStats = await _playerService.getPlayerStats(widget.userId);
+                      
+                      // Recargar el MenuInicio con los datos actualizados
+                      if (context.mounted) {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => MenuInicio(
+                              userId: widget.userId,
+                              username: widget.username,
+                              initialStats: updatedStats,
+                            ),
+                          ),
+                        );
+                      }
+                  }
+                } catch (e) {
                   if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(content: Text('Error al actualizar: $e')),
                       );
                   }
-              }
-            },
-            child: const Text('Guardar Cambios'),
+                }
+              },
+              child: const Text('Guardar Cambios'),
+            ),
           ),
-      )],
+      ],
       ),
     );
   }

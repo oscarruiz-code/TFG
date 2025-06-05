@@ -415,6 +415,30 @@ class _Game1State extends State<Game1> with TickerProviderStateMixin {
         }
       });
     });
+    
+    // Añadir listener para el progreso del deslizamiento
+    _eventBus.on(GameEvents.playerSlideProgress, (data) {
+      if (!mounted) return;
+      
+      setState(() {
+        // Obtener la dirección y el incremento del deslizamiento
+        double direccion = data['direccion'] as double;
+        double incremento = data['incremento'] as double;
+        
+        // Actualizar worldOffset si no estamos en los límites del mundo
+        if ((worldOffset > minWorldOffset || direccion > 0) && 
+            (worldOffset < maxWorldOffset || direccion < 0)) {
+          worldOffset += direccion * incremento;
+          worldOffset = worldOffset.clamp(minWorldOffset, maxWorldOffset);
+        }
+        
+        // Mantener al jugador en el centro
+        player.x = MediaQuery.of(context).size.width * 0.4;
+        
+        // Actualizar la distancia recorrida
+        distancia += incremento.abs().round();
+      });
+    });
   }
 
   @override

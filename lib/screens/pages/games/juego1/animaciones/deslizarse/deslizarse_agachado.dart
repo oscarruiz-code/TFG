@@ -6,7 +6,7 @@ class AnimacionDeslizarseAgachado {
   ];
   
   static const double velocidad = 150.0; // Velocidad más lenta cuando está agachado
-  static const double distancia = 20.0; // Misma distancia de 20 unidades
+  static const double distancia = 100.0; // Aumentado de 20.0 a 50.0 unidades
   static const double frameTime = 0.04;
   static const double frameTimeUltimo = 0.4;
   

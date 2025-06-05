@@ -7,6 +7,7 @@ class GameEvents {
   static const String playerMove = 'player_move';
   static const String playerIdle = 'player_idle';
   static const String playerEndSlide = 'player_end_slide';
+  static const String playerSlideProgress = 'player_slide_progress'; 
   static const String playerUpdatePosition = 'player_update_position';
   static const String playerLand = 'player_land';
   static const String buttonPressed = 'button_pressed';
@@ -19,11 +20,10 @@ class GameEvents {
   static const String playerRespawn = 'player_respawn';
   static const String coinCollected = 'coin_collected';
   static const String playerCollisionTop =
-      'player_collision_top'; // Nuevo evento para colisión desde arriba
+      'player_collision_top';
   static const String playerCollisionBottom = 'player_collision_bottom';
   static const String playerCollisionWithHouse =
-      'player_collision_with_house'; // Sugerido si quieres notificar colisión con casas
+      'player_collision_with_house'; 
   static const String playerInVoid =
-      'player_in_void'; // Para cuando el jugador está en el vacío // Ya tienes declarado para monedas
-  // Nuevo evento para colisión desde abajo
+      'player_in_void'; 
 }

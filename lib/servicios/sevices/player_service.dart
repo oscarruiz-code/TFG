@@ -18,23 +18,45 @@ class PlayerService {
     try {
       // Obtener stats actuales del jugador
       var stats = await getPlayerStats(userId);
+      
+      // Verificar si es un admin
+      var adminResults = await conn.query(
+        'SELECT id FROM admins WHERE id = ?',
+        [userId],
+      );
+      
+      bool isAdmin = adminResults.isNotEmpty;
 
       // Verificar si el avatar es gratuito
       if (PlayerStats.freeAvatars.contains(avatarPath)) {
-        await conn.query(
-          'UPDATE player_stats SET current_avatar = ? WHERE user_id = ?',
-          [avatarPath, userId],
-        );
+        if (isAdmin) {
+          await conn.query(
+            'UPDATE admin_stats SET current_avatar = ? WHERE admin_id = ?',
+            [avatarPath, userId],
+          );
+        } else {
+          await conn.query(
+            'UPDATE player_stats SET current_avatar = ? WHERE user_id = ?',
+            [avatarPath, userId],
+          );
+        }
         return true;
       }
 
       // Si es premium, verificar si está desbloqueado
       if (PlayerStats.premiumAvatars.contains(avatarPath) &&
           stats.hasPremiumAvatar(avatarPath)) {
-        await conn.query(
-          'UPDATE player_stats SET current_avatar = ? WHERE user_id = ?',
-          [avatarPath, userId],
-        );
+        if (isAdmin) {
+          await conn.query(
+            'UPDATE admin_stats SET current_avatar = ? WHERE admin_id = ?',
+            [avatarPath, userId],
+          );
+        } else {
+          await conn.query(
+            'UPDATE player_stats SET current_avatar = ? WHERE user_id = ?',
+            [avatarPath, userId],
+          );
+        }
         return true;
       }
 

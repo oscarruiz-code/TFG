@@ -7,7 +7,7 @@ class AnimacionDeslizarse {
   ];
   
   static const double velocidad = 200.0; // Ajustado para deslizamiento de 20 unidades
-  static const double distancia = 20.0; // Distancia exacta de 20 unidades
+  static const double distancia = 150.0; // Distancia exacta de 20 unidades
   static const double frameTime = 0.03;
   static const double frameTimeUltimo = 0.3;
   
