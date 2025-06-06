@@ -8,12 +8,6 @@ class PlayerStats {
   bool hasUsedFreeRename;
   String currentAvatar;
   List<String> unlockedPremiumAvatars;
-  int bestScore;
-  int playTime;
-  double worldOffset;
-  int currentLevel;
-  int health;
-  String? lastCheckpoint;
 
   PlayerStats({
     this.id,
@@ -24,12 +18,6 @@ class PlayerStats {
     this.hasUsedFreeRename = false,
     this.currentAvatar = 'assets/perfil/gratis/perfil1.png',
     this.unlockedPremiumAvatars = const [],
-    this.bestScore = 0,
-    this.playTime = 0,
-    this.worldOffset = 0.0,
-    this.currentLevel = 1,
-    this.health = 100,
-    this.lastCheckpoint,
   });
 
   Map<String, dynamic> toMap() {
@@ -42,12 +30,6 @@ class PlayerStats {
       'has_used_free_rename': hasUsedFreeRename ? 1 : 0,
       'current_avatar': currentAvatar,
       'unlocked_premium_avatars': unlockedPremiumAvatars.join(','),
-      'best_score': bestScore,
-      'play_time': playTime,
-      'world_offset': worldOffset,
-      'current_level': currentLevel,
-      'health': health,
-      'last_checkpoint': lastCheckpoint,
     };
   }
 
@@ -61,12 +43,6 @@ class PlayerStats {
       hasUsedFreeRename: map['has_used_free_rename'] == 1,
       currentAvatar: map['current_avatar'] ?? 'assets/perfil/gratis/perfil1.png',
       unlockedPremiumAvatars: (map['unlocked_premium_avatars'] as String?)?.split(',').where((s) => s.isNotEmpty).toList() ?? [],
-      bestScore: _parseInt(map['best_score']),
-      playTime: _parseInt(map['play_time']),
-      worldOffset: map['world_offset'] != null ? (map['world_offset'] as num).toDouble() : 0.0,
-      currentLevel: _parseInt(map['current_level']),
-      health: _parseInt(map['health']),
-      lastCheckpoint: map['last_checkpoint'],
     );
   }
 

@@ -1,8 +1,12 @@
 import 'package:oscarruizcode_pingu/dependencias/imports.dart';
 
+/// Pantalla que muestra una lista de usuarios del sistema organizada por roles.
 class UserListScreen extends StatefulWidget {
+  /// Indica si el usuario actual es administrador.
   final bool isAdmin;
+  /// ID del usuario que ha iniciado sesión.
   final int loggedUserId;
+  /// Lista inicial de usuarios para mostrar.
   final List<User> initialUsers;
 
   const UserListScreen({
@@ -35,28 +39,36 @@ class _UserListScreenState extends State<UserListScreen> with SingleTickerProvid
     super.dispose();
   }
 
-  Widget _buildUserList(List<User> users, String role) {
-    final filteredUsers = users.where((user) => user.role == role).toList();
-
-    if (filteredUsers.isEmpty) {
-      return const Center(child: Text('No hay usuarios disponibles.'));
-    }
-
+  Widget _buildUserList(List<User> users, String roleFilter) {
+    // Filtrar usuarios por rol
+    final filteredUsers = users.where((user) => user.role == roleFilter).toList();
+    
     return ListView.builder(
       itemCount: filteredUsers.length,
       itemBuilder: (context, index) {
         final user = filteredUsers[index];
         
-        // Lógica de permisos de edición
+        // Determinar si el usuario actual puede editar este usuario
         bool canEdit = false;
-        if (widget.isAdmin) {
-          // Si es admin, puede editar a todos excepto otros admins
-          canEdit = user.role != 'admin' || user.id == widget.loggedUserId;
-        } else {
-          // Si es subadmin, puede editar usuarios normales y otros subadmins
-          canEdit = user.role == 'user' || user.role == 'subadmin';
+        
+        // Si es superadmin (ID 8), puede editar a cualquier usuario
+        if (widget.loggedUserId == 8) {
+          canEdit = true;
+        } 
+        // Si es admin normal, solo puede editar usuarios y subadmins, no otros admins
+        else if (widget.isAdmin && user.role != 'admin') {
+          canEdit = true;
+        } 
+        // Si es subadmin, solo puede editar usuarios normales y otros subadmins
+        else if (!widget.isAdmin && user.role != 'admin') {
+          canEdit = true;
         }
-
+        
+        // Siempre permitir editar el propio perfil
+        if (user.id == widget.loggedUserId) {
+          canEdit = true;
+        }
+        
         return ListTile(
           leading: Icon(
             Icons.person,
@@ -138,7 +150,7 @@ class _UserListScreenState extends State<UserListScreen> with SingleTickerProvid
           ],
         ),
         actions: [
-          if (widget.isAdmin)  // Esto ahora dependerá del rol real 'admin'
+          if (widget.isAdmin)
             IconButton(
               icon: const Icon(Icons.person_add),
               onPressed: () {

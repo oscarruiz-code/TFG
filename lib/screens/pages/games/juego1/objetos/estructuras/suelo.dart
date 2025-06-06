@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
 
+/// Representa una plataforma de tipo suelo en el juego.
+///
+/// Esta clase define las propiedades físicas y visuales de una plataforma de suelo,
+/// incluyendo su posición, dimensiones y sprite asociado. También proporciona un
+/// hitbox ajustado para la detección de colisiones.
 class Suelo {
   final double x;
   final double y;

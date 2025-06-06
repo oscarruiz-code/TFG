@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
 
+/// Representa la meta o punto final del nivel en el juego.
+///
+/// Esta clase define las propiedades físicas y visuales de la casa que sirve como
+/// objetivo para que el jugador complete el nivel. Incluye su posición, dimensiones
+/// y un hitbox para la detección de colisiones.
 class Casa {
   final double x;
   final double y;

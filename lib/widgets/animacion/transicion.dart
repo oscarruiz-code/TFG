@@ -1,6 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../../screens/pages/games/juego1/pages/game1.dart';
+import 'package:oscarruizcode_pingu/dependencias/imports.dart';
 
 class TransicionGame1 extends StatefulWidget {
   final int userId;
@@ -19,9 +18,7 @@ class TransicionGame1 extends StatefulWidget {
 class _TransicionGame1State extends State<TransicionGame1> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _progressAnimation;
-  bool _resourcesLoaded = false;
-  String _loadingMessage = 'Iniciando carga...';
-  bool _isFirstBuild = true;
+  String _loadingMessage = 'Preparando juego...';
 
   @override
   void initState() {
@@ -32,107 +29,28 @@ class _TransicionGame1State extends State<TransicionGame1> with SingleTickerProv
     ]);
     
     _controller = AnimationController(
-      duration: const Duration(milliseconds: 1000),
+      duration: const Duration(milliseconds: 2000),  // 2 segundos como solicitaste
       vsync: this,
     );
 
-    _progressAnimation = Tween<double>(begin: 0, end: 1).animate(_controller);
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (_isFirstBuild) {
-      _isFirstBuild = false;
-      _loadResources();
-    }
-  }
-
-  Future<void> _loadResources() async {
-    try {
-      // Cargar componentes del juego
-      setState(() => _loadingMessage = 'Cargando componentes del juego...');
-      await Future.wait([
-        // Fondo y recursos básicos
-        precacheImage(const AssetImage('assets/imagenes/fondo.png'), context),
-        precacheImage(const AssetImage('assets/imagenes/logo.png'), context),
-        precacheImage(const AssetImage('assets/imagenes/juego.png'), context),
-        
-        // Sprites del personaje - Andar
-        precacheImage(const AssetImage('assets/personajes/principal/andar/andar1.png'), context),
-        precacheImage(const AssetImage('assets/personajes/principal/andar/andar2.png'), context),
-        precacheImage(const AssetImage('assets/personajes/principal/andar/andar3.png'), context),
-        precacheImage(const AssetImage('assets/personajes/principal/andar/andar4.png'), context),
-        precacheImage(const AssetImage('assets/personajes/principal/andar/andar5.png'), context),
-        precacheImage(const AssetImage('assets/personajes/principal/andar/andar6.png'), context),
-        precacheImage(const AssetImage('assets/personajes/principal/andar/andar7.png'), context),
-        
-        // Sprites del personaje - Deslizar
-        precacheImage(const AssetImage('assets/personajes/principal/deslizarse/deslizarse1.png'), context),
-        precacheImage(const AssetImage('assets/personajes/principal/deslizarse/deslizarse2.png'), context),
-        precacheImage(const AssetImage('assets/personajes/principal/deslizarse/deslizarse3.png'), context),
-        precacheImage(const AssetImage('assets/personajes/principal/deslizarse/deslizarse4.png'), context),
-        
-        // Sprites del personaje - Saltar
-        precacheImage(const AssetImage('assets/personajes/principal/saltar/saltar1.png'), context),
-        precacheImage(const AssetImage('assets/personajes/principal/saltar/saltar2.png'), context),
-        precacheImage(const AssetImage('assets/personajes/principal/saltar/saltar3.png'), context),
-        
-        // Sprites del personaje - Agacharse
-        precacheImage(const AssetImage('assets/personajes/principal/agacharse/agacharse1.png'), context),
-        precacheImage(const AssetImage('assets/personajes/principal/agacharse/agacharse2.png'), context),
-        precacheImage(const AssetImage('assets/personajes/principal/agacharse/agacharse3.png'), context),
-        
-        // Sprites del personaje - Andar Agachado
-        precacheImage(const AssetImage('assets/personajes/principal/andar_agachado/andar_agachado1.png'), context),
-        precacheImage(const AssetImage('assets/personajes/principal/andar_agachado/andar_agachado2.png'), context),
-        precacheImage(const AssetImage('assets/personajes/principal/andar_agachado/andar_agachado3.png'), context),
-        precacheImage(const AssetImage('assets/personajes/principal/andar_agachado/andar_agachado4.png'), context),
-        precacheImage(const AssetImage('assets/personajes/principal/andar_agachado/andar_agachado5.png'), context),
-        precacheImage(const AssetImage('assets/personajes/principal/andar_agachado/andar_agachado6.png'), context),
-        
-        // Sprites del personaje - Deslizarse Agachado
-        precacheImage(const AssetImage('assets/personajes/principal/deslizarse_agachado/deslizarse_agachado1.png'), context),
-        precacheImage(const AssetImage('assets/personajes/principal/deslizarse_agachado/deslizarse_agachado2.png'), context),
-        precacheImage(const AssetImage('assets/personajes/principal/deslizarse_agachado/deslizarse_agachado3.png'), context),
-        
-        // Sprites del personaje - Saltar Agachado
-        precacheImage(const AssetImage('assets/personajes/principal/saltar_agachado/saltar_agachado1.png'), context),
-        precacheImage(const AssetImage('assets/personajes/principal/saltar_agachado/saltar_agachado2.png'), context),
-        
-        // Items y objetos del juego
-        precacheImage(const AssetImage('assets/personajes/items/monedas/monedacoin.png'), context),
-        precacheImage(const AssetImage('assets/personajes/items/monedas/monedasalto.png'), context),
-        precacheImage(const AssetImage('assets/personajes/items/monedas/monedavelocidad.png'), context),
-        precacheImage(const AssetImage('assets/personajes/items/monedas/monedavelocidad_hitbox.png'), context), // Agregar el hitbox de la moneda
-        precacheImage(const AssetImage('assets/personajes/items/casa/casita.png'), context),
-        precacheImage(const AssetImage('assets/avatar/defecto.png'), context),
-        
-        // Objetos del escenario
-        precacheImage(const AssetImage('assets/objetos/suelo/suelo.png'), context),
-        precacheImage(const AssetImage('assets/objetos/suelo/suelo2.png'), context),
-        precacheImage(const AssetImage('assets/objetos/rampa/rampa.png'), context),
-        precacheImage(const AssetImage('assets/objetos/rampa/rampa_invertida.png'), context),
-      ]);
-
-      // Inicializar componentes del juego
-      setState(() => _loadingMessage = 'Inicializando componentes...');
-      
-      // Marcar como cargado y animar la barra de progreso
-      setState(() {
-        _resourcesLoaded = true;
-        _loadingMessage = '¡Carga completada!';
-      });
-
-      await _controller.forward();
-      
-      if (mounted) {
+    _progressAnimation = Tween<double>(begin: 0, end: 1).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut)
+    );
+    
+    // Iniciar la animación automáticamente
+    _controller.forward();
+    
+    // Navegar al juego cuando termine la animación
+    _controller.addStatusListener((status) {
+      if (status == AnimationStatus.completed && mounted) {
         Navigator.pushReplacement(
           context,
           PageRouteBuilder(
             pageBuilder: (context, animation, secondaryAnimation) => Game1(
               userId: widget.userId, 
-              username: widget.username, // Pasamos el userId al Game1
+              username: widget.username,
+              savedGameData: null, // Forzar a null para que sea un nuevo juego
+              precargado: true, // Optimizar la carga
             ),
             transitionDuration: const Duration(milliseconds: 500),
             transitionsBuilder: (context, animation, secondaryAnimation, child) {
@@ -144,9 +62,7 @@ class _TransicionGame1State extends State<TransicionGame1> with SingleTickerProv
           ),
         );
       }
-    } catch (e) {
-      setState(() => _loadingMessage = 'Error al cargar recursos: $e');
-    }
+    });
   }
 
   @override
@@ -179,25 +95,17 @@ class _TransicionGame1State extends State<TransicionGame1> with SingleTickerProv
                       LinearProgressIndicator(
                         value: _progressAnimation.value,
                         backgroundColor: Colors.grey[800],
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          _resourcesLoaded ? Colors.blue : Colors.blue.withOpacity(0.5),
-                        ),
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
                       ),
                       const SizedBox(height: 10),
                       Text(
                         '${(_progressAnimation.value * 100).toInt()}%',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                        ),
+                        style: const TextStyle(color: Colors.white),
                       ),
                       const SizedBox(height: 10),
                       Text(
                         _loadingMessage,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 14,
-                        ),
+                        style: const TextStyle(color: Colors.white70),
                         textAlign: TextAlign.center,
                       ),
                     ],

@@ -1,8 +1,18 @@
 import 'package:flutter/material.dart';
 
+/// Widget que implementa los botones de acción para el control del juego.
+///
+/// Proporciona tres botones interactivos para las acciones principales del jugador:
+/// saltar, deslizarse y agacharse. Los botones están dispuestos en una configuración
+/// ergonómica para facilitar el acceso durante el juego.
 class ActionButtons extends StatelessWidget {
+  /// Callback que se ejecuta cuando el jugador presiona el botón de salto.
   final VoidCallback onJump;
+  
+  /// Callback que se ejecuta cuando el jugador presiona el botón de deslizamiento.
   final VoidCallback onSlide;
+  
+  /// Callback que se ejecuta cuando el jugador presiona el botón para agacharse.
   final VoidCallback onCrouch;
 
   const ActionButtons({
@@ -42,6 +52,12 @@ class ActionButtons extends StatelessWidget {
     );
   }
 
+  /// Construye un botón de acción individual con el aspecto visual definido.
+  ///
+  /// @param onTap Función que se ejecuta cuando se presiona el botón.
+  /// @param icon Icono que se muestra en el botón.
+  /// @param color Color base del botón.
+  /// @return Un widget GestureDetector configurado como botón de acción.
   Widget _buildActionButton({
     required VoidCallback onTap,
     required IconData icon,

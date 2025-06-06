@@ -1,8 +1,16 @@
 import '../../../../../dependencias/imports.dart';
 
+/// Clase que define la estructura del primer nivel del juego.
+/// Contiene todos los elementos del mapa: suelos, plataformas, monedas y la casa final.
 class Mapa1 {
+  /// Lista que almacena todos los objetos del mapa (suelos, monedas, casa final).
   final List<dynamic> objetos;
 
+  /// Constructor que inicializa el mapa con todos sus elementos.
+  /// 
+  /// Parámetros:
+  /// - [collectedCoinsPositions]: Lista opcional de posiciones de monedas ya recolectadas.
+  ///   Permite mantener el estado de las monedas entre sesiones de juego.
   Mapa1({List<Map<String, double>>? collectedCoinsPositions})
       : objetos = [
 
@@ -162,6 +170,14 @@ class Mapa1 {
           Casa(x: 5075, y: 200, width: 100, height: 100),
         ];
 
+  /// Verifica si una moneda en la posición especificada ya ha sido recolectada.
+  /// 
+  /// Parámetros:
+  /// - [x]: Posición horizontal de la moneda.
+  /// - [y]: Posición vertical de la moneda.
+  /// - [positions]: Lista de posiciones de monedas recolectadas.
+  /// 
+  /// Retorna [bool] indicando si la moneda ya fue recolectada.
   static bool _isCollected(double x, double y, List<Map<String, double>>? positions) {
     if (positions == null) {
         debugPrint('No saved positions available for coin at x:$x, y:$y');
@@ -178,11 +194,18 @@ class Mapa1 {
     return isCollected;
 }
 
+  /// Obtiene todos los elementos de tipo suelo en el mapa.
   List<dynamic> get suelos => objetos.where((obj) => obj is Suelo || obj is Suelo2).toList();
+  
+  /// Obtiene todas las casas en el mapa (normalmente solo la casa final).
   List<dynamic> get casas => objetos.whereType<Casa>().toList();
+  
+  /// Obtiene todas las monedas en el mapa.
   List<MonedaBase> get monedas => objetos.whereType<MonedaBase>().toList();
 
 
+  /// Calcula el ancho total del mundo basado en la posición del último objeto.
+  /// Útil para determinar los límites del nivel.
   double get anchoMundo {
     if (objetos.isEmpty) return 0;
     final last = objetos.last;

@@ -4,19 +4,13 @@ class UserService {
   Future<int> createUser(String username, String email, String password) async {
     final conn = await DatabaseConnection.getConnection();
     try {
-      var result = await conn.query(
-        'INSERT INTO users (username, email, password, role) VALUES (?, ?, ?, ?)',
-        [username, email, password, 'user']
-      );
+      var result = await UserQueryRepository.insertUser(conn, username, email, password);
       
       int userId = result.insertId ?? -1;
       
       // Crear el registro en player_stats
       if (userId != -1) {
-        await conn.query(
-          'INSERT INTO player_stats (user_id) VALUES (?)',
-          [userId]
-        );
+        await UserQueryRepository.insertPlayerStats(conn, userId);
       }
       
       return userId;
@@ -29,19 +23,13 @@ class UserService {
     final conn = await DatabaseConnection.getConnection();
     try {
       // Verificar en ambas tablas
-      var userResults = await conn.query(
-        'SELECT * FROM users WHERE username = ? AND password = ? AND is_active = TRUE',
-        [username, password]
-      );
+      var userResults = await UserQueryRepository.checkUserCredentials(conn, username, password);
       
       if (userResults.isNotEmpty) {
         return true;
       }
       
-      var adminResults = await conn.query(
-        'SELECT * FROM admins WHERE username = ? AND password = ? AND is_active = TRUE',
-        [username, password]
-      );
+      var adminResults = await UserQueryRepository.checkAdminCredentials(conn, username, password);
       
       return adminResults.isNotEmpty;
     } finally {
@@ -53,20 +41,14 @@ class UserService {
     final conn = await DatabaseConnection.getConnection();
     try {
       // Verificar en la tabla de usuarios
-      var userResults = await conn.query(
-        'SELECT * FROM users WHERE username = ?',
-        [username]
-      );
+      var userResults = await UserQueryRepository.checkUsernameInUsers(conn, username);
       
       if (userResults.isNotEmpty) {
         return true;
       }
       
       // Verificar en la tabla de admins
-      var adminResults = await conn.query(
-        'SELECT * FROM admins WHERE username = ?',
-        [username]
-      );
+      var adminResults = await UserQueryRepository.checkUsernameInAdmins(conn, username);
       
       return adminResults.isNotEmpty;
     } finally {
@@ -78,10 +60,7 @@ class UserService {
     final conn = await DatabaseConnection.getConnection();
     try {
       // Primero buscar en la tabla de users y verificar si está bloqueado
-      var userResults = await conn.query(
-        'SELECT id, username, role, is_blocked FROM users WHERE username = ? AND password = ? AND is_active = TRUE',
-        [username, password],
-      );
+      var userResults = await UserQueryRepository.getUserInfo(conn, username, password);
       
       if (userResults.isNotEmpty) {
         if (userResults.first['is_blocked'] == 1) {
@@ -103,12 +82,13 @@ class UserService {
   Future<Map<String, dynamic>?> checkAdminAndGetInfo(String username, String password) async {
     final conn = await DatabaseConnection.getConnection();
     try {
-      var adminResults = await conn.query(
-        'SELECT id, username, role FROM admins WHERE username = ? AND password = ? AND is_active = TRUE',
-        [username, password],
-      );
+      var adminResults = await UserQueryRepository.getAdminInfo(conn, username, password);
       
       if (adminResults.isNotEmpty) {
+        // Verificar si el administrador está bloqueado
+        if (adminResults.first['is_blocked'] == 1) {
+          return null; // Administrador bloqueado
+        }
         return {
           'id': adminResults.first['id'],
           'username': adminResults.first['username'],
@@ -126,17 +106,11 @@ class UserService {
     final conn = await DatabaseConnection.getConnection();
     try {
       // Intentar actualizar en la tabla de usuarios
-      var userResult = await conn.query(
-        'UPDATE users SET password = ? WHERE id = ?',
-        [newPassword, userId],
-      );
+      var userResult = await UserQueryRepository.updateUserPassword(conn, userId, newPassword);
       
       // Si no se actualizó ningún usuario, intentar en la tabla de admins
       if (userResult.affectedRows == 0) {
-        await conn.query(
-          'UPDATE admins SET password = ? WHERE id = ?',
-          [newPassword, userId],
-        );
+        await UserQueryRepository.updateAdminPassword(conn, userId, newPassword);
       }
     } finally {
       await conn.close();

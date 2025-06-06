@@ -129,12 +129,13 @@ class _MenuInicioState extends State<MenuInicio> {
           label: 'Game 1',
           onPressed: () async {
             try {
+
               final savedGame = await _playerService.loadGameState(widget.userId, 1);
               if (savedGame != null) {
                 if (!mounted) return;
                 showDialog(
                   context: context,
-                  barrierDismissible: false, // Evita cerrar al tocar fuera
+                  barrierDismissible: false,
                   builder: (context) => AlertDialog(
                     backgroundColor: const Color.fromRGBO(0, 32, 96, 1),
                     title: const Text('Partida Guardada', 

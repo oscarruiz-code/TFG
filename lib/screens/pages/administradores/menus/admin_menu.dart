@@ -1,9 +1,15 @@
 import 'package:oscarruizcode_pingu/dependencias/imports.dart';
+import 'package:flutter/services.dart';
 
+/// Pantalla de menú para administradores y subadministradores.
 class AdminMenuScreen extends StatefulWidget {
+  /// Indica si el usuario es administrador.
   final bool isAdmin;
+  /// Nombre de usuario.
   final String username;
+  /// ID del usuario.
   final int userId;
+  /// Rol del usuario ('admin', 'subadmin', 'user').
   final String? role;
 
   const AdminMenuScreen({
@@ -90,6 +96,14 @@ class _AdminMenuScreenState extends State<AdminMenuScreen> {
 
                       if (!mounted) return;
 
+                      // Permitir todas las orientaciones antes de navegar al juego
+                      SystemChrome.setPreferredOrientations([
+                        DeviceOrientation.portraitUp,
+                        DeviceOrientation.portraitDown,
+                        DeviceOrientation.landscapeLeft,
+                        DeviceOrientation.landscapeRight,
+                      ]);
+
                       Navigator.pushReplacement(
                         context,
                         MaterialPageRoute(
@@ -129,7 +143,7 @@ class _AdminMenuScreenState extends State<AdminMenuScreen> {
                           context,
                           MaterialPageRoute(
                             builder: (context) => UserListScreen(
-                              isAdmin: isRealAdmin,  // Usar isRealAdmin en lugar de widget.isAdmin
+                              isAdmin: isRealAdmin,
                               loggedUserId: widget.userId,
                               initialUsers: users,
                             ),

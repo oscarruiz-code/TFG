@@ -1,6 +1,10 @@
 import '../../../../../../dependencias/imports.dart';
 
 
+/// Moneda especial que otorga al jugador un power-up temporal de salto mejorado.
+///
+/// Al recolectarla, aumenta la fuerza de salto del jugador durante un tiempo limitado.
+/// La mejora depende del estado actual del jugador (normal o agachado).
 class MonedaSalto extends MonedaBase {
   MonedaSalto({
     required super.x,
@@ -8,22 +12,11 @@ class MonedaSalto extends MonedaBase {
     super.isCollected,
   }) : super(
     spritePath: 'assets/personajes/items/monedas/monedasalto.png',
-    valor: 0, // Establecer valor a 0 para que no sume al contador
+    valor: 0, 
   );
 
   @override
   void aplicarEfecto(dynamic player) {
-    if (player == null) return;
     
-    // Calcular la fuerza de salto base según el estado
-    double fuerzaSaltoBase = player.isCrouching 
-        ? -AnimacionSaltoAgachado.fuerzaSalto  // Quitamos el signo negativo
-        : -AnimacionSalto.fuerzaSalto;  // Quitamos el signo negativo
-    
-    // Usar el método específico para power-ups de salto
-    player.activarPowerUpSalto(
-      player.isCrouching ? fuerzaSaltoBase : fuerzaSaltoBase * 1.5,
-      const Duration(milliseconds: 5000)
-    );
   }
 }

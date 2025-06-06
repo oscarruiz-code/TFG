@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:oscarruizcode_pingu/dependencias/imports.dart';
 
 class GameOverDialog extends StatelessWidget {
   final bool victory;
@@ -8,16 +8,20 @@ class GameOverDialog extends StatelessWidget {
   final VoidCallback onRetry;
   final VoidCallback onMenu;
   final VoidCallback onSaveAndExit;
+  final int userId; // Añadido parámetro userId
+  final String username; // Añadido parámetro username
 
   const GameOverDialog({
     super.key,
     required this.victory,
     required this.coins,
     required this.score,
-    required this.duration, // Añadido como requerido
+    required this.duration,
     required this.onRetry,
     required this.onMenu,
     required this.onSaveAndExit,
+    required this.userId, // Añadido como requerido
+    required this.username, // Añadido como requerido
   });
 
   // Función para formatear la duración en formato mm:ss
@@ -42,7 +46,19 @@ class GameOverDialog extends StatelessWidget {
       actions: [
         if (!victory) ...[  
           TextButton(
-            onPressed: onRetry,
+            onPressed: () {
+              Navigator.pop(context); // Cerrar el diálogo
+              // Navegar a la pantalla de transición en lugar de directamente al juego
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => TransicionGame1(
+                    userId: userId, // Usar el parámetro pasado al diálogo
+                    username: username, // Usar el parámetro pasado al diálogo
+                  ),
+                ),
+              );
+            },
             child: const Text('Reintentar'),
           ),
         ],

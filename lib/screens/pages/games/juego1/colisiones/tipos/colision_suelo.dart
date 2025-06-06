@@ -1,8 +1,20 @@
 import 'package:oscarruizcode_pingu/dependencias/imports.dart';
 
+/// Clase que gestiona la detección de colisiones entre el jugador y los elementos de suelo.
+/// Proporciona métodos para verificar colisiones verticales y calcular alturas.
 class ColisionSuelo {
-  // Método principal que verifica tanto colisiones verticales como laterales
-
+  /// Verifica si existen colisiones verticales entre el jugador y los elementos de suelo.
+  /// 
+  /// Detecta dos tipos de colisiones:
+  /// - Colisión desde arriba (jugador sobre suelo): Ajusta la posición del jugador y emite evento playerLand.
+  /// - Colisión desde abajo (jugador contra techo): Ajusta la posición del jugador y emite evento playerCollisionTop.
+  /// 
+  /// Parámetros:
+  /// - [player]: Objeto jugador con su hitbox en coordenadas de pantalla.
+  /// - [suelos]: Lista de elementos de suelo para verificar colisiones.
+  /// - [worldOffset]: Desplazamiento del mundo para ajustar la posición de los suelos.
+  /// 
+  /// Retorna [bool] indicando si se detectó alguna colisión.
   bool verificarVertical(Player player, List<dynamic> suelos, double worldOffset) {
     Rect playerHitbox = player.hitbox;
     bool colisionDetectada = false;
@@ -19,8 +31,8 @@ class ColisionSuelo {
         // Colisión desde arriba (suelo)
         if (playerHitbox.bottom > sueloHitbox.top &&
             playerHitbox.top < sueloHitbox.top &&
-            playerHitbox.bottom - sueloHitbox.top < 8) {  // Ajustado de 10 a 8
-          player.y = sueloHitbox.top - playerHitbox.height / 2 - 1;  // Añadido -1 para separación adicional
+            playerHitbox.bottom - sueloHitbox.top < 8) {
+          player.y = sueloHitbox.top - playerHitbox.height / 2 - 1;
           player.velocidadVertical = 0;
           player.isOnGround = true;
           colisionDetectada = true;
@@ -31,7 +43,7 @@ class ColisionSuelo {
         if (playerHitbox.top < sueloHitbox.bottom &&
             playerHitbox.bottom > sueloHitbox.bottom &&
             sueloHitbox.bottom - playerHitbox.top < 10) {
-          player.y = sueloHitbox.bottom + playerHitbox.height / 2 + 2;  // Aumentado de +1 a +2 para mayor separación
+          player.y = sueloHitbox.bottom + playerHitbox.height / 2 + 2;
           player.velocidadVertical = 0;
           colisionDetectada = true;
           GameEventBus().emit(GameEvents.playerCollisionTop);
@@ -42,6 +54,17 @@ class ColisionSuelo {
     return colisionDetectada;
   }
 
+  /// Calcula la altura mínima del suelo debajo del jugador.
+  /// 
+  /// Útil para determinar la distancia al suelo más cercano cuando el jugador está en el aire.
+  /// 
+  /// Parámetros:
+  /// - [player]: Objeto jugador con su hitbox en coordenadas de pantalla.
+  /// - [suelos]: Lista de elementos de suelo para verificar.
+  /// - [worldOffset]: Desplazamiento del mundo para ajustar la posición de los suelos.
+  /// 
+  /// Retorna [double] con la altura del suelo más cercano debajo del jugador.
+  /// Si no hay suelo debajo, retorna double.infinity.
   double obtenerAltura(Player player, List<dynamic> suelos, double worldOffset) {
     double alturaMinima = double.infinity;
     Rect playerHitbox = player.hitbox;

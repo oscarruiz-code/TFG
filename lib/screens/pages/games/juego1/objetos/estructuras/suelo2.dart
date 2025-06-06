@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
 
+/// Representa una plataforma de tipo suelo alternativo en el juego.
+///
+/// Similar a la clase Suelo, pero con diferentes ajustes de hitbox y sprite.
+/// Esta variante está diseñada para representar un tipo diferente de plataforma
+/// con características de colisión distintas.
 class Suelo2 {
   final double x;
   final double y;

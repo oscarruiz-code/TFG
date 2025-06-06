@@ -1,6 +1,9 @@
 import 'package:oscarruizcode_pingu/dependencias/imports.dart';
 
+/// Pantalla para registrar nuevos usuarios, subadministradores o administradores.
 class AdminRegisterScreen extends StatefulWidget {
+  /// Indica si el usuario actual es administrador.
+  /// Determina si se puede crear un nuevo usuario con rol de administrador.
   final bool isAdmin;
 
   const AdminRegisterScreen({
@@ -140,7 +143,7 @@ class _AdminRegisterScreenState extends State<AdminRegisterScreen> {
                         value: 'subadmin',
                         child: Text('Subadministrador'),
                       ),
-                      if (widget.isAdmin) // Solo mostrar opción de admin si el usuario es admin
+                      if (widget.isAdmin)
                         const DropdownMenuItem(
                           value: 'admin',
                           child: Text('Administrador'),
@@ -204,7 +207,7 @@ class _AdminRegisterScreenState extends State<AdminRegisterScreen> {
                           }
                         }
                       }
-                    },  // Faltaba esta coma
+                    },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.blue,
                       foregroundColor: Colors.white,

@@ -1,3 +1,7 @@
+/// Clase que define las constantes para los tipos de eventos del juego.
+///
+/// Centraliza todos los nombres de eventos disponibles en el juego para
+/// evitar errores tipográficos y facilitar la refactorización.
 class GameEvents {
   static const String playerJump = 'player_jump';
   static const String playerSlide = 'player_slide';
@@ -19,11 +23,9 @@ class GameEvents {
   static const String checkpointSet = 'checkpoint_set';
   static const String playerRespawn = 'player_respawn';
   static const String coinCollected = 'coin_collected';
-  static const String playerCollisionTop =
-      'player_collision_top';
+  static const String playerCollisionTop = 'player_collision_top';
   static const String playerCollisionBottom = 'player_collision_bottom';
-  static const String playerCollisionWithHouse =
-      'player_collision_with_house'; 
-  static const String playerInVoid =
-      'player_in_void'; 
+  static const String playerCollisionWithHouse = 'player_collision_with_house'; 
+  static const String playerInVoid = 'player_in_void'; 
+  static const String playerStateChange = 'player_state_change';
 }

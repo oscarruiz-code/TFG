@@ -20,6 +20,7 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^5.0.0
+  flutter_launcher_icons: ^0.13.1 
 
 flutter:
   uses-material-design: true
@@ -28,8 +29,14 @@ flutter:
    - assets/imagenes/fondo.png
    - assets/imagenes/logo.png
    - assets/imagenes/juego.png
+
    - assets/videos/fondo_inicio.mp4
+
    - assets/sonidos/musica.mp3
+   - assets/sonidos/musicajuego.mp3
+   - assets/sonidos/efectos/moneda.mp3
+   - assets/sonidos/efectos/salto.mp3
+
    - assets/personajes/principal/andar/andar1.png
    - assets/personajes/principal/andar/andar2.png
    - assets/personajes/principal/andar/andar3.png
@@ -58,16 +65,29 @@ flutter:
    - assets/personajes/principal/deslizarse_agachado/deslizarse_agachado3.png
    - assets/personajes/principal/saltar_agachado/saltar_agachado1.png
    - assets/personajes/principal/saltar_agachado/saltar_agachado2.png
+
    - assets/personajes/items/monedas/monedacoin.png
    - assets/personajes/items/monedas/monedasalto.png
    - assets/personajes/items/monedas/monedavelocidad.png
+
    - assets/personajes/items/casa/casita.png
+
    - assets/perfil/gratis/
    - assets/perfil/premium/
+
    - assets/etiquetas/
+   
    - assets/avatar/defecto.png
    - assets/objetos/suelo/suelo.png
    - assets/objetos/suelo/suelo2.png
+
+# Añade esta sección al final del archivo
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path:  "assets/imagenes/logo.png"
+  adaptive_icon_background: "#FFFFFF" # Color de fondo para iconos adaptativos
+  adaptive_icon_foreground: "assets/imagenes/logo.png" # Opcional para Android
 
   
 

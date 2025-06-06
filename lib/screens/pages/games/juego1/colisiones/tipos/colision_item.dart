@@ -1,6 +1,17 @@
 import '../../../../../../dependencias/imports.dart';
 
+/// Clase que gestiona la detección de colisiones entre el jugador y los items coleccionables.
+/// Proporciona métodos para verificar si existe superposición entre los hitboxes.
 class ColisionItem {
+  /// Verifica si existe una colisión entre el jugador y una moneda.
+  /// 
+  /// Parámetros:
+  /// - [player]: Objeto jugador con su hitbox en coordenadas de pantalla.
+  /// - [moneda]: Objeto moneda que se quiere comprobar.
+  /// - [worldOffset]: Desplazamiento del mundo para ajustar la posición de la moneda.
+  /// 
+  /// Retorna [bool] indicando si hay colisión (true) o no (false).
+  /// No detecta colisión si la moneda ya ha sido recolectada.
   bool verificar(Player player, MonedaBase moneda, double worldOffset) {
     if (moneda.isCollected) return false;
 

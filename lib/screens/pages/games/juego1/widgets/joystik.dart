@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
 
+/// Widget que implementa un joystick virtual para controlar el movimiento en el juego.
+///
+/// Proporciona una interfaz táctil que permite al usuario controlar la dirección
+/// del movimiento mediante gestos de arrastre. El joystick consta de un círculo exterior
+/// fijo y un círculo interior móvil que responde a los gestos del usuario.
 class Joystick extends StatefulWidget {
   final Function(double dx, double dy) onDirectionChanged;
 
@@ -14,7 +19,7 @@ class _JoystickState extends State<Joystick> {
   Offset _currentPosition = Offset.zero;
   final double _joystickRadius = 60.0;
   final double _innerCircleRadius = 25.0;
-  final double _maxMovementRatio = 0.8; // 80% del área disponible
+  final double _maxMovementRatio = 0.8;
 
   void _updatePosition(Offset position) {
     if (_isDragging) {

@@ -1,22 +1,30 @@
 import 'package:oscarruizcode_pingu/dependencias/imports.dart';
 import 'dart:developer' as developer;
 
+/// Pantalla que muestra y permite editar los detalles de un usuario.
+///
+/// Permite a administradores y subadministradores modificar información
+/// de usuarios como nombre, email, rol, monedas y tickets.
 class UserDetailScreen extends StatefulWidget {
+  /// ID del usuario a mostrar
   final int userId;
+  /// Indica si quien accede es administrador
   final bool isAdmin;
-  final int loggedUserId;  // Agregamos este parámetro
+  /// ID del usuario que ha iniciado sesión
+  final int loggedUserId;
 
   const UserDetailScreen({
     super.key,
     required this.userId,
     required this.isAdmin,
-    required this.loggedUserId,  // Requerimos el parámetro
+    required this.loggedUserId,
   });
 
   @override
   State<UserDetailScreen> createState() => UserDetailScreenState();
 }
 
+/// Estado para la pantalla de detalles de usuario.
 class UserDetailScreenState extends State<UserDetailScreen> {
   final AdminService _adminService = AdminService();
   final PlayerService _playerService = PlayerService();
@@ -87,7 +95,7 @@ class UserDetailScreenState extends State<UserDetailScreen> {
     required void Function(int) onIncrease,
     required void Function(int) onDecrease,
     bool allowNegative = false,
-    bool allowManualEdit = false,  // Nuevo parámetro
+    bool allowManualEdit = false,
   }) {
     return Row(
       children: [
@@ -98,7 +106,7 @@ class UserDetailScreenState extends State<UserDetailScreen> {
               labelText: label,
             ),
             keyboardType: TextInputType.number,
-            readOnly: !allowManualEdit,  // Cambiado para permitir edición manual
+            readOnly: !allowManualEdit,
             onChanged: allowManualEdit ? (value) async {
               if (value.isNotEmpty) {
                 try {
@@ -106,7 +114,7 @@ class UserDetailScreenState extends State<UserDetailScreen> {
                   await _playerService.updateCoins(widget.userId, newValue);
                   _loadUserDetails();
                 } catch (e) {
-                  // Ignorar errores de parsing
+                  
                 }
               }
             } : null,
@@ -141,14 +149,52 @@ class UserDetailScreenState extends State<UserDetailScreen> {
     }
 
     // Determinar si el usuario actual puede editar este usuario
-    bool canEdit = widget.isAdmin || 
+    bool canEdit = false;
+    bool canBlock = false;
+    bool canDelete = false;
+    
+    // Si es superadmin (ID 8), puede editar, bloquear y eliminar a cualquier usuario
+    if (widget.loggedUserId == 8) {
+      canEdit = true;
+      canBlock = true;
+      canDelete = true;
+    } 
+    // Si es admin normal
+    else if (widget.isAdmin && user!.role == 'admin') {
+      // Un admin normal no puede modificar a otros admins
+      canEdit = widget.loggedUserId == widget.userId; // Solo su propio perfil
+      canBlock = false; // No puede bloquear a otros admins
+      canDelete = false; // No puede eliminar a otros admins
+    }
+    // Si es admin y el usuario es subadmin o usuario normal
+    else if (widget.isAdmin && (user!.role == 'subadmin' || user!.role == 'user')) {
+      canEdit = true;
+      canBlock = true;
+      canDelete = true;
+    }
+    // Si es subadmin
+    else if (!widget.isAdmin) {
+      // Un subadmin no puede modificar a admins
+      if (user!.role == 'admin') {
+        canEdit = false;
+        canBlock = false;
+        canDelete = false;
+      }
+      // Un subadmin puede editar y bloquear a otros subadmins
+      else if (user!.role == 'subadmin') {
+        canEdit = true;
+        canBlock = true;
+        canDelete = false; // No puede eliminar a otros subadmins
+      }
+      // Un subadmin puede editar, bloquear y eliminar a usuarios normales
+      else {
+        canEdit = true;
+        canBlock = true;
+        canDelete = true;
+      }
+    }
     // Si es subadmin, solo puede editar usuarios normales y otros subadmins
     (!widget.isAdmin && (user!.role == 'user' || user!.role == 'subadmin'));
-
-    // Determinar si puede eliminar al usuario
-    bool canDelete = widget.isAdmin || 
-    // Si es subadmin, solo puede eliminar usuarios normales
-    (!widget.isAdmin && user!.role == 'user');
 
     return Scaffold(
       appBar: AppBar(title: Text('Detalles de ${user!.username}')),
@@ -254,25 +300,41 @@ class UserDetailScreenState extends State<UserDetailScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
                       ElevatedButton(
-                        onPressed: () async {
+                        onPressed: canBlock ? () async {
                           await _adminService.blockUser(
                             widget.userId,
                             !user!.isBlocked,
+                            loggedUserId: widget.loggedUserId,
+                            loggedUserRole: widget.isAdmin ? 'admin' : 'subadmin',
                           );
                           _loadUserDetails();
-                        },
+                        } : null,
                         child: Text(
                           user!.isBlocked ? 'Desbloquear' : 'Bloquear',
                         ),
                       ),
-                      if (canDelete) // Cambiado de widget.isAdmin a canDelete
+                      if (canDelete)
                         ElevatedButton(
                           onPressed: () async {
                             try {
-                              // Primero eliminamos los registros de player_stats
-                              await _playerService.deletePlayerStats(widget.userId);
-                              // Luego eliminamos el usuario
-                              await _adminService.deleteUser(widget.userId);
+                              // Verificar si el usuario es admin o subadmin
+                              if (user!.role == 'admin' || user!.role == 'subadmin') {
+                                // Para admins y subadmins, necesitamos usar updateUserRole para eliminar correctamente
+                                await _adminService.updateUserRole(
+                                  widget.userId,
+                                  'user', // Cambiamos temporalmente a usuario normal
+                                  loggedUserId: widget.loggedUserId,
+                                  loggedUserRole: widget.isAdmin ? 'admin' : 'subadmin',
+                                );
+                                // Ahora eliminamos el usuario normal
+                                await _playerService.deletePlayerStats(widget.userId);
+                                await _adminService.deleteUser(widget.userId);
+                              } else {
+                                // Para usuarios normales, el proceso actual es correcto
+                                await _playerService.deletePlayerStats(widget.userId);
+                                await _adminService.deleteUser(widget.userId);
+                              }
+                              
                               if (!mounted) return;
                               Navigator.pop(context);
                               ScaffoldMessenger.of(context).showSnackBar(
@@ -316,6 +378,8 @@ class UserDetailScreenState extends State<UserDetailScreen> {
                           await _adminService.updateUserRole(
                             widget.userId,
                             selectedRole,
+                            loggedUserId: widget.loggedUserId,
+                            loggedUserRole: widget.isAdmin ? 'admin' : 'subadmin',
                           );
                         }
 
@@ -343,6 +407,8 @@ class UserDetailScreenState extends State<UserDetailScreen> {
                         if (e.toString().contains('Duplicate entry') && 
                             e.toString().contains('username')) {
                           errorMessage = 'El nombre de usuario ya existe. Por favor, elige otro.';
+                        } else {
+                          errorMessage = 'Error: ${e.toString()}';
                         }
                         
                         ScaffoldMessenger.of(context).showSnackBar(
@@ -356,7 +422,7 @@ class UserDetailScreenState extends State<UserDetailScreen> {
                     child: const Text('Guardar Cambios'),
                   ),
                 ],
-              )  // Quitar la coma aquí
+              )
             else
               Center(
                 child: Text(

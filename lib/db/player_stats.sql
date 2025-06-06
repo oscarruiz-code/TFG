@@ -3,6 +3,7 @@ CREATE TABLE admins (
     username VARCHAR(255) NOT NULL UNIQUE,
     email VARCHAR(255) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
+    is_blocked BOOLEAN DEFAULT FALSE,
     is_active BOOLEAN DEFAULT TRUE,
     role VARCHAR(20) NOT NULL DEFAULT 'admin'
 );
@@ -16,9 +17,6 @@ CREATE TABLE users (
     is_active BOOLEAN DEFAULT TRUE,
     role VARCHAR(20) NOT NULL DEFAULT 'user'
 );
-
-INSERT INTO admins (username, email, password, role)
-VALUES ('superadmin', 'superadmin@admin.com', '0000', 'admin');
 
 CREATE TABLE player_stats (
     id INTEGER PRIMARY KEY AUTO_INCREMENT,

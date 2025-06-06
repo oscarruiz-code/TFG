@@ -384,12 +384,14 @@ class _MenuHistorialState extends State<MenuHistorial> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
+                      // En el método _buildHistoryItem, dentro del botón "Continuar"
                       ElevatedButton.icon(
                         onPressed: () async {
                           try {
                             final savedGame = await _playerStatsService.loadGameState(widget.userId, _selectedGameType);
                             if (savedGame != null) {
                               if (!mounted) return;
+                              
                               Navigator.pushReplacement(
                                 context,
                                 MaterialPageRoute(

@@ -1,6 +1,11 @@
 import '../../../../../../dependencias/imports.dart';
 import 'package:flutter/material.dart';
 
+/// Clase abstracta que define la estructura base para todos los tipos de monedas en el juego.
+///
+/// Proporciona propiedades comunes como posición, estado de recolección, tamaño y valor,
+/// así como métodos para marcar como recolectada, definir hitbox para colisiones y
+/// renderizar la moneda en pantalla. Cada subclase debe implementar su propio efecto.
 abstract class MonedaBase {
   double x;
   double y;
