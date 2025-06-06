@@ -2,6 +2,15 @@ import 'package:oscarruizcode_pingu/dependencias/imports.dart';
 import 'dart:ui';
 import 'dart:math' as math;
 
+/// Widget que crea un contenedor con efecto de vidrio esmerilado (glassmorphism).
+///
+/// Aplica un efecto de desenfoque al fondo y añade gradientes semitransparentes
+/// para simular un panel de vidrio con reflejos sutiles.
+///
+/// Parámetros:
+/// * [child] - Widget que se mostrará dentro del contenedor de vidrio.
+/// * [borderRadius] - Radio de las esquinas del contenedor. Por defecto es 15.0.
+/// * [padding] - Espaciado interno del contenedor. Por defecto es EdgeInsets.all(0).
 class GlassContainer extends StatelessWidget {
   final Widget child;
   final double borderRadius;
@@ -51,6 +60,10 @@ class GlassContainer extends StatelessWidget {
   }
 }
 
+/// Clipper personalizado que crea un patrón de grietas aleatorias.
+///
+/// Utiliza un generador de números aleatorios con semilla fija para crear
+/// un patrón de grietas consistente entre renderizaciones.
 class CrackClipper extends CustomClipper<Path> {
   @override
   Path getClip(Size size) {

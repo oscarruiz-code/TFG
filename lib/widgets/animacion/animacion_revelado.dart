@@ -1,5 +1,15 @@
 import 'package:flutter/material.dart';
 
+/// Widget que crea una animación de revelado progresivo sobre un contenido.
+///
+/// Muestra el [child] gradualmente mediante una animación que revela el contenido
+/// por columnas, creando un efecto de barrido horizontal.
+///
+/// Parámetros:
+/// * [child] - Widget que se mostrará con la animación de revelado.
+/// * [filas] - Número de filas en la cuadrícula de revelado. Por defecto es 10.
+/// * [columnas] - Número de columnas en la cuadrícula de revelado. Por defecto es 20.
+/// * [duracion] - Duración de la animación. Por defecto es 1200 milisegundos.
 class AnimacionRevelado extends StatefulWidget {
   final Widget child;
   final int filas;

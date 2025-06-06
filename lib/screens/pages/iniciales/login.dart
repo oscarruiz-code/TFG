@@ -1,6 +1,12 @@
 import 'package:oscarruizcode_pingu/dependencias/imports.dart';
 import 'package:flutter/services.dart';
 
+/// Pantalla de inicio de sesión.
+///
+/// Permite a los usuarios autenticarse en la aplicación mediante
+/// nombre de usuario y contraseña. Verifica las credenciales contra
+/// las tablas de administradores y usuarios, y redirige a la pantalla
+/// correspondiente según el tipo de usuario.
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -38,6 +44,81 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     _passwordController.dispose();
     _fadeController.dispose();
     super.dispose();
+  }
+
+  /// Procesa el inicio de sesión del usuario.
+  ///
+  /// Verifica las credenciales primero contra la tabla de administradores
+  /// y luego contra la tabla de usuarios normales. Redirige al usuario a
+  /// la pantalla correspondiente según su rol (administrador, subadministrador
+  /// o usuario normal). Muestra mensajes de error apropiados en caso de fallos.
+  Future<void> _handleLogin() async {
+    try {
+      // Primero intentar con la tabla de administradores
+      final adminInfo = await _userService.checkAdminAndGetInfo(
+        _usernameController.text,
+        _passwordController.text,
+      );
+
+      if (adminInfo != null) {
+        if (!mounted) return;
+        await _fadeController.reverse();
+        _musicService.stopBackgroundMusic();
+        
+        if (!mounted) return;
+        
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => AdminMenuScreen(
+              isAdmin: adminInfo['role'] == 'admin',
+              username: adminInfo['username'],
+              userId: adminInfo['id'] as int,
+              role: adminInfo['role'],
+            ),
+          ),
+        );
+        return;
+      }
+
+      // Si no es admin, intentar con la tabla de usuarios
+      final userInfo = await _userService.checkUserAndGetInfo(
+        _usernameController.text,
+        _passwordController.text,
+      );
+  
+      if (!mounted) return;
+      
+      if (userInfo != null) {
+        final playerService = PlayerService();
+        final playerStats = await playerService.getPlayerStats(userInfo['id'] as int);
+        
+        await _fadeController.reverse();
+        _musicService.stopBackgroundMusic();
+        
+        if (!mounted) return;
+        
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => MenuInicio(
+              userId: userInfo['id'] as int,
+              username: userInfo['username'] as String,
+              initialStats: playerStats, 
+            ),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Usuario o Contraseña Invalido')),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error de inicio de sesión: $e')),
+      );
+    }
   }
 
   @override
@@ -207,74 +288,5 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
         ),
       ),
     );
-  }
-
-  Future<void> _handleLogin() async {
-    try {
-      // Primero intentar con la tabla de administradores
-      final adminInfo = await _userService.checkAdminAndGetInfo(
-        _usernameController.text,
-        _passwordController.text,
-      );
-
-      if (adminInfo != null) {
-        if (!mounted) return;
-        await _fadeController.reverse();
-        _musicService.stopBackgroundMusic();
-        
-        if (!mounted) return;
-        
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => AdminMenuScreen(
-              isAdmin: adminInfo['role'] == 'admin',
-              username: adminInfo['username'],
-              userId: adminInfo['id'] as int,
-              role: adminInfo['role'],
-            ),
-          ),
-        );
-        return;
-      }
-
-      // Si no es admin, intentar con la tabla de usuarios
-      final userInfo = await _userService.checkUserAndGetInfo(
-        _usernameController.text,
-        _passwordController.text,
-      );
-  
-      if (!mounted) return;
-      
-      if (userInfo != null) {
-        final playerService = PlayerService();
-        final playerStats = await playerService.getPlayerStats(userInfo['id'] as int);
-        
-        await _fadeController.reverse();
-        _musicService.stopBackgroundMusic();
-        
-        if (!mounted) return;
-        
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => MenuInicio(
-              userId: userInfo['id'] as int,
-              username: userInfo['username'] as String,
-              initialStats: playerStats, 
-            ),
-          ),
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Usuario o Contraseña Invalido')),
-        );
-      }
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error de inicio de sesión: $e')),
-      );
-    }
   }
 }

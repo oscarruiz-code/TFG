@@ -1,5 +1,9 @@
 import 'package:oscarruizcode_pingu/dependencias/imports.dart';
 
+/// Gestiona el sistema de puntos de control (checkpoints) para el jugador.
+///
+/// Permite guardar la posición del último checkpoint alcanzado y restaurar al jugador
+/// a esa posición cuando muere o se requiere un respawn.
 class PlayerCheckpoint {
   double checkpointX = 0;
   double checkpointY = 0;

@@ -1,18 +1,30 @@
 import 'package:oscarruizcode_pingu/dependencias/imports.dart';
 import 'package:flutter/services.dart';
 
+/// Widget que muestra el historial de partidas del usuario, mejores puntuaciones
+/// y partidas guardadas.
+///
+/// Permite al usuario ver sus estadísticas de juego, filtrar por tipo de juego,
+/// continuar partidas guardadas o eliminarlas.
 class MenuHistorial extends StatefulWidget {
+  /// ID único del usuario.
   final int userId;
-  final String username; // Agregar username
-  final PlayerStats playerStats; // Agregar playerStats
-  final PageController pageController; // Agregar pageController
+  
+  /// Nombre de usuario actual.
+  final String username;
+  
+  /// Estadísticas del jugador.
+  final PlayerStats playerStats;
+  
+  /// Controlador de página para la navegación entre pantallas.
+  final PageController pageController;
 
   const MenuHistorial({
     super.key,
     required this.userId,
-    required this.username, // Agregar este parámetro
-    required this.playerStats, // Agregar este parámetro
-    required this.pageController, // Agregar este parámetro
+    required this.username,
+    required this.playerStats,
+    required this.pageController,
   });
 
   @override

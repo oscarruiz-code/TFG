@@ -1,5 +1,6 @@
 import 'package:oscarruizcode_pingu/dependencias/imports.dart';
 
+/// Enumeración de los posibles estados del jugador pingüino.
 enum PenguinPlayerState {
   idle,
   walking,
@@ -9,6 +10,11 @@ enum PenguinPlayerState {
   walkingCrouched,
 }
 
+/// Clase principal que integra todos los módulos del jugador y coordina su funcionamiento.
+///
+/// Actúa como fachada para los módulos especializados (movimiento, colisión, animación,
+/// power-ups y checkpoints), delegando las funcionalidades específicas y manteniendo
+/// la sincronización entre ellos mediante eventos.
 class Player {
   // Constantes
   static const double defaultHeight = 50.0;
@@ -272,7 +278,7 @@ class Player {
 
   void updateSlideFrame(double distanciaRecorrida, double distanciaMitad) {
     _animation.updateSlideFrame(distanciaRecorrida, distanciaMitad);
-    slideFrame = _animation.slideFrame;  // Asegurarse de que slideFrame se actualice correctamente
+    slideFrame = _animation.slideFrame;  
   }
 
   // Método para iniciar el salto
@@ -299,7 +305,7 @@ class Player {
     // Actualizar los valores en el módulo de movimiento
     _movement.isSliding = isSliding;
     _movement.isJumping = isJumping;
-    // NO pasar isCrouching aquí, ya que aún es false
+
     
     _movement.crouch();
     

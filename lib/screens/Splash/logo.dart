@@ -1,5 +1,10 @@
 import 'package:oscarruizcode_pingu/dependencias/imports.dart';
 
+/// Pantalla de presentación con animación del logo.
+///
+/// Muestra el logo de la aplicación con una animación de fade in/out
+/// y realiza la precarga del video de fondo antes de navegar a la
+/// pantalla de inicio de sesión.
 class LogoScreen extends StatefulWidget {
   const LogoScreen({super.key});
 
@@ -22,6 +27,11 @@ class _LogoScreenState extends State<LogoScreen> with SingleTickerProviderStateM
     _initializeScreen();
   }
 
+  /// Inicializa la pantalla con animaciones y precarga de recursos.
+  ///
+  /// Realiza la animación de entrada, precarga el video de fondo,
+  /// espera 5 segundos, reproduce el video, realiza la animación de
+  /// salida y navega a la pantalla de inicio de sesión.
   Future<void> _initializeScreen() async {
     _fadeController.forward();
     

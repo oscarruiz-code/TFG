@@ -1,6 +1,12 @@
 import 'package:oscarruizcode_pingu/dependencias/imports.dart';
 import 'package:flutter/services.dart';
 
+/// Pantalla de registro de nuevos usuarios.
+///
+/// Permite a los usuarios crear una nueva cuenta proporcionando
+/// nombre de usuario, correo electrónico y contraseña.
+/// Verifica que el usuario no exista previamente y navega a la
+/// pantalla de inicio de sesión tras un registro exitoso.
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
 
@@ -24,6 +30,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
     super.dispose();
   }
 
+  /// Procesa el registro de un nuevo usuario.
+  ///
+  /// Verifica que las contraseñas coincidan, comprueba si el nombre de usuario
+  /// ya existe y crea un nuevo usuario si las validaciones son correctas.
+  /// Muestra mensajes de error apropiados en caso de fallos.
   Future<void> _register() async {
     if (_passwordController.text != _confirmPasswordController.text) {
       ScaffoldMessenger.of(context).showSnackBar(

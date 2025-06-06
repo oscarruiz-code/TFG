@@ -1,5 +1,9 @@
 import 'package:oscarruizcode_pingu/dependencias/imports.dart';
 
+/// Controla las animaciones del personaje jugador según su estado actual.
+///
+/// Gestiona los sprites a mostrar basándose en el estado del jugador (caminando,
+/// saltando, agachado, deslizándose) y la dirección en la que mira.
 class PlayerAnimation {
   // Propiedades de animación
   int crouchFrame = 0;
@@ -97,7 +101,7 @@ class PlayerAnimation {
     if (!isJumping && !isSliding) {
       animationTime = 0.0;
       frameIndex = 0;
-      slideFrame = 0;  // Asegurarse de que slideFrame se reinicie
+      slideFrame = 0; 
       currentState =
           isCrouching ? PenguinPlayerState.crouching : PenguinPlayerState.idle;
     }
@@ -116,11 +120,11 @@ class PlayerAnimation {
     double distanciaMitad,
   ) {
     if (distanciaRecorrida < distanciaMitad * 0.5) {
-      slideFrame = 1; // Primer frame al inicio
+      slideFrame = 1; 
     } else if (distanciaRecorrida < distanciaMitad) {
-      slideFrame = 2; // Segundo frame en la primera mitad
+      slideFrame = 2; 
     } else {
-      slideFrame = 3; // Tercer frame en la segunda mitad
+      slideFrame = 3;
     }
   }
 
@@ -129,13 +133,13 @@ class PlayerAnimation {
     double distanciaMitad,
   ) {
     if (distanciaRecorrida < distanciaMitad * 0.3) {
-      slideFrame = 0; // Primer frame al inicio
+      slideFrame = 0; 
     } else if (distanciaRecorrida < distanciaMitad * 0.6) {
-      slideFrame = 1; // Segundo frame
+      slideFrame = 1; 
     } else if (distanciaRecorrida < distanciaMitad) {
-      slideFrame = 2; // Tercer frame
+      slideFrame = 2;
     } else {
-      slideFrame = 3; // Cuarto frame para la segunda mitad
+      slideFrame = 3;
     }
   }
   
@@ -144,7 +148,7 @@ class PlayerAnimation {
       if (isCrouching) {
         crouchFrame = 1;
         Future.delayed(Duration(milliseconds: 100), () {
-          if (isCrouching) crouchFrame = 2;  // Este es agacharse3.png
+          if (isCrouching) crouchFrame = 2;  
         });
       }
     });
@@ -157,7 +161,7 @@ class PlayerAnimation {
         crouchFrame = 1;
         Future.delayed(Duration(milliseconds: 100), () {
           if (isStandingUp) {
-            crouchFrame = 0;  // Asegurarse de que crouchFrame vuelva a 0
+            crouchFrame = 0;  
             isCrouching = false;
             isStandingUp = false;
             currentState = PenguinPlayerState.idle;

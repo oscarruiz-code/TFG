@@ -1,5 +1,13 @@
 import 'package:oscarruizcode_pingu/dependencias/imports.dart';
 
+/// Widget que aplica una animación de escala pulsante a un texto.
+///
+/// Crea un efecto de pulsación continua que hace que el texto aumente y disminuya
+/// su tamaño de forma cíclica, atrayendo la atención del usuario.
+///
+/// Parámetros:
+/// * [text] - El texto que se mostrará con la animación.
+/// * [style] - El estilo de texto a aplicar.
 class TextoAnimado extends StatefulWidget {
   final String text;
   final TextStyle style;

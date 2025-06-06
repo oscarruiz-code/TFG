@@ -1,9 +1,18 @@
 import 'package:oscarruizcode_pingu/dependencias/imports.dart';
 import 'package:flutter/services.dart';
 
+/// Widget principal que actúa como punto de entrada para la aplicación después del login.
+///
+/// Proporciona navegación mediante PageView a las diferentes secciones de la aplicación
+/// (opciones, inicio, tienda, historial) y muestra los botones para acceder a los juegos.
 class MenuInicio extends StatefulWidget {
+  /// ID único del usuario.
   final int userId;
+  
+  /// Nombre de usuario actual.
   final String username;
+  
+  /// Estadísticas iniciales del jugador.
   final PlayerStats initialStats;
 
   const MenuInicio({

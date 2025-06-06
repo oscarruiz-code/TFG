@@ -2,6 +2,17 @@ import 'package:flutter/services.dart';
 import 'dart:convert';
 import '../../../../../dependencias/imports.dart';
 
+/// Implementa el primer juego de la aplicación, un plataformas 2D con un pingüino como protagonista.
+///
+/// Esta clase gestiona todo el ciclo de vida del juego, incluyendo:
+/// - Inicialización y carga de datos guardados
+/// - Sistema de calibración inicial para optimizar el rendimiento
+/// - Bucle de juego con física, colisiones y animaciones
+/// - Controles táctiles (joystick y botones de acción)
+/// - Recolección de monedas y power-ups
+/// - Guardado de progreso y puntuaciones
+/// - Gestión de estados de victoria y derrota
+
 class Game1 extends StatefulWidget {
   final int userId;
   final String username;
@@ -20,6 +31,10 @@ class Game1 extends StatefulWidget {
   State<Game1> createState() => _Game1State();
 }
 
+/// Estado interno del juego que implementa la lógica principal y la interfaz de usuario.
+///
+/// Utiliza [TickerProviderStateMixin] para gestionar las animaciones y el bucle de juego.
+/// Implementa un sistema de eventos para la comunicación entre componentes.
 class _Game1State extends State<Game1> with TickerProviderStateMixin {
   bool isGameActive = true;
   bool _isInitialized = false;
@@ -59,6 +74,8 @@ class _Game1State extends State<Game1> with TickerProviderStateMixin {
     _initializeGame();
   }
 
+  /// Inicializa el juego configurando la orientación de pantalla, límites del mundo,
+  /// carga de datos guardados, y preparación de componentes como el mapa y el jugador.
   void _initializeGame() {
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.landscapeLeft,
@@ -194,6 +211,10 @@ class _Game1State extends State<Game1> with TickerProviderStateMixin {
   }
 
   // Modificar el método _gameLoop para cambiar la duración de la calibración
+  /// Bucle principal del juego que se ejecuta en cada frame.
+  /// 
+  /// Gestiona la detección de colisiones, física, movimiento del jugador,
+  /// y la fase de calibración inicial para optimizar el rendimiento.
   void _gameLoop() {
     if (!isGameActive || !_isInitialized) return;
 
@@ -260,6 +281,10 @@ class _Game1State extends State<Game1> with TickerProviderStateMixin {
     });
   }
 
+  /// Aplica la física del juego, incluyendo gravedad y colisiones con el suelo.
+  /// 
+  /// @param result Resultado de las colisiones detectadas
+  /// @param dtSeconds Delta de tiempo en segundos desde el último frame
   void _applyPhysics(CollisionResult result, double dtSeconds) {
     // Aplicar gravedad si está en el aire
     if (!player.isOnGround) {
@@ -300,6 +325,9 @@ class _Game1State extends State<Game1> with TickerProviderStateMixin {
     }
   }
 
+  /// Procesa las colisiones detectadas, incluyendo monedas, casa (victoria) y caídas al vacío.
+  /// 
+  /// @param result Resultado de las colisiones detectadas
   void _handleCollisions(CollisionResult result) {
     // Maneja colisión con la casa (fin del juego)
     if (result.isCollidingWithHouse) {
@@ -334,6 +362,11 @@ class _Game1State extends State<Game1> with TickerProviderStateMixin {
     }
   }
 
+  /// Actualiza la posición del mundo y del jugador basado en el movimiento y estado actual.
+  /// 
+  /// Gestiona el desplazamiento durante deslizamientos y limita el movimiento durante la calibración.
+  /// @param dtSeconds Delta de tiempo en segundos desde el último frame
+  /// @param collisionResult Resultado de las colisiones detectadas
   void _updateWorldPosition(double dtSeconds, CollisionResult collisionResult) {
     double personajeCentro = MediaQuery.of(context).size.width * 0.4;
 
@@ -427,6 +460,7 @@ class _Game1State extends State<Game1> with TickerProviderStateMixin {
     }
   }
 
+  /// Configura los listeners de eventos para controles, colisiones y estados del jugador.
   void _setupEventListeners() {
     _eventBus.on(GameEvents.buttonPressed, (data) {
       if (!mounted) return;
@@ -613,6 +647,7 @@ class _Game1State extends State<Game1> with TickerProviderStateMixin {
     );
   }
 
+  /// Construye el fondo estático del juego.
   Widget _buildParallaxBackground() {
     // El fondo debe ocupar toda la pantalla y NO moverse con el worldOffset
     return Positioned.fill(
@@ -623,6 +658,7 @@ class _Game1State extends State<Game1> with TickerProviderStateMixin {
     );
   }
 
+  /// Construye los objetos del mundo y las monedas no recolectadas.
   Widget _buildWorldObjects() {
     return Stack(
       children: [
@@ -674,6 +710,7 @@ class _Game1State extends State<Game1> with TickerProviderStateMixin {
     );
   }
 
+  /// Construye el sprite del jugador con la orientación correcta.
   Widget _buildPlayer() {
     return Stack(
       children: [
@@ -694,6 +731,7 @@ class _Game1State extends State<Game1> with TickerProviderStateMixin {
     );
   }
 
+  /// Construye los controles de juego (botones de acción y joystick).
   Widget _buildControls() {
     return Stack(
       children: [
@@ -726,6 +764,7 @@ class _Game1State extends State<Game1> with TickerProviderStateMixin {
     );
   }
 
+  /// Construye el panel de estadísticas del jugador (monedas, vida, tiempo).
   Widget _buildStats() {
     return Positioned(
       bottom: 10, // Reducir la distancia desde abajo
@@ -779,6 +818,9 @@ class _Game1State extends State<Game1> with TickerProviderStateMixin {
     );
   }
 
+  /// Maneja el intento de salir del juego, preguntando si se desea guardar el progreso.
+  /// 
+  /// @return Future<bool> que indica si se debe permitir salir (true) o no (false)
   Future<bool> _onWillPop() async {
     isGameActive = false;
     _gameLoopController.stop();
@@ -848,11 +890,18 @@ class _Game1State extends State<Game1> with TickerProviderStateMixin {
     return true;
   }
 
+  /// Maneja la colisión con el vacío, resultando en game over.
   void _handleVoidCollision() {
     // Caer al vacío siempre resulta en game over
     _handleGameOver(false);
   }
 
+  /// Gestiona el final del juego, ya sea por victoria o derrota.
+  /// 
+  /// Calcula la puntuación final, actualiza monedas del jugador, guarda el historial
+  /// y muestra el diálogo de fin de juego con opciones para continuar.
+  /// 
+  /// @param victory Indica si el jugador ha ganado (true) o perdido (false)
   void _handleGameOver(bool victory) async {
     isGameActive = false;
     _gameLoopController.stop();
@@ -999,6 +1048,10 @@ class _Game1State extends State<Game1> with TickerProviderStateMixin {
   }
 
   // Método auxiliar para guardar progreso
+  /// Guarda el progreso actual del juego en la base de datos.
+  /// 
+  /// @param victory Indica si se trata de una partida completada con victoria
+  /// @param score Puntuación obtenida en la partida
   Future<void> _saveGameProgress({bool victory = false, int score = 0}) async {
     try {
       // Crear una lista de posiciones de monedas recolectadas

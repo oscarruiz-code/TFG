@@ -1,12 +1,23 @@
 import 'package:oscarruizcode_pingu/dependencias/imports.dart';
 import 'package:flutter/services.dart';
 
+/// Widget que muestra las opciones disponibles para el usuario.
+///
+/// Permite cambiar el nombre de usuario, activar/desactivar el sonido,
+/// acceder al editor de perfil y cerrar sesión.
 class MenuOpciones extends StatelessWidget {
+  /// ID único del usuario.
   final int userId;
+  
+  /// Nombre de usuario actual.
   final String username;
+  
+  /// Controlador de página para la navegación entre pantallas.
   final PageController pageController;
+  
+  /// Estadísticas del jugador que incluyen información sobre tickets y cambios de nombre.
   final PlayerStats playerStats;
-  final PlayerService _playerService = PlayerService();  // Add this line
+  final PlayerService _playerService = PlayerService();
   final MusicService _musicService = MusicService();
 
   MenuOpciones({

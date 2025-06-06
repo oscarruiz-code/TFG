@@ -1,6 +1,11 @@
 import 'package:oscarruizcode_pingu/dependencias/imports.dart';
 import 'dart:developer' as developer;
 
+/// Controla el movimiento del personaje jugador, incluyendo desplazamiento horizontal,
+/// saltos, agacharse y deslizamientos.
+///
+/// Gestiona la física del movimiento, la detección de colisiones con el suelo,
+/// y emite eventos para sincronizar el estado del jugador con otros componentes.
 class PlayerMovement {
   // Propiedades de movimiento
   double x;

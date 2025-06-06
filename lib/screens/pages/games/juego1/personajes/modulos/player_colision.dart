@@ -1,5 +1,9 @@
 import 'package:oscarruizcode_pingu/dependencias/imports.dart';
 
+/// Maneja la detección de colisiones del jugador con elementos del entorno.
+///
+/// Define los hitboxes dinámicos según el estado del jugador (agachado, saltando, deslizándose),
+/// inicializa los listeners para eventos de colisión y procesa las respuestas a estas colisiones.
 class PlayerCollision {
   double x;
   double y;

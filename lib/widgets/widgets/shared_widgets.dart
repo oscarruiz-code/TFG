@@ -1,9 +1,14 @@
 import 'package:oscarruizcode_pingu/dependencias/imports.dart';
 
+/// Barra superior compartida que muestra información del usuario y recursos.
+///
+/// Presenta el avatar y nombre del usuario, así como los recursos disponibles
+/// (monedas y tickets). Permite acceder al diálogo de selección de avatar
+/// al tocar en la información del usuario.
 class SharedTopBar extends StatelessWidget {
   final String username;
   final PlayerStats playerStats;
-  final PlayerService _playerService = PlayerService();  // Add this line
+  final PlayerService _playerService = PlayerService();
 
   SharedTopBar({
     super.key,
@@ -71,6 +76,11 @@ class SharedTopBar extends StatelessWidget {
     );
   }
 
+  /// Muestra un diálogo para seleccionar un nuevo avatar.
+  ///
+  /// Presenta avatares gratuitos y premium, permitiendo al usuario
+  /// seleccionar uno nuevo. Los avatares premium solo están disponibles
+  /// si el usuario los ha desbloqueado previamente.
   void _showProfilePictureDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -165,6 +175,11 @@ class SharedTopBar extends StatelessWidget {
   }
 }
 
+/// Barra de navegación inferior compartida para la aplicación.
+///
+/// Proporciona acceso a las principales secciones de la aplicación:
+/// Ajustes, Inicio, Tienda e Historial, utilizando un PageController
+/// para gestionar la navegación entre páginas.
 class SharedBottomNav extends StatelessWidget {
   final PageController pageController;
 
@@ -194,6 +209,10 @@ class SharedBottomNav extends StatelessWidget {
     );
   }
 
+  /// Construye un elemento de navegación con icono y etiqueta.
+  ///
+  /// Al pulsarlo, navega a la página correspondiente utilizando
+  /// el PageController proporcionado.
   Widget _buildNavItem(IconData icon, String label, int page) {
     return Column(
       children: [

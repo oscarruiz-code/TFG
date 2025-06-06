@@ -1,14 +1,23 @@
 import 'package:flutter/services.dart';
 import 'package:oscarruizcode_pingu/dependencias/imports.dart';
 
+/// Widget de transición que muestra una pantalla de carga antes de iniciar el juego.
+///
+/// Presenta una animación de progreso con un indicador de porcentaje y un mensaje
+/// de carga mientras se preparan los recursos del juego. Al completarse, navega
+/// automáticamente a la pantalla del juego.
+///
+/// Parámetros:
+/// * [userId] - ID del usuario que iniciará el juego.
+/// * [username] - Nombre del usuario que iniciará el juego.
 class TransicionGame1 extends StatefulWidget {
   final int userId;
-  final String username;  // Añadimos la propiedad userId
+  final String username;
   
   const TransicionGame1({
     super.key,
     required this.userId, 
-    required this.username // Requerimos el userId en el constructor
+    required this.username
   });
 
   @override
@@ -29,7 +38,7 @@ class _TransicionGame1State extends State<TransicionGame1> with SingleTickerProv
     ]);
     
     _controller = AnimationController(
-      duration: const Duration(milliseconds: 2000),  // 2 segundos como solicitaste
+      duration: const Duration(milliseconds: 2000),
       vsync: this,
     );
 
@@ -49,8 +58,8 @@ class _TransicionGame1State extends State<TransicionGame1> with SingleTickerProv
             pageBuilder: (context, animation, secondaryAnimation) => Game1(
               userId: widget.userId, 
               username: widget.username,
-              savedGameData: null, // Forzar a null para que sea un nuevo juego
-              precargado: true, // Optimizar la carga
+              savedGameData: null,
+              precargado: true, 
             ),
             transitionDuration: const Duration(milliseconds: 500),
             transitionsBuilder: (context, animation, secondaryAnimation, child) {

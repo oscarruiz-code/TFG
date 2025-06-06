@@ -1,6 +1,9 @@
 import 'package:oscarruizcode_pingu/dependencias/imports.dart';
-import 'dart:async';
 
+/// Gestiona los power-ups temporales del jugador, como velocidad y salto mejorados.
+///
+/// Esta clase controla la activación, duración y desactivación de los power-ups,
+/// utilizando temporizadores para revertir los efectos después de un tiempo determinado.
 class PlayerPowerUp {
   double velocidadBase;
   double fuerzaSalto;

@@ -1,10 +1,22 @@
 import 'package:oscarruizcode_pingu/dependencias/imports.dart';
 import 'package:flutter/services.dart';
 
+/// Widget que muestra la tienda del juego donde los usuarios pueden comprar
+/// avatares premium, tickets para Game 2 y tickets para cambiar su nombre.
+///
+/// Permite a los usuarios gastar monedas para adquirir diferentes elementos
+/// y muestra confirmaciones de compra.
 class MenuTienda extends StatefulWidget {
+  /// ID único del usuario.
   final int userId;
+  
+  /// Nombre de usuario actual.
   final String username;
+  
+  /// Controlador de página para la navegación entre pantallas.
   final PageController pageController;
+  
+  /// Estadísticas del jugador que incluyen monedas y avatares desbloqueados.
   final PlayerStats playerStats;
 
   const MenuTienda({

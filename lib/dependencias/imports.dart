@@ -96,7 +96,6 @@ export 'package:oscarruizcode_pingu/screens/pages/games/juego1/objetos/monedas/m
 
 /// Pantalla principal del juego 1
 export 'package:oscarruizcode_pingu/screens/pages/games/juego1/pages/game1.dart';
-export 'package:oscarruizcode_pingu/screens/pages/games/juego1/pages/controller/inicializador.dart';
 
 /// Controles del juego 1
 export 'package:oscarruizcode_pingu/screens/pages/games/juego1/widgets/joystik.dart';

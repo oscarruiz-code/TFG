@@ -1,10 +1,22 @@
 import 'package:oscarruizcode_pingu/dependencias/imports.dart';
 import 'package:flutter/services.dart';
 
+/// Widget que permite al usuario editar su perfil, incluyendo su foto de perfil,
+/// correo electrónico y contraseña.
+///
+/// Proporciona una interfaz para seleccionar avatares gratuitos o premium
+/// y actualizar la información de la cuenta del usuario.
 class MenuEditarPerfil extends StatefulWidget {
+  /// ID único del usuario.
   final int userId;
+  
+  /// Nombre de usuario actual.
   final String username;
+  
+  /// Estadísticas del jugador que incluyen información sobre avatares y tickets.
   final PlayerStats playerStats;
+  
+  /// Controlador de página para la navegación entre pantallas.
   final PageController pageController;
 
   const MenuEditarPerfil({
