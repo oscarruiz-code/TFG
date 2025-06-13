@@ -1,16 +1,14 @@
-# oscarruizcode_pingu
+# oscarruiz-code ICEBERGS
 
-A new Flutter project.
+Bienvenidos, a mi proyecto en produccion, Icebergs, un juego potengo que tiene como personaje principal un pinguino.
 
-## Getting Started
+## Documentacion
 
-This project is a starting point for a Flutter application.
+Este proyecto toca todos los palos, tiene interfaces personalizadas, conexion a Base de datos , alojada en la nube y una implementacion,
+de logica modularizada, junto a todo el proyecto.
 
-A few resources to get you started if this is your first Flutter project:
+Estamos realizandolo en Flutter : Dart, como idioma de programacion principal, el cual son dos herramientas bastantes potentes.
+Ahora mismo esta en proceso, pero ya funciona mas del 60% de la aplicacion correctamente.
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+Espero que disfruteis del codigo, y podais guiarse junto a se documentacion dentro de el.
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
